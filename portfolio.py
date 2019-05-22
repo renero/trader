@@ -2,15 +2,15 @@ BUY = +1
 SELL = -1
 
 h1 = ' {:<3s} |{:>8s} |{:>9s} |{:>9s} |{:>9s} |{:>8s} |{:>7s} '
-h2 = '| {:<7s} | {:<9s}| {:s}'
+h2 = '| {:<7s} | {:<9s}| {:20s}'
 h = h1 + h2
 s = ' {:>03d} |{:>8.1f} |{:>9.1f} |{:>9.1f} |{:>+9.1f} |{:>8.1f} |{:>7.1f} '
 f = '                           {:>9.1f} |{:>9.1f} |{:>8.1f} |{:>7.1f}'
 
 REWARD_DO_NOTHING = 0
-REWARD_FAILED_BUY = 0
+REWARD_FAILED_BUY = -1
 REWARD_SUCCESS_BUY = -2
-REWARD_FAILED_SELL = 0
+REWARD_FAILED_SELL = -1
 REWARD_POSITIVE_SELL = +10
 REWARD_NEGATIVE_SELL = -1
 
@@ -70,7 +70,6 @@ class Portfolio:
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
             self.log('| {:<7s}'.format('n/a'), end='')
-
             self.reward = -2.
             return self.reward
 

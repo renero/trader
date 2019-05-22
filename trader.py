@@ -10,11 +10,15 @@ from keras.models import Sequential
 
 from myenv import *
 
+value_states = ['EVEN', 'WIN', 'LOSE']
+forecast_states = ['EVEN', 'WIN', 'LOSE']
+share_states = ['HAVE', 'DONTHAVE']
+
 
 def create_model(env: MyEnv) -> Sequential:
     model = Sequential()
     model.add(InputLayer(batch_input_shape=(1, env.num_states_)))
-    model.add(Dense(36, activation='sigmoid'))
+    model.add(Dense(env.num_states_ * env.num_actions_, activation='sigmoid'))
     model.add(Dense(env.num_actions_, activation='linear'))
     model.compile(loss='mse', optimizer='adam', metrics=['mae'])
     model.summary()
@@ -76,8 +80,11 @@ def q_learning(env, num_episodes=1000, plot=False):
         np.argmax(model.predict(np.identity(num_states)[i:i + 1])[0])
         for i in range(num_states)
     ]
+    print('\nStrategy learned')
+    strategy_string = "State {{:<{}s}} -> {{:<10s}} {{}}".format(
+        env.states.max_len)
     for i in range(num_states):
-        print("State {:<12s} -> {:<10s} {}".format(
+        print(strategy_string.format(
             env.states.name(i), action_dict[strategy[i]],
             model.predict(np.identity(num_states)[i:i + 1])))
     print()
@@ -85,19 +92,14 @@ def q_learning(env, num_episodes=1000, plot=False):
 
 
 def main():
-    env = MyEnv(debug=False)
-    strategy = q_learning(env, 100)
+    env = MyEnv([value_states, forecast_states, share_states], debug=True)
+    strategy = q_learning(env, 1000)
 
     done = False
     state = env.reset(debug=True)
     while not done:
         a = env.decide(state, strategy)
         new_state, r, done, _ = env.step(a)
-
-    # table = q_learning_with_table(env)
-    # print(table)
-    # table_greedy = eps_greedy_q_learning_with_table(env)
-    # print(table_greedy)
 
 
 main()

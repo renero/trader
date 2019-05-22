@@ -1,3 +1,16 @@
+"""
+This class is here to help with managing several states, resulting from
+generating a cartesian product of sub_states. For example:
+
+    # value_states = {'EVEN', 'WIN', 'LOSE'}
+    # forecast_states = {'EVEN', 'WIN', 'LOSE'}
+    #
+    # states = RLStates([value_states, forecast_states])
+    # print(states.state)
+    # print(states.get_id('EVEN', 'LOSE'))
+    # print(states.name(7))
+
+"""
 from itertools import product
 
 
@@ -30,7 +43,7 @@ class RLStates:
             'Incorrect nr. of states. Read {}, should be {}'.format(
                 len(sub_states), self.nr_substates)
         s = '_'.join(sub_states)
-        assert s in self.state,\
+        assert s in self.state, \
             'The state ({}) does NOT exist in RL set of states'.format(s)
         return self.state[s]
 
@@ -40,11 +53,10 @@ class RLStates:
                 state_id, self.max_id - 1)
         return self.ivd[state_id]
 
-
-# value_states = {'EVEN', 'WIN', 'LOSE'}
-# forecast_states = {'EVEN', 'WIN', 'LOSE'}
-#
-# states = RLStates([value_states, forecast_states]).combine()
-# print(states.state)
-# print(states.id('EVEN', 'LOSE'))
-# print(states.name(7))
+    @property
+    def max_len(self):
+        ml = -1
+        for s in self.state.keys():
+            if len(s) > ml:
+                ml = len(s)
+        return ml

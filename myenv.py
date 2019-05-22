@@ -5,15 +5,12 @@ from rlstates import RLStates
 # Default initial budget
 DEF_INITIAL_BUDGET = 10000.
 
-value_states = ['EVEN', 'WIN', 'LOSE']
-forecast_states = ['EVEN', 'WIN', 'LOSE']
-
 #
 # My Actions
+#
 DO_NOTHING = 0
 BUY = 1
 SELL = 2
-
 action_dict = {
     0: 'do_nothing',
     1: 'buy',
@@ -38,20 +35,20 @@ class MyEnv:
     debug = False
 
     def __init__(self,
-                 num_states=9,
+                 states_list,
                  num_actions=3,
                  path='forecast_Gold_Inflation',
                  debug=False):
         self.debug = debug
         self.num_actions_ = num_actions
-        self.num_states_ = num_states
         self.read_data(path)
         self.set_price()
         self.portfolio_ = Portfolio(DEF_INITIAL_BUDGET,
                                     self.price_,
                                     self.forecast_,
                                     debug)
-        self.states = RLStates([value_states, forecast_states])
+        self.states = RLStates(states_list)
+        self.num_states_ = self.states.max_id
         self.set_state()
         return
 
@@ -72,7 +69,7 @@ class MyEnv:
         return self.set_state()
 
     def set_state(self):
-        # state of my budget
+        # state of my portfolio value
         if self.portfolio_.budget == self.portfolio_.initial_budget:
             value = 'EVEN'
         elif self.portfolio_.budget > self.portfolio_.initial_budget:
@@ -86,8 +83,13 @@ class MyEnv:
             forecast = 'WIN'
         else:
             forecast = 'LOSE'
+        # Do I have shares in my portfolio?
+        if self.portfolio_.shares > 0.:
+            shares_state = 'HAVE'
+        else:
+            shares_state = 'DONTHAVE'
 
-        self.current_state_ = self.states.get_id(value, forecast)
+        self.current_state_ = self.states.get_id(value, forecast, shares_state)
         return self.current_state_
 
     def read_data(self, path):
