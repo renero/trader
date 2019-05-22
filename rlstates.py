@@ -24,7 +24,7 @@ class RLStates:
         self.max_id = len(self.state)
         return self
 
-    def id(self, *sub_states):
+    def get_id(self, *sub_states):
         assert len(
             sub_states) == self.nr_substates, \
             'Incorrect nr. of states. Read {}, should be {}'.format(
@@ -34,17 +34,17 @@ class RLStates:
             'The state ({}) does NOT exist in RL set of states'.format(s)
         return self.state[s]
 
-    def name(self, id):
-        assert id in self.ivd, \
+    def name(self, state_id):
+        assert state_id in self.ivd, \
             'State ID {} not in list (0..{}).'.format(
-                id, self.max_id - 1)
-        return self.ivd[id]
+                state_id, self.max_id - 1)
+        return self.ivd[state_id]
 
 
-# value_states = {'EVEN', 'WIN', 'LOOSE'}
-# forecast_states = {'EVEN', 'WIN', 'LOOSE'}
+# value_states = {'EVEN', 'WIN', 'LOSE'}
+# forecast_states = {'EVEN', 'WIN', 'LOSE'}
 #
 # states = RLStates([value_states, forecast_states]).combine()
 # print(states.state)
-# print(states.id('EVEN', 'LOOSE'))
+# print(states.id('EVEN', 'LOSE'))
 # print(states.name(7))

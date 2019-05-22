@@ -78,7 +78,7 @@ def q_learning(env, num_episodes=1000, plot=False):
     ]
     for i in range(num_states):
         print("State {:<12s} -> {:<10s} {}".format(
-            state_dict[i], action_dict[strategy[i]],
+            env.states.name(i), action_dict[strategy[i]],
             model.predict(np.identity(num_states)[i:i + 1])))
     print()
     return strategy
@@ -86,7 +86,7 @@ def q_learning(env, num_episodes=1000, plot=False):
 
 def main():
     env = MyEnv(debug=False)
-    strategy = q_learning(env, 1000)
+    strategy = q_learning(env, 100)
 
     done = False
     state = env.reset(debug=True)
