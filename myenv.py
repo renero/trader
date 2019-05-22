@@ -1,9 +1,15 @@
 import pandas as pd
 from portfolio import Portfolio
+from rlstates import RLStates
+
 
 # Default initial budget
 DEF_INITIAL_BUDGET = 10000.
 
+value_states = ['EVEN', 'WIN', 'LOSE']
+forecast_states = ['EVEN', 'WIN', 'LOSE']
+
+#
 # My Actions
 DO_NOTHING = 0
 BUY = 1
@@ -16,12 +22,12 @@ EVEN_LOSE = 2
 WINNING_EVEN = 3
 WINNING_WIN = 4
 WINNING_LOSE = 5
-LOOSING_EVEN = 6
-LOOSING_WIN = 7
-LOOSING_LOSE = 8
+LOSING_EVEN = 6
+LOSING_WIN = 7
+LOSING_LOSE = 8
 
-forecast_dict = {'even': 0, 'win': 1, 'lose': 2}
-value_dict = {'even': 0, 'win': 3, 'lose': 6}
+forecast_dict = {'EVEN': 0, 'WIN': 1, 'LOSE': 2}
+value_dict = {'EVEN': 0, 'WIN': 3, 'LOSE': 6}
 
 state_dict = {
     EVEN_EVEN: 'EVEN_EVEN',
@@ -30,10 +36,11 @@ state_dict = {
     WINNING_EVEN: 'WINNING_EVEN',
     WINNING_WIN: 'WINNING_RISE',
     WINNING_LOSE: 'WINNING_FALL',
-    LOOSING_EVEN: 'LOOSING_EVEN',
-    LOOSING_WIN: 'LOOSING_RISE',
-    LOOSING_LOSE: 'LOOSING_FALL'
+    LOSING_EVEN: 'LOSING_EVEN',
+    LOSING_WIN: 'LOSING_RISE',
+    LOSING_LOSE: 'LOSING_FALL'
 }
+
 action_dict = {
     0: 'do_nothing',
     1: 'buy',
@@ -71,6 +78,7 @@ class MyEnv:
                                     self.price_,
                                     self.forecast_,
                                     debug)
+        self.states = RLStates([value_states, forecast_states])
         self.set_state()
         return
 
@@ -88,25 +96,31 @@ class MyEnv:
                                     self.price_,
                                     self.forecast_,
                                     self.debug)
+        self.states = RLStates([value_states, forecast_states])
         self.set_state()
         return self.state_
 
     def set_state(self):
         # state of my budget
         if self.portfolio_.budget == self.portfolio_.initial_budget:
-            value = 'even'
+            value = 'EVEN'
         elif self.portfolio_.budget > self.portfolio_.initial_budget:
-            value = 'win'
+            value = 'WIN'
         else:
-            value = 'lose'
+            value = 'LOSE'
         # guess what the state, given the forecast
         if self.portfolio_.forecast == self.portfolio_.latest_price:
-            forecast = 'even'
+            forecast = 'EVEN'
         elif self.portfolio_.forecast > self.portfolio_.latest_price:
-            forecast = 'win'
+            forecast = 'WIN'
         else:
-            forecast = 'lose'
+            forecast = 'LOSE'
+        test_state_ = self.states.id(value, forecast)
         self.state_ = value_dict[value] + forecast_dict[forecast]
+        if test_state_ != self.state_:
+            print('\n\nKEY ({}) ERRORRRRR!!! {} != {}\n\n'.format(
+                '_'.join([value, forecast]), test_state_, self.state_
+            ))
         return self.state_
 
     def read_data(self, path):
