@@ -15,6 +15,26 @@ forecast_states = ['EVEN', 'WIN', 'LOSE']
 share_states = ['HAVE', 'DONTHAVE']
 
 
+def print_strategy(env, model, num_states, strategy):
+    print('\nStrategy learned')
+    strategy_string = "State {{:<{}s}} -> {{:<10s}} {{}}".format(
+        env.states.max_len)
+    for i in range(num_states):
+        print(strategy_string.format(
+            env.states.name(i), action_dict[strategy[i]],
+            model.predict(np.identity(num_states)[i:i + 1])))
+    print()
+
+
+def plot_reinforcement(r_avg_list, plot: bool = False):
+    if plot is False:
+        return
+    plt.plot(r_avg_list)
+    plt.ylabel('Average reward per game')
+    plt.xlabel('Number of games')
+    plt.show()
+
+
 def create_model(env: MyEnv) -> Sequential:
     model = Sequential()
     model.add(InputLayer(batch_input_shape=(1, env.num_states_)))
@@ -37,9 +57,18 @@ def predict_value(model, num_states, state):
     return np.max(model.predict(onehot(num_states, state)))
 
 
-def q_learning(env, num_episodes=1000, plot=False):
-    # create the keras model
+def q_learning(env: MyEnv, num_episodes: int = 1000,
+               plot: bool = False) -> list:
+    """
+    Implements the RL learning loop over an environment.
+
+    :type env: MyEnv
+    :type num_episodes: int
+    :type plot: bool
+    """
+    # create the Keras model
     model = create_model(env)
+
     # now execute the q learning
     y = 0.95
     eps = 0.5
@@ -47,11 +76,13 @@ def q_learning(env, num_episodes=1000, plot=False):
     r_avg_list = []
     num_states: int = env.num_states_
     num_actions = env.num_actions_
+
+    # Loop over 'num_episodes'
     for i in range(num_episodes):
         s = env.reset()
         eps *= decay_factor
         if i % 100 == 0:
-            print("Episode {} of {}".format(i + 1, num_episodes))
+            print("Episode {} of {}".format(i, num_episodes))
         done = False
         r_sum = 0
         while not done:
@@ -70,24 +101,13 @@ def q_learning(env, num_episodes=1000, plot=False):
             r_sum += r
         r_avg_list.append(r_sum / num_episodes)
 
-    if plot:
-        plt.plot(r_avg_list)
-        plt.ylabel('Average reward per game')
-        plt.xlabel('Number of games')
-        plt.show()
-
+    plot_reinforcement(r_avg_list, plot)
     strategy = [
         np.argmax(model.predict(np.identity(num_states)[i:i + 1])[0])
         for i in range(num_states)
     ]
-    print('\nStrategy learned')
-    strategy_string = "State {{:<{}s}} -> {{:<10s}} {{}}".format(
-        env.states.max_len)
-    for i in range(num_states):
-        print(strategy_string.format(
-            env.states.name(i), action_dict[strategy[i]],
-            model.predict(np.identity(num_states)[i:i + 1])))
-    print()
+    print_strategy(env, model, num_states, strategy)
+
     return strategy
 
 
