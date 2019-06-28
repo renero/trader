@@ -8,7 +8,7 @@ import numpy as np
 from keras.layers import Dense, InputLayer
 from keras.models import Sequential
 
-from myenv import *
+from trader.myenv import *
 
 value_states = ['EVEN', 'WIN', 'LOSE']
 forecast_states = ['EVEN', 'WIN', 'LOSE']
