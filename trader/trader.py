@@ -8,7 +8,7 @@ import numpy as np
 from keras.layers import Dense, InputLayer
 from keras.models import Sequential
 
-from trader.myenv import *
+from myenv import *
 
 value_states = ['EVEN', 'WIN', 'LOSE']
 forecast_states = ['EVEN', 'WIN', 'LOSE']
@@ -71,7 +71,7 @@ def q_learning(env: MyEnv, num_episodes: int = 1000,
 
     # now execute the q learning
     y = 0.95
-    eps = 0.5
+    eps = 0.2
     decay_factor = 0.999
     r_avg_list = []
     num_states: int = env.num_states_
@@ -113,7 +113,7 @@ def q_learning(env: MyEnv, num_episodes: int = 1000,
 
 def main():
     env = MyEnv([value_states, forecast_states, share_states], debug=True)
-    strategy = q_learning(env, 1000)
+    strategy = q_learning(env, 10000)
 
     done = False
     state = env.reset(debug=True)

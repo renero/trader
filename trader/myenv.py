@@ -37,7 +37,7 @@ class MyEnv:
     def __init__(self,
                  states_list,
                  num_actions=3,
-                 path='forecast_Gold_Inflation',
+                 path='../data/forecast_Gold_Inflation',
                  debug=False):
         self.debug = debug
         self.num_actions_ = num_actions
