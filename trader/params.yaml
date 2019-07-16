@@ -15,7 +15,7 @@ decay_factor: 0.999
 num_episodes_update: 100
 
 # Num. of episodes to run simulate and learn
-num_episodes: 10000
+num_episodes: 1000
 
 # Different states in which the environment might be.
 state:
@@ -42,4 +42,10 @@ action:
 
 # Environment variables
 environment:
-  initial_budget: 1200.
+  initial_budget: 1100.
+  reward_do_nothing: -1
+  reward_failed_buy: -1
+  reward_success_buy: 0
+  reward_failed_sell: -3
+  reward_positive_sell: +10
+  reward_negative_sell: -1

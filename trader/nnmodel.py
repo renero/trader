@@ -4,15 +4,17 @@ from keras.models import Sequential
 from environment import Environment
 
 
-class NNModel:
+class NNModel(object):
 
-    @staticmethod
-    def create_model(env: Environment) -> Sequential:
+    def __init__(self, context_dictionary):
+        self.__dict__.update(context_dictionary)
+
+    def create_model(self, env: Environment) -> Sequential:
         model = Sequential()
-        model.add(InputLayer(batch_input_shape=(1, env.num_states_)))
+        model.add(InputLayer(batch_input_shape=(1, self._num_states)))
         model.add(
-            Dense(env.num_states_ * env.num_actions_, activation='sigmoid'))
-        model.add(Dense(env.num_actions_, activation='linear'))
+            Dense(self._num_states * self._num_actions, activation='sigmoid'))
+        model.add(Dense(self._num_actions, activation='linear'))
         model.compile(loss='mse', optimizer='adam', metrics=['mae'])
         model.summary()
 

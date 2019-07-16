@@ -1,7 +1,7 @@
 import numpy as np
 
-from display import Display as display
 from chart import Chart as plot
+from display import Display as display
 from environment import Environment
 from nnmodel import NNModel
 
@@ -10,16 +10,19 @@ class QLearning(object):
 
     def __init__(self, context_dictionary):
         self.__dict__.update(context_dictionary)
+        self.nn = NNModel(context_dictionary)
+        self.model = None
 
     @staticmethod
     def onehot(num_states: int, state: int) -> np.ndarray:
         return np.identity(num_states)[state:state + 1]
 
-    def predict(self, model, num_states, state) -> int:
-        return int(np.argmax(model.predict(self.onehot(num_states, state))))
+    def predict(self, state) -> int:
+        return int(
+            np.argmax(self.model.predict(self.onehot(self._num_states, state))))
 
-    def predict_value(self, model, num_states, state):
-        return np.max(model.predict(self.onehot(num_states, state)))
+    def predict_value(self, state):
+        return np.max(self.model.predict(self.onehot(self._num_states, state)))
 
     def q_learn(self, env: Environment, do_plot: bool = False) -> list:
         """
@@ -30,12 +33,10 @@ class QLearning(object):
         :type do_plot: bool
         """
         # create the Keras model
-        model = NNModel.create_model(env)
+        self.model = self.nn.create_model(env)
 
         # now execute the q learning
         r_avg_list = []
-        num_states: int = env.num_states_
-        num_actions = env.num_actions_
 
         # Loop over 'num_episodes'
         for i in range(self._num_episodes):
@@ -47,17 +48,17 @@ class QLearning(object):
             r_sum = 0
             while not done:
                 if np.random.random() < self._eps:
-                    a = np.random.randint(0, num_actions)
+                    a = np.random.randint(0, self._num_actions)
                 else:
-                    a = self.predict(model, num_states, s)
+                    a = self.predict(s)
                 new_s, r, done, _ = env.step(a)
-                target = r + self._y * self.predict_value(model, num_states,
-                                                          new_s)
-                target_vec = model.predict(self.onehot(num_states, s))[0]
+                target = r + self._y * self.predict_value(new_s)
+                target_vec = \
+                    self.model.predict(self.onehot(self._num_states, s))[0]
                 target_vec[a] = target
-                model.fit(self.onehot(num_states, s),
-                          target_vec.reshape(-1, num_actions),
-                          epochs=1, verbose=0)
+                self.model.fit(self.onehot(self._num_states, s),
+                               target_vec.reshape(-1, self._num_actions),
+                               epochs=1, verbose=0)
                 s = new_s
                 r_sum += r
             r_avg_list.append(r_sum / self._num_episodes)
@@ -65,9 +66,10 @@ class QLearning(object):
         if do_plot is True:
             plot.reinforcement(r_avg_list, do_plot)
         strategy = [
-            np.argmax(model.predict(np.identity(num_states)[i:i + 1])[0])
-            for i in range(num_states)
+            np.argmax(
+                self.model.predict(np.identity(self._num_states)[i:i + 1])[0])
+            for i in range(self._num_states)
         ]
-        display.strategy(self, env, model, num_states, strategy)
+        display.strategy(self, env, self.model, self._num_states, strategy)
 
         return strategy

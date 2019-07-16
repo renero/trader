@@ -20,25 +20,22 @@ class Environment(object):
     new_state_: int = 0
     debug = False
 
-    def __init__(self, context_dictionary):
+    def __init__(self, context_dictionary, debug=False):
+        # First, update the internal dictionary with the parameters read.
         self.__dict__.update(context_dictionary)
-        self.initialize()
+        self.context_dictionary = context_dictionary
 
-    def initialize(self,
-                   num_actions=3,
-                   debug=False):
         self.debug = debug
-        self.num_actions_ = num_actions
         self.read_data(self._data_path)
         self.set_price()
-        self.portfolio_ = Portfolio(self._environment._initial_budget,
+        self.portfolio_ = Portfolio(self.__dict__,
                                     self.price_,
                                     self.forecast_,
                                     debug)
         self.states = RLStates(self._states_list)
-        self.num_states_ = self.states.max_id
+        self._num_states = self.states.max_id
         self.set_state()
-        return self
+        context_dictionary.update(self.__dict__)
 
     def log(self, *args, **kwargs):
         if self.debug is True:
@@ -50,7 +47,7 @@ class Environment(object):
         self.done_ = False
         self.t = 0
         self.set_price()
-        self.portfolio_ = Portfolio(self._environment._initial_budget,
+        self.portfolio_ = Portfolio(self.__dict__,
                                     self.price_,
                                     self.forecast_,
                                     self.debug)
@@ -91,7 +88,7 @@ class Environment(object):
         self.forecast_ = self.data_.iloc[self.t, 1]
 
     def step(self, action):
-        assert action < self.num_actions_, \
+        assert action < self._num_actions, \
             'Action ID must be between 0 and {}'.format(
                 self.num_actions_)
 
