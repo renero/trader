@@ -1,0 +1,51 @@
+#
+# Parameters to start a simulation with a trader
+# @renero
+#
+
+# Data Path. Where is the data from which learning how to invest?
+data_path: ../data/forecast_Gold_Inflation
+
+# Parameters for the Q-Learning function
+y: 0.95
+eps: 0.5
+decay_factor: 0.999
+
+# Every how many episodes display the update in q-learning?
+num_episodes_update: 100
+
+# Num. of episodes to run simulate and learn
+num_episodes: 1000
+
+# Different states in which the environment might be.
+state:
+  portfolio_value:
+    names:
+      - EVEN
+      - WIN
+      - LOSE
+  forecast:
+    names:
+      - EVEN
+      - WIN
+      - LOSE
+  got_shares:
+    names:
+      - HAVE
+      - DONTHAVE
+
+# Actions to be accomplished by the agent.
+action:
+  - do_nothing
+  - buy
+  - sell
+
+# Environment variables
+environment:
+  initial_budget: 1100.
+  reward_do_nothing: -1
+  reward_failed_buy: -1
+  reward_success_buy: 0
+  reward_failed_sell: -3
+  reward_positive_sell: +10
+  reward_negative_sell: -1

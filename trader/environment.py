@@ -1,24 +1,10 @@
 import pandas as pd
+
 from portfolio import Portfolio
 from rlstates import RLStates
 
-# Default initial budget
-DEF_INITIAL_BUDGET = 10000.
 
-#
-# My Actions
-#
-DO_NOTHING = 0
-BUY = 1
-SELL = 2
-action_dict = {
-    0: 'do_nothing',
-    1: 'buy',
-    2: 'sell'
-}
-
-
-class MyEnv:
+class Environment(object):
     num_states_ = 0
     max_states_ = 0
     num_actions_ = 0
@@ -34,23 +20,22 @@ class MyEnv:
     new_state_: int = 0
     debug = False
 
-    def __init__(self,
-                 states_list,
-                 num_actions=3,
-                 path='forecast_Gold_Inflation',
-                 debug=False):
+    def __init__(self, context_dictionary, debug=False):
+        # First, update the internal dictionary with the parameters read.
+        self.__dict__.update(context_dictionary)
+        self.context_dictionary = context_dictionary
+
         self.debug = debug
-        self.num_actions_ = num_actions
-        self.read_data(path)
+        self.read_data(self._data_path)
         self.set_price()
-        self.portfolio_ = Portfolio(DEF_INITIAL_BUDGET,
+        self.portfolio_ = Portfolio(self.__dict__,
                                     self.price_,
                                     self.forecast_,
                                     debug)
-        self.states = RLStates(states_list)
-        self.num_states_ = self.states.max_id
+        self.states = RLStates(self._states_list)
+        self._num_states = self.states.max_id
         self.set_state()
-        return
+        context_dictionary.update(self.__dict__)
 
     def log(self, *args, **kwargs):
         if self.debug is True:
@@ -62,7 +47,7 @@ class MyEnv:
         self.done_ = False
         self.t = 0
         self.set_price()
-        self.portfolio_ = Portfolio(DEF_INITIAL_BUDGET,
+        self.portfolio_ = Portfolio(self.__dict__,
                                     self.price_,
                                     self.forecast_,
                                     self.debug)
@@ -103,16 +88,16 @@ class MyEnv:
         self.forecast_ = self.data_.iloc[self.t, 1]
 
     def step(self, action):
-        assert action < self.num_actions_, \
+        assert action < self._num_actions, \
             'Action ID must be between 0 and {}'.format(
                 self.num_actions_)
 
-        if action == DO_NOTHING:
+        if action == self._action_name.do_nothing:
             self.portfolio_.do_nothing()
             self.reward_ = 0.
-        if action == BUY:
+        if action == self._action_name.buy:
             self.reward_ = self.portfolio_.buy()
-        if action == SELL:
+        if action == self._action_name.sell:
             self.reward_ = self.portfolio_.sell()
         self.log(' | R: {:>+5.1f} | {:s}'.format(
             self.reward_, self.states.name(self.current_state_)))
