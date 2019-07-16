@@ -33,9 +33,6 @@ class QLearning(object):
         model = NNModel.create_model(env)
 
         # now execute the q learning
-        # y = 0.95
-        # eps = 0.2
-        # decay_factor = 0.999
         r_avg_list = []
         num_states: int = env.num_states_
         num_actions = env.num_actions_

@@ -7,15 +7,14 @@ from environment import *
 from qlearning import QLearning
 from trader import Trader
 
-value_states = ['EVEN', 'WIN', 'LOSE']
-forecast_states = ['EVEN', 'WIN', 'LOSE']
-share_states = ['HAVE', 'DONTHAVE']
+# value_states = ['EVEN', 'WIN', 'LOSE']
+# forecast_states = ['EVEN', 'WIN', 'LOSE']
+# share_states = ['HAVE', 'DONTHAVE']
 
 
 def main():
     trader = Trader()
-    env = Environment(trader).initialize(
-        [value_states, forecast_states, share_states], debug=True)
+    env = Environment(trader)
     strategy = QLearning(trader).q_learn(env)
 
     done = False

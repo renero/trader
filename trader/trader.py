@@ -20,13 +20,13 @@ from pathlib import Path
 
 from yaml import safe_load, YAMLError
 
+debug = False
+
 
 class MyDict(dict):
-    debug = False
 
-    def __init__(self, debug=False, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.debug = debug
 
     def __getattr__(self, key):
         if key in self:
@@ -36,8 +36,9 @@ class MyDict(dict):
     def __setattr__(self, key, value):
         self[key] = value
 
-    def log(self, *args, **kwargs):
-        if self.debug is True:
+    @staticmethod
+    def log(*args, **kwargs):
+        if debug is True:
             print(*args, **kwargs)
 
     def add_dict(self, this_object, param_dictionary):
@@ -91,7 +92,18 @@ class Trader(MyDict):
         if not self._action or not self._state:
             raise AssertionError('No states or actions defined in config file.')
 
+        # Build a dictionary with a sequential number associated to each action
+        setattr(self, '_action_name', MyDict())
+        for tup in zip(self._action, range(len(self._action))):
+            self._action_name[tup[0]] = tup[1]
+
         # Build the reverse dictionary for the actions dictionary
-        setattr(self, '_action_id', dict())
+        setattr(self, '_action_id', MyDict())
         for tup in zip(range(len(self._action)), self._action):
             self._action_id[tup[0]] = tup[1]
+
+        # Build a list of lists with the names of all possible states.
+        setattr(self, '_states_list', list())
+        for state in self._state.keys():
+            if state[0] == '_':
+                self._states_list.append(self._state[state]._names)

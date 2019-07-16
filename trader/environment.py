@@ -3,21 +3,6 @@ import pandas as pd
 from portfolio import Portfolio
 from rlstates import RLStates
 
-# Default initial budget
-# DEF_INITIAL_BUDGET = 10000.
-
-#
-# My Actions
-#
-DO_NOTHING = 0
-BUY = 1
-SELL = 2
-action_dict = {
-    0: 'do_nothing',
-    1: 'buy',
-    2: 'sell'
-}
-
 
 class Environment(object):
     num_states_ = 0
@@ -37,9 +22,9 @@ class Environment(object):
 
     def __init__(self, context_dictionary):
         self.__dict__.update(context_dictionary)
+        self.initialize()
 
     def initialize(self,
-                   states_list,
                    num_actions=3,
                    debug=False):
         self.debug = debug
@@ -50,7 +35,7 @@ class Environment(object):
                                     self.price_,
                                     self.forecast_,
                                     debug)
-        self.states = RLStates(states_list)
+        self.states = RLStates(self._states_list)
         self.num_states_ = self.states.max_id
         self.set_state()
         return self
@@ -110,12 +95,12 @@ class Environment(object):
             'Action ID must be between 0 and {}'.format(
                 self.num_actions_)
 
-        if action == DO_NOTHING:
+        if action == self._action_name.do_nothing:
             self.portfolio_.do_nothing()
             self.reward_ = 0.
-        if action == BUY:
+        if action == self._action_name.buy:
             self.reward_ = self.portfolio_.buy()
-        if action == SELL:
+        if action == self._action_name.sell:
             self.reward_ = self.portfolio_.sell()
         self.log(' | R: {:>+5.1f} | {:s}'.format(
             self.reward_, self.states.name(self.current_state_)))
