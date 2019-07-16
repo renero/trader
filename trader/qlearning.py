@@ -3,14 +3,14 @@ import numpy as np
 from chart import Chart as plot
 from display import Display as display
 from environment import Environment
-from nnmodel import NNModel
+from nn import NN
 
 
 class QLearning(object):
 
     def __init__(self, context_dictionary):
         self.__dict__.update(context_dictionary)
-        self.nn = NNModel(context_dictionary)
+        self.nn = NN(context_dictionary)
         self.model = None
 
     @staticmethod
@@ -24,20 +24,27 @@ class QLearning(object):
     def predict_value(self, state):
         return np.max(self.model.predict(self.onehot(self._num_states, state)))
 
-    def q_learn(self, env: Environment, do_plot: bool = False) -> list:
+    def get_strategy(self):
         """
-        Implements the RL learning loop over an environment.
-
-        :type env: Environment
-        :type num_episodes: int
-        :type do_plot: bool
+        Get the defined strategy from the weights of the model.
+        :return: strategy matrix
         """
-        # create the Keras model
-        self.model = self.nn.create_model(env)
+        strategy = [
+            np.argmax(
+                self.model.predict(np.identity(self._num_states)[i:i + 1])[0])
+            for i in range(self._num_states)
+        ]
+        return strategy
 
+    def learn(self, env):
+        """
+        Implements the learning loop over the states, actions and strategies
+        to learn what is the sequence of actions that maximize reward.
+        :param env:
+        :return:
+        """
         # now execute the q learning
-        r_avg_list = []
-
+        avg_rewards = []
         # Loop over 'num_episodes'
         for i in range(self._num_episodes):
             s = env.reset()
@@ -61,15 +68,30 @@ class QLearning(object):
                                epochs=1, verbose=0)
                 s = new_s
                 r_sum += r
-            r_avg_list.append(r_sum / self._num_episodes)
+            avg_rewards.append(r_sum / self._num_episodes)
+        return avg_rewards
 
-        if do_plot is True:
-            plot.reinforcement(r_avg_list, do_plot)
-        strategy = [
-            np.argmax(
-                self.model.predict(np.identity(self._num_states)[i:i + 1])[0])
-            for i in range(self._num_states)
-        ]
+    def q_learn(self, env: Environment, do_plot: bool = False) -> list:
+        """
+        Implements the RL learning loop over an environment.
+
+        :type env: Environment
+        :type do_plot: bool
+        """
+        # create the Keras modeln and learn
+        self.model = self.nn.create_model()
+        if self._load_model is True:
+            self.model = self.nn.load_model(self._model_file,
+                                            self._weights_file)
+        else:
+            avg_rewards = self.learn(env)
+
+        # Extract the strategy matrix from the model.
+        strategy = self.get_strategy()
+
+        # display anything?
+        if do_plot is True and self._load_model is False:
+            plot.reinforcement(avg_rewards, do_plot)
         display.strategy(self, env, self.model, self._num_states, strategy)
 
         return strategy
