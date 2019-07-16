@@ -1,9 +1,10 @@
 import pandas as pd
+
 from portfolio import Portfolio
 from rlstates import RLStates
 
 # Default initial budget
-DEF_INITIAL_BUDGET = 10000.
+# DEF_INITIAL_BUDGET = 10000.
 
 #
 # My Actions
@@ -18,7 +19,7 @@ action_dict = {
 }
 
 
-class MyEnv:
+class Environment:
     num_states_ = 0
     max_states_ = 0
     num_actions_ = 0
@@ -34,23 +35,26 @@ class MyEnv:
     new_state_: int = 0
     debug = False
 
-    def __init__(self,
-                 states_list,
-                 num_actions=3,
-                 path='../data/forecast_Gold_Inflation',
-                 debug=False):
+    def __init__(self, context_dictionary):
+        self.__dict__.update(context_dictionary)
+
+    def initialize(self,
+                   states_list,
+                   num_actions=3,
+                   path='../data/forecast_Gold_Inflation',
+                   debug=False):
         self.debug = debug
         self.num_actions_ = num_actions
         self.read_data(path)
         self.set_price()
-        self.portfolio_ = Portfolio(DEF_INITIAL_BUDGET,
+        self.portfolio_ = Portfolio(self._environment._initial_budget,
                                     self.price_,
                                     self.forecast_,
                                     debug)
         self.states = RLStates(states_list)
         self.num_states_ = self.states.max_id
         self.set_state()
-        return
+        return self
 
     def log(self, *args, **kwargs):
         if self.debug is True:
@@ -62,7 +66,7 @@ class MyEnv:
         self.done_ = False
         self.t = 0
         self.set_price()
-        self.portfolio_ = Portfolio(DEF_INITIAL_BUDGET,
+        self.portfolio_ = Portfolio(self._environment._initial_budget,
                                     self.price_,
                                     self.forecast_,
                                     self.debug)

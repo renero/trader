@@ -1,125 +1,97 @@
-#
-# Largely based on:
-# https://adventuresinmachinelearning.com/reinforcement-learning-tutorial-python-keras/
-#
+"""
+This class reads params from a YAML file and creates an object that
+contains attributes named as the params in the file, accessible through
+getters:
 
-import matplotlib.pyplot as plt
-import numpy as np
-from keras.layers import Dense, InputLayer
-from keras.models import Sequential
+  object.parameter
 
-from myenv import *
+in addition to classical dictionary access method
 
-value_states = ['EVEN', 'WIN', 'LOSE']
-forecast_states = ['EVEN', 'WIN', 'LOSE']
-share_states = ['HAVE', 'DONTHAVE']
+  object[parameter]
 
+The structure of attributes is built recursively if they contain a dictionary.
 
-def print_strategy(env, model, num_states, strategy):
-    print('\nStrategy learned')
-    strategy_string = "State {{:<{}s}} -> {{:<10s}} {{}}".format(
-        env.states.max_len)
-    for i in range(num_states):
-        print(strategy_string.format(
-            env.states.name(i), action_dict[strategy[i]],
-            model.predict(np.identity(num_states)[i:i + 1])))
-    print()
+  object.attr1.attr2.attr3
+
+"""
+
+from os import getcwd
+from pathlib import Path
+
+from yaml import safe_load, YAMLError
 
 
-def plot_reinforcement(r_avg_list, plot: bool = False):
-    if plot is False:
-        return
-    plt.plot(r_avg_list)
-    plt.ylabel('Average reward per game')
-    plt.xlabel('Number of games')
-    plt.show()
+class MyDict(dict):
+    debug = False
 
+    def __init__(self, debug=False, **kwargs):
+        super().__init__(**kwargs)
+        self.debug = debug
 
-def create_model(env: MyEnv) -> Sequential:
-    model = Sequential()
-    model.add(InputLayer(batch_input_shape=(1, env.num_states_)))
-    model.add(Dense(env.num_states_ * env.num_actions_, activation='sigmoid'))
-    model.add(Dense(env.num_actions_, activation='linear'))
-    model.compile(loss='mse', optimizer='adam', metrics=['mae'])
-    model.summary()
-    return model
+    def __getattr__(self, key):
+        if key in self:
+            return self.get(key)
+        raise KeyError('Key <{}> not present in dictionary'.format(key))
 
+    def __setattr__(self, key, value):
+        self[key] = value
 
-def onehot(num_states: int, state: int) -> np.ndarray:
-    return np.identity(num_states)[state:state + 1]
+    def log(self, *args, **kwargs):
+        if self.debug is True:
+            print(*args, **kwargs)
 
-
-def predict(model, num_states, state) -> int:
-    return int(np.argmax(model.predict(onehot(num_states, state))))
-
-
-def predict_value(model, num_states, state):
-    return np.max(model.predict(onehot(num_states, state)))
-
-
-def q_learning(env: MyEnv, num_episodes: int = 1000,
-               plot: bool = False) -> list:
-    """
-    Implements the RL learning loop over an environment.
-
-    :type env: MyEnv
-    :type num_episodes: int
-    :type plot: bool
-    """
-    # create the Keras model
-    model = create_model(env)
-
-    # now execute the q learning
-    y = 0.95
-    eps = 0.2
-    decay_factor = 0.999
-    r_avg_list = []
-    num_states: int = env.num_states_
-    num_actions = env.num_actions_
-
-    # Loop over 'num_episodes'
-    for i in range(num_episodes):
-        s = env.reset()
-        eps *= decay_factor
-        if i % 100 == 0:
-            print("Episode {} of {}".format(i, num_episodes))
-        done = False
-        r_sum = 0
-        while not done:
-            if np.random.random() < eps:
-                a = np.random.randint(0, num_actions)
+    def add_dict(self, this_object, param_dictionary):
+        for param_name in param_dictionary.keys():
+            self.log('ATTR: <{}> type is {}'.format(
+                param_name, type(param_dictionary[param_name])))
+            attribute_name = '_{}'.format(param_name)
+            if type(param_dictionary[param_name]) is not dict:
+                self.log(' - Setting attr name {} to {}'.format(
+                    attribute_name, param_dictionary[param_name]))
+                setattr(this_object, attribute_name,
+                        param_dictionary[param_name])
             else:
-                a = predict(model, num_states, s)
-            new_s, r, done, _ = env.step(a)
-            target = r + y * predict_value(model, num_states, new_s)
-            target_vec = model.predict(onehot(num_states, s))[0]
-            target_vec[a] = target
-            model.fit(onehot(num_states, s),
-                      target_vec.reshape(-1, num_actions),
-                      epochs=1, verbose=0)
-            s = new_s
-            r_sum += r
-        r_avg_list.append(r_sum / num_episodes)
+                self.log(' x Dictionary Found!')
 
-    plot_reinforcement(r_avg_list, plot)
-    strategy = [
-        np.argmax(model.predict(np.identity(num_states)[i:i + 1])[0])
-        for i in range(num_states)
-    ]
-    print_strategy(env, model, num_states, strategy)
+                self.log('   > Creating new dict() with name <{}>'.format(
+                    attribute_name))
+                setattr(this_object, attribute_name, MyDict())
 
-    return strategy
+                self.log('     > New Attribute <{}> type is: {}'.format(
+                    attribute_name, type(getattr(this_object, attribute_name))
+                ))
+                new_object = getattr(this_object, attribute_name)
+
+                self.log('   > Calling recursively with dict')
+                self.log('     {}'.format(param_dictionary[param_name]))
+                this_object.add_dict(new_object, param_dictionary[param_name])
 
 
-def main():
-    env = MyEnv([value_states, forecast_states, share_states], debug=True)
-    strategy = q_learning(env, 10000)
+class Trader(MyDict):
 
-    done = False
-    state = env.reset(debug=True)
-    while not done:
-        a = env.decide(state, strategy)
-        new_state, r, done, _ = env.step(a)
+    def __init__(self, default_params_filename='params.yaml', **kwargs):
+        """
+        Read the parameters from a default filename
+        :return:
+        """
+        super().__init__(**kwargs)
+        params = {}
+        cwd = Path(getcwd())
+        params_path: str = str(cwd.joinpath(default_params_filename))
 
+        with open(params_path, 'r') as stream:
+            try:
+                params = safe_load(stream)
+            except YAMLError as exc:
+                print(exc)
 
-main()
+        self.add_dict(self, params)
+
+        # Check that I've states and actions to start playing with.
+        if not self._action or not self._state:
+            raise AssertionError('No states or actions defined in config file.')
+
+        # Build the reverse dictionary for the actions dictionary
+        setattr(self, '_action_id', dict())
+        for tup in zip(range(len(self._action)), self._action):
+            self._action_id[tup[0]] = tup[1]
