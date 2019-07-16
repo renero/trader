@@ -1,6 +1,10 @@
 #
+# Parameters to start a simulation with a trader
+# @renero
 #
-#
+
+# Data Path. Where is the data from which learning how to invest?
+data_path: ../data/forecast_Gold_Inflation
 
 # Parameters for the Q-Learning function
 y: 0.95
@@ -36,6 +40,6 @@ action:
   - buy
   - sell
 
-# environment variables
+# Environment variables
 environment:
   initial_budget: 1000.

@@ -4,7 +4,6 @@ from display import Display as display
 from chart import Chart as plot
 from environment import Environment
 from nnmodel import NNModel
-from trader import Trader
 
 
 class QLearning(object):

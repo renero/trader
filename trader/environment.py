@@ -19,7 +19,7 @@ action_dict = {
 }
 
 
-class Environment:
+class Environment(object):
     num_states_ = 0
     max_states_ = 0
     num_actions_ = 0
@@ -41,11 +41,10 @@ class Environment:
     def initialize(self,
                    states_list,
                    num_actions=3,
-                   path='../data/forecast_Gold_Inflation',
                    debug=False):
         self.debug = debug
         self.num_actions_ = num_actions
-        self.read_data(path)
+        self.read_data(self._data_path)
         self.set_price()
         self.portfolio_ = Portfolio(self._environment._initial_budget,
                                     self.price_,
