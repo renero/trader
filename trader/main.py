@@ -18,14 +18,20 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 def main():
     trader = Trader()
     environment = Environment(trader)
-    strategy = QLearning(trader).q_learn(environment)
+    learner = QLearning(trader)
+    strategy = learner.q_learn(environment)
 
     done = False
     state = environment.reset(debug=True)
+    total_reward = 0.
     while not done:
         a = environment.decide(state, strategy)
-        new_state, r, done, _ = environment.step(a)
+        new_state, reward, done, _ = environment.step(a)
         state = new_state
+        total_reward += reward
 
+    # Save the model?
+    if trader._save_model is True:
+        learner.nn.save_model(learner.model)
 
 main()

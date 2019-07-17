@@ -35,6 +35,7 @@ class Environment(object):
         self.states = RLStates(self._states_list)
         self._num_states = self.states.max_id
         self.set_state()
+        # Update the original contextual dictionary with the params just set.
         context_dictionary.update(self.__dict__)
 
     def log(self, *args, **kwargs):
