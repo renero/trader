@@ -104,10 +104,6 @@ class Trader(MyDict):
 
         # Specific attributes to store number of actions and states.
         setattr(self, '_num_actions', len(self._action))
-        # total_num_states = 0
-        # for state_list in self._state:
-        #     total_num_states += len(state_list)
-        # setattr(self, '_num_states', # )
 
         # Build a list of lists with the names of all possible states.
         setattr(self, '_states_list', list())

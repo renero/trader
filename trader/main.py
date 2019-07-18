@@ -2,6 +2,9 @@
 # Largely based on:
 # https://adventuresinmachinelearning.com/reinforcement-learning-tutorial-python-keras/
 #
+# Forecast for GoldPrice comes from the code in DeepLearninginFinance:
+#   https://github.com/sonaam1234/DeepLearningInFinance
+#
 
 import os
 
@@ -19,7 +22,7 @@ def main():
     trader = Trader()
     environment = Environment(trader)
     learner = QLearning(trader)
-    strategy = learner.q_learn(environment)
+    strategy = learner.q_learn(environment, do_plot=True)
 
     done = False
     state = environment.reset(debug=True)
@@ -30,8 +33,9 @@ def main():
         state = new_state
         total_reward += reward
 
-    # Save the model?
+    # Save the model?
     if trader._save_model is True:
         learner.nn.save_model(learner.model)
+
 
 main()

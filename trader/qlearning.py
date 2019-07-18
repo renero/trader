@@ -13,16 +13,17 @@ class QLearning(object):
         self.nn = NN(context_dictionary)
         self.model = None
 
-    @staticmethod
-    def onehot(num_states: int, state: int) -> np.ndarray:
-        return np.identity(num_states)[state:state + 1]
+    def onehot(self, state: int) -> np.ndarray:
+        return np.identity(self._num_states)[state:state + 1]
 
     def predict(self, state) -> int:
         return int(
-            np.argmax(self.model.predict(self.onehot(self._num_states, state))))
+            np.argmax(
+                self.model.predict(
+                    self.onehot(state))))
 
     def predict_value(self, state):
-        return np.max(self.model.predict(self.onehot(self._num_states, state)))
+        return np.max(self.model.predict(self.onehot(state)))
 
     def get_strategy(self):
         """
@@ -31,7 +32,7 @@ class QLearning(object):
         """
         strategy = [
             np.argmax(
-                self.model.predict(np.identity(self._num_states)[i:i + 1])[0])
+                self.model.predict(self.onehot(i))[0])
             for i in range(self._num_states)
         ]
         return strategy
@@ -61,9 +62,9 @@ class QLearning(object):
                 new_s, r, done, _ = env.step(a)
                 target = r + self._y * self.predict_value(new_s)
                 target_vec = \
-                    self.model.predict(self.onehot(self._num_states, s))[0]
+                    self.model.predict(self.onehot(s))[0]
                 target_vec[a] = target
-                self.model.fit(self.onehot(self._num_states, s),
+                self.model.fit(self.onehot(s),
                                target_vec.reshape(-1, self._num_actions),
                                epochs=1, verbose=0)
                 s = new_s
@@ -73,17 +74,18 @@ class QLearning(object):
 
     def q_learn(self, env: Environment, do_plot: bool = False) -> list:
         """
-        Implements the RL learning loop over an environment.
+        Learns or Load an strategy to follow over a given environment,
+        using RL.
 
         :type env: Environment
         :type do_plot: bool
         """
-        # create the Keras modeln and learn
-        self.model = self.nn.create_model()
+        # create the Keras model and learn, or load it from disk.
         if self._load_model is True:
             self.model = self.nn.load_model(self._model_file,
                                             self._weights_file)
         else:
+            self.model = self.nn.create_model()
             avg_rewards = self.learn(env)
 
         # Extract the strategy matrix from the model.
