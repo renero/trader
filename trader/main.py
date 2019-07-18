@@ -28,7 +28,7 @@ def main():
     state = environment.reset(debug=True)
     total_reward = 0.
     while not done:
-        a = environment.decide(state, strategy)
+        a = environment.decide_next_action(state, strategy)
         new_state, reward, done, _ = environment.step(a)
         state = new_state
         total_reward += reward

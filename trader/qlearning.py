@@ -41,7 +41,7 @@ class QLearning(object):
         """
         Implements the learning loop over the states, actions and strategies
         to learn what is the sequence of actions that maximize reward.
-        :param env:
+        :param env: the environment
         :return:
         """
         # now execute the q learning
