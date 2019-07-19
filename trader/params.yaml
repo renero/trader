@@ -9,9 +9,9 @@ models_dir: ../data/
 save_model: false
 
 # Specify here if you want to load a pre-trained model
-load_model: true
-model_file: ../data/model1.json
-weights_file: ../data/model1.h5
+load_model: false
+model_file: ../output/model1.json
+weights_file: ../output/model1.h5
 
 # Parameters for the Q-Learning function
 y: 0.95

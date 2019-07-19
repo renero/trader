@@ -54,31 +54,12 @@ class Environment(object):
                                     self.debug)
         return self.set_state()
 
-    def set_state(self):
-        # state of my portfolio value
-        if self.portfolio_.budget == self.portfolio_.initial_budget:
-            value = 'EVEN'
-        elif self.portfolio_.budget > self.portfolio_.initial_budget:
-            value = 'WIN'
-        else:
-            value = 'LOSE'
-        # guess what the state, given the forecast
-        if self.portfolio_.forecast == self.portfolio_.latest_price:
-            forecast = 'EVEN'
-        elif self.portfolio_.forecast > self.portfolio_.latest_price:
-            forecast = 'WIN'
-        else:
-            forecast = 'LOSE'
-        # Do I have shares in my portfolio?
-        if self.portfolio_.shares > 0.:
-            shares_state = 'HAVE'
-        else:
-            shares_state = 'DONTHAVE'
-
-        self.current_state_ = self.states.get_id(value, forecast, shares_state)
-        return self.current_state_
-
     def read_data(self, path):
+        """
+        Reads the simulation data.
+        :param path:
+        :return:
+        """
         self.data_ = pd.read_csv(path)
         self.max_states_ = self.data_.shape[0]
 
@@ -88,7 +69,45 @@ class Environment(object):
         self.price_ = self.data_.iloc[self.t, 0]
         self.forecast_ = self.data_.iloc[self.t, 1]
 
+    @staticmethod
+    def decide_next_action(state, strategy):
+        return strategy[state]
+
+    def set_state(self):
+        """
+        Determine the state of my portfolio value
+        :return: New state
+        """
+        if self.portfolio_.budget == self.portfolio_.initial_budget:
+            value = 'EVEN'
+        elif self.portfolio_.budget > self.portfolio_.initial_budget:
+            value = 'WIN'
+        else:
+            value = 'LOSE'
+
+        # guess what the state, given the forecast
+        if self.portfolio_.forecast == self.portfolio_.latest_price:
+            forecast = 'EVEN'
+        elif self.portfolio_.forecast > self.portfolio_.latest_price:
+            forecast = 'WIN'
+        else:
+            forecast = 'LOSE'
+
+        # Do I have shares in my portfolio?
+        if self.portfolio_.shares > 0.:
+            shares_state = 'HAVE'
+        else:
+            shares_state = 'DONTHAVE'
+
+        self.current_state_ = self.states.get_id(value, forecast, shares_state)
+        return self.current_state_
+
     def step(self, action):
+        """
+        Send an action to my Environment.
+        :param action: the action.
+        :return: state, reward, done and iter count.
+        """
         assert action < self._num_actions, \
             'Action ID must be between 0 and {}'.format(
                 self.num_actions_)
@@ -116,7 +135,3 @@ class Environment(object):
         self.portfolio_.report(self.t)
 
         return self.new_state_, self.reward_, self.done_, self.t
-
-    @staticmethod
-    def decide(state, strategy):
-        return strategy[state]

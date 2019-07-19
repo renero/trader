@@ -7,13 +7,6 @@ h = h1 + h2
 s = ' {:>03d} |{:>8.1f} |{:>9.1f} |{:>9.1f} |{:>+9.1f} |{:>8.1f} |{:>7.1f} '
 f = '                           {:>9.1f} |{:>9.1f} |{:>8.1f} |{:>7.1f}'
 
-# REWARD_DO_NOTHING = 0
-# REWARD_FAILED_BUY = -1
-# REWARD_SUCCESS_BUY = -2
-# REWARD_FAILED_SELL = -1
-# REWARD_POSITIVE_SELL = +10
-# REWARD_NEGATIVE_SELL = -1
-
 
 class Portfolio:
     initial_budget = 0.
