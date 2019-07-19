@@ -34,12 +34,12 @@ class Portfolio:
         self.report(t=0, disp_header=True)
         return
 
-    def log(self, *args, **kwargs):
+    def _log(self, *args, **kwargs):
         if self.debug is True:
             print(*args, **kwargs)
 
     def do_nothing(self):
-        self.log('| {:<7s}'.format('none'), end='')
+        self._log('| {:<7s}'.format('none'), end='')
 
         self.reward = self._environment._reward_do_nothing
         return self.reward
@@ -47,7 +47,7 @@ class Portfolio:
     def buy(self, num_shares: float = 1.0) -> object:
         purchase_amount = num_shares * self.latest_price
         if purchase_amount > self.budget:
-            self.log('| {:<7s}'.format('n/a'), end='')
+            self._log('| {:<7s}'.format('n/a'), end='')
             self.reward = self._environment._reward_failed_buy
             return self.reward
 
@@ -57,7 +57,7 @@ class Portfolio:
         self.portfolio_value += purchase_amount
         self.movements.append((BUY, num_shares, self.latest_price))
 
-        self.log('| +{:6.1f}'.format(self.latest_price), end='')
+        self._log('| +{:6.1f}'.format(self.latest_price), end='')
 
         self.reward = self._environment._reward_success_buy
 
@@ -66,7 +66,7 @@ class Portfolio:
     def sell(self, num_shares=1.0):
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
-            self.log('| {:<7s}'.format('n/a'), end='')
+            self._log('| {:<7s}'.format('n/a'), end='')
             self.reward = self._environment._reward_failed_sell
             return self.reward
 
@@ -76,7 +76,7 @@ class Portfolio:
         self.portfolio_value -= sell_price
         self.movements.append((SELL, num_shares, self.latest_price))
 
-        self.log('| -{:6.1f}'.format(self.latest_price), end='')
+        self._log('| -{:6.1f}'.format(self.latest_price), end='')
 
         if self.budget > self.initial_budget:
             self.reward = self._environment._reward_positive_sell
@@ -95,19 +95,19 @@ class Portfolio:
         header = h.format('t', 'price', 'forecast', 'budget', 'net val.',
                           'value', 'shares', 'action', 'reward', 'state')
         if disp_header is True:
-            self.log(header)
-            self.log('{}'.format('-' * (len(header) + 8), sep=''))
+            self._log(header)
+            self._log('{}'.format('-' * (len(header) + 8), sep=''))
 
         if disp_footer is True:
             footer = f.format(self.budget,
                               self.investment * -1.,
                               self.portfolio_value,
                               self.shares)
-            self.log('{}'.format('-' * (len(header) + 8), sep=''))
-            self.log(footer)
+            self._log('{}'.format('-' * (len(header) + 8), sep=''))
+            self._log(footer)
             return
 
-        self.log(s.format(
+        self._log(s.format(
             t,
             self.latest_price,
             self.forecast,

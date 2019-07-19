@@ -1,7 +1,9 @@
+import importlib
+
 import pandas as pd
 
 from portfolio import Portfolio
-from rlstates import RLStates
+from scombiner import SCombiner
 
 
 class Environment(object):
@@ -32,9 +34,9 @@ class Environment(object):
                                     self.price_,
                                     self.forecast_,
                                     debug)
-        self.states = RLStates(self._states_list)
+        self.states = SCombiner(self._states_list)
         self._num_states = self.states.max_id
-        self.set_state()
+        self.update_state()
         # Update the original contextual dictionary with the params just set.
         context_dictionary.update(self.__dict__)
 
@@ -43,6 +45,11 @@ class Environment(object):
             print(*args, **kwargs)
 
     def reset(self, debug=False):
+        """
+        Reset all internal states
+        :param debug:
+        :return:
+        """
         self.debug = debug
         del self.portfolio_
         self.done_ = False
@@ -52,7 +59,7 @@ class Environment(object):
                                     self.price_,
                                     self.forecast_,
                                     self.debug)
-        return self.set_state()
+        return self.update_state()
 
     def read_data(self, path):
         """
@@ -64,7 +71,10 @@ class Environment(object):
         self.max_states_ = self.data_.shape[0]
 
     def set_price(self):
-        """ Set the price to the current time slot, reading column 0 from DF """
+        """
+        Set the price to the current time slot,
+        reading column 0 from DF
+        """
         assert self.data_ is not None, 'Price series data has not been read yet'
         self.price_ = self.data_.iloc[self.t, 0]
         self.forecast_ = self.data_.iloc[self.t, 1]
@@ -73,33 +83,25 @@ class Environment(object):
     def decide_next_action(state, strategy):
         return strategy[state]
 
-    def set_state(self):
+    def update_state(self):
         """
         Determine the state of my portfolio value
         :return: New state
         """
-        if self.portfolio_.budget == self.portfolio_.initial_budget:
-            value = 'EVEN'
-        elif self.portfolio_.budget > self.portfolio_.initial_budget:
-            value = 'WIN'
-        else:
-            value = 'LOSE'
+        # Iterate through the list of states defined in the parameters file
+        # and call the update_state() static method in them.
+        new_substates = []
+        for module_param_name in self._state.keys():
+            # The extended classes are defined in the params file and must
+            # start with the 'state_' string.
+            # The '[1:]' serves to remove the leading underscore.
+            module_name = 'state_' + module_param_name[1:]
+            module = importlib.import_module(module_name)
+            new_substates.append(
+                getattr(module, module_name).update_state(self.portfolio_))
 
-        # guess what the state, given the forecast
-        if self.portfolio_.forecast == self.portfolio_.latest_price:
-            forecast = 'EVEN'
-        elif self.portfolio_.forecast > self.portfolio_.latest_price:
-            forecast = 'WIN'
-        else:
-            forecast = 'LOSE'
-
-        # Do I have shares in my portfolio?
-        if self.portfolio_.shares > 0.:
-            shares_state = 'HAVE'
-        else:
-            shares_state = 'DONTHAVE'
-
-        self.current_state_ = self.states.get_id(value, forecast, shares_state)
+        # Get the ID resulting from the combination of the sub-states
+        self.current_state_ = self.states.get_id(*new_substates)
         return self.current_state_
 
     def step(self, action):
@@ -131,7 +133,7 @@ class Environment(object):
 
         self.set_price()
         self.portfolio_.update(self.price_, self.forecast_)
-        self.new_state_ = self.set_state()
+        self.new_state_ = self.update_state()
         self.portfolio_.report(self.t)
 
         return self.new_state_, self.reward_, self.done_, self.t
