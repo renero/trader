@@ -7,9 +7,7 @@ from scombiner import SCombiner
 
 
 class Environment(object):
-    num_states_ = 0
     max_states_ = 0
-    num_actions_ = 0
     data_ = None
     current_state_ = 0
     t = 0
@@ -37,7 +35,9 @@ class Environment(object):
         self.states = SCombiner(self._states_list)
         self._num_states = self.states.max_id
         self.update_state()
-        # Update the original contextual dictionary with the params just set.
+
+        # Update the original contextual dictionary with the
+        # new parameters just set in this constructor
         context_dictionary.update(self.__dict__)
 
     def log(self, *args, **kwargs):
@@ -112,7 +112,7 @@ class Environment(object):
         """
         assert action < self._num_actions, \
             'Action ID must be between 0 and {}'.format(
-                self.num_actions_)
+                self._num_actions)
 
         if action == self._action_name.do_nothing:
             self.portfolio_.do_nothing()

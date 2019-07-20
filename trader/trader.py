@@ -110,3 +110,11 @@ class Trader(MyDict):
         for state in self._state.keys():
             if state[0] == '_':
                 self._states_list.append(self._state[state]._names)
+
+    @property
+    def save_model(self):
+        return self._save_model
+
+    @property
+    def state(self):
+        return self._state

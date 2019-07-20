@@ -1,6 +1,3 @@
-BUY = +1
-SELL = -1
-
 h1 = ' {:<3s} |{:>8s} |{:>9s} |{:>9s} |{:>9s} |{:>8s} |{:>7s} '
 h2 = '| {:<7s} | {:<9s}| {:20s}'
 h = h1 + h2
@@ -9,6 +6,7 @@ f = '                           {:>9.1f} |{:>9.1f} |{:>8.1f} |{:>7.1f}'
 
 
 class Portfolio:
+
     initial_budget = 0.
     budget = 0.
     investment = 0
@@ -20,19 +18,26 @@ class Portfolio:
     movements = []
     debug = False
 
+    # Constants
+    BUY = +1
+    SELL = -1
+
     def __init__(self,
                  context_dictionary,
                  initial_price=0.,
                  forecast=0.,
                  debug=False):
+
+        # copy the contents of the dictionary passed as argument. This dict
+        # contains the parameters read in the initialization.
         self.__dict__.update(context_dictionary)
+
         self.debug = debug
-        self.budget = self._environment._initial_budget
-        self.initial_budget = self._environment._initial_budget
+        self.budget = self.environment._initial_budget
+        self.initial_budget = self.environment._initial_budget
         self.latest_price = initial_price
         self.forecast = forecast
         self.report(t=0, disp_header=True)
-        return
 
     def _log(self, *args, **kwargs):
         if self.debug is True:
@@ -41,25 +46,25 @@ class Portfolio:
     def do_nothing(self):
         self._log('| {:<7s}'.format('none'), end='')
 
-        self.reward = self._environment._reward_do_nothing
+        self.reward = self.environment._reward_do_nothing
         return self.reward
 
     def buy(self, num_shares: float = 1.0) -> object:
         purchase_amount = num_shares * self.latest_price
         if purchase_amount > self.budget:
             self._log('| {:<7s}'.format('n/a'), end='')
-            self.reward = self._environment._reward_failed_buy
+            self.reward = self.environment._reward_failed_buy
             return self.reward
 
         self.budget -= purchase_amount
         self.investment += purchase_amount
         self.shares += num_shares
         self.portfolio_value += purchase_amount
-        self.movements.append((BUY, num_shares, self.latest_price))
+        self.movements.append((self.BUY, num_shares, self.latest_price))
 
         self._log('| +{:6.1f}'.format(self.latest_price), end='')
 
-        self.reward = self._environment._reward_success_buy
+        self.reward = self.environment._reward_success_buy
 
         return self.reward
 
@@ -67,21 +72,21 @@ class Portfolio:
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
             self._log('| {:<7s}'.format('n/a'), end='')
-            self.reward = self._environment._reward_failed_sell
+            self.reward = self.environment._reward_failed_sell
             return self.reward
 
         self.budget += sell_price
         self.investment -= sell_price
         self.shares -= num_shares
         self.portfolio_value -= sell_price
-        self.movements.append((SELL, num_shares, self.latest_price))
+        self.movements.append((self.SELL, num_shares, self.latest_price))
 
         self._log('| -{:6.1f}'.format(self.latest_price), end='')
 
         if self.budget > self.initial_budget:
-            self.reward = self._environment._reward_positive_sell
+            self.reward = self.environment._reward_positive_sell
         else:
-            self.reward = self._environment._reward_negative_sell
+            self.reward = self.environment._reward_negative_sell
 
         return self.reward
 
@@ -115,3 +120,7 @@ class Portfolio:
             self.investment * -1.,
             self.portfolio_value,
             self.shares), end='')
+
+    @property
+    def environment(self):
+        return self._environment

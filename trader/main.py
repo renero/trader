@@ -22,19 +22,18 @@ def main():
     trader = Trader()
     environment = Environment(trader)
     learner = QLearning(trader)
-    strategy = learner.q_learn(environment, do_plot=True)
+    strategy = learner.q_learn(environment)
 
     done = False
     state = environment.reset(debug=True)
     total_reward = 0.
     while not done:
-        a = environment.decide_next_action(state, strategy)
-        new_state, reward, done, _ = environment.step(a)
-        state = new_state
+        action = environment.decide_next_action(state, strategy)
+        state, reward, done, _ = environment.step(action)
         total_reward += reward
 
     # Save the model?
-    if trader._save_model is True:
+    if trader.save_model is True:
         learner.nn.save_model(learner.model)
 
 
