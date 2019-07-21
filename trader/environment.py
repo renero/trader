@@ -26,8 +26,8 @@ class Environment(object):
         self.context_dictionary = context_dictionary
 
         self.debug = debug
-        self.read_data(self._data_path)
-        self.set_price()
+        self.read_market_data(self._data_path)
+        self.update_market_price()
         self.portfolio_ = Portfolio(self.__dict__,
                                     self.price_,
                                     self.forecast_,
@@ -54,14 +54,14 @@ class Environment(object):
         del self.portfolio_
         self.done_ = False
         self.t = 0
-        self.set_price()
+        self.update_market_price()
         self.portfolio_ = Portfolio(self.__dict__,
                                     self.price_,
                                     self.forecast_,
                                     self.debug)
         return self.update_state()
 
-    def read_data(self, path):
+    def read_market_data(self, path):
         """
         Reads the simulation data.
         :param path:
@@ -70,7 +70,7 @@ class Environment(object):
         self.data_ = pd.read_csv(path)
         self.max_states_ = self.data_.shape[0]
 
-    def set_price(self):
+    def update_market_price(self):
         """
         Set the price to the current time slot,
         reading column 0 from DF
@@ -97,8 +97,11 @@ class Environment(object):
             # The '[1:]' serves to remove the leading underscore.
             module_name = 'state_' + module_param_name[1:]
             module = importlib.import_module(module_name)
-            new_substates.append(
-                getattr(module, module_name).update_state(self.portfolio_))
+            state_class = getattr(module, module_name)
+            new_substate = state_class.update_state(self.portfolio_)
+            new_substates.append(new_substate)
+            # new_substates.append(
+            #     getattr(module, module_name).update_state(self.portfolio_))
 
         # Get the ID resulting from the combination of the sub-states
         self.current_state_ = self.states.get_id(*new_substates)
@@ -114,13 +117,16 @@ class Environment(object):
             'Action ID must be between 0 and {}'.format(
                 self._num_actions)
 
-        if action == self._action_name.do_nothing:
-            self.portfolio_.do_nothing()
-            self.reward_ = 0.
-        if action == self._action_name.buy:
-            self.reward_ = self.portfolio_.buy()
-        if action == self._action_name.sell:
-            self.reward_ = self.portfolio_.sell()
+        self.reward_ = getattr(self.portfolio_, self._action_name[action])()
+
+        # if action == self._action_name.do_nothing:
+        #     self.portfolio_.do_nothing()
+        #     self.reward_ = 0.
+        # if action == self._action_name.buy:
+        #     self.reward_ = self.portfolio_.buy()
+        # if action == self._action_name.sell:
+        #     self.reward_ = self.portfolio_.sell()
+
         self.log(' | R: {:>+5.1f} | {:s}'.format(
             self.reward_, self.states.name(self.current_state_)))
 
@@ -131,7 +137,7 @@ class Environment(object):
             self.log("")
             return self.new_state_, self.reward_, self.done_, self.t
 
-        self.set_price()
+        self.update_market_price()
         self.portfolio_.update(self.price_, self.forecast_)
         self.new_state_ = self.update_state()
         self.portfolio_.report(self.t)

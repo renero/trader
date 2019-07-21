@@ -93,14 +93,14 @@ class Trader(MyDict):
             raise AssertionError('No states or actions defined in config file.')
 
         # Build a dictionary with a sequential number associated to each action
-        setattr(self, '_action_name', MyDict())
+        setattr(self, '_action_id', MyDict())
         for tup in zip(self._action, range(len(self._action))):
-            self._action_name[tup[0]] = tup[1]
+            self._action_id[tup[0]] = tup[1]
 
         # Build the reverse dictionary for the actions dictionary
-        setattr(self, '_action_id', MyDict())
+        setattr(self, '_action_name', MyDict())
         for tup in zip(range(len(self._action)), self._action):
-            self._action_id[tup[0]] = tup[1]
+            self._action_name[tup[0]] = tup[1]
 
         # Specific attributes to store number of actions and states.
         setattr(self, '_num_actions', len(self._action))
