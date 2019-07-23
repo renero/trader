@@ -24,17 +24,11 @@ class Environment(object):
         # First, update the internal dictionary with the parameters read.
         self.__dict__.update(context_dictionary)
         self.context_dictionary = context_dictionary
-
         self.debug = debug
-        self.read_market_data(self._data_path)
-        self.update_market_price()
-        self.portfolio_ = Portfolio(self.__dict__,
-                                    self.price_,
-                                    self.forecast_,
-                                    debug)
         self.states = SCombiner(self._states_list)
         self._num_states = self.states.max_id
-        self.update_state()
+        self.read_market_data(self._data_path)
+        self.init_portfolio()
 
         # Update the original contextual dictionary with the
         # new parameters just set in this constructor
@@ -44,22 +38,29 @@ class Environment(object):
         if self.debug is True:
             print(*args, **kwargs)
 
-    def reset(self, debug=False):
+    def init_portfolio(self):
         """
-        Reset all internal states
-        :param debug:
-        :return:
+        Initialize the portfolio by updating market price according to the
+        current timeslot 't', creating a new object, and updating the
+        internal state of the environment accordingly.
+        :return: The initial state.
         """
-        self.debug = debug
-        del self.portfolio_
-        self.done_ = False
-        self.t = 0
         self.update_market_price()
         self.portfolio_ = Portfolio(self.__dict__,
                                     self.price_,
                                     self.forecast_,
                                     self.debug)
         return self.update_state()
+
+    def reset(self):
+        """
+        Reset all internal states
+        :return:
+        """
+        self.done_ = False
+        self.t = 0
+        del self.portfolio_
+        return self.init_portfolio()
 
     def read_market_data(self, path):
         """
@@ -100,8 +101,6 @@ class Environment(object):
             state_class = getattr(module, module_name)
             new_substate = state_class.update_state(self.portfolio_)
             new_substates.append(new_substate)
-            # new_substates.append(
-            #     getattr(module, module_name).update_state(self.portfolio_))
 
         # Get the ID resulting from the combination of the sub-states
         self.current_state_ = self.states.get_id(*new_substates)
@@ -117,16 +116,9 @@ class Environment(object):
             'Action ID must be between 0 and {}'.format(
                 self._num_actions)
 
+        # Call to the proper portfolio method, based on the action number
+        # passed to this argument.
         self.reward_ = getattr(self.portfolio_, self._action_name[action])()
-
-        # if action == self._action_name.do_nothing:
-        #     self.portfolio_.do_nothing()
-        #     self.reward_ = 0.
-        # if action == self._action_name.buy:
-        #     self.reward_ = self.portfolio_.buy()
-        # if action == self._action_name.sell:
-        #     self.reward_ = self.portfolio_.sell()
-
         self.log(' | R: {:>+5.1f} | {:s}'.format(
             self.reward_, self.states.name(self.current_state_)))
 

@@ -25,8 +25,10 @@ def main():
     strategy = learner.q_learn(environment)
 
     done = False
-    state = environment.reset(debug=True)
     total_reward = 0.
+    environment.debug = True
+    environment.portfolio_.debug = True
+    state = environment.reset()
     while not done:
         action = environment.decide_next_action(state, strategy)
         state, reward, done, _ = environment.step(action)

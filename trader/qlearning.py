@@ -37,7 +37,7 @@ class QLearning(object):
         ]
         return strategy
 
-    def learn(self, env):
+    def learn(self, env: Environment):
         """
         Implements the learning loop over the states, actions and strategies
         to learn what is the sequence of actions that maximize reward.
@@ -61,8 +61,7 @@ class QLearning(object):
                     a = self.predict(s)
                 new_s, r, done, _ = env.step(a)
                 target = r + self._y * self.predict_value(new_s)
-                target_vec = \
-                    self.model.predict(self.onehot(s))[0]
+                target_vec = self.model.predict(self.onehot(s))[0]
                 target_vec[a] = target
                 self.model.fit(self.onehot(s),
                                target_vec.reshape(-1, self._num_actions),
