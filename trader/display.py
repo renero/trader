@@ -10,7 +10,7 @@ class Display:
             env.states.max_len)
         for i in range(num_states):
             print(strategy_string.format(
-                env.states.name(i), trader._action_id[strategy[i]],
+                env.states.name(i),
+                trader.configuration._action_name[strategy[i]],
                 model.predict(np.identity(num_states)[i:i + 1])))
         print()
-
