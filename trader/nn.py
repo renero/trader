@@ -3,21 +3,24 @@ import os
 from keras.layers import Dense, InputLayer
 from keras.models import Sequential, model_from_json
 
+from dictionary import Dictionary
+
 
 class NN(object):
 
-    def __init__(self, context_dictionary):
-        self.__dict__.update(context_dictionary)
+    def __init__(self, configuration: Dictionary):
+        self.configuration = configuration
 
     def create_model(self) -> Sequential:
         model = Sequential()
-        model.add(InputLayer(batch_input_shape=(1, self._num_states)))
         model.add(
-            Dense(self._num_states * self._num_actions,
-                  input_shape=(self._num_states, ),
+            InputLayer(batch_input_shape=(1, self.configuration._num_states)))
+        model.add(
+            Dense(self.configuration._num_states * self.configuration._num_actions,
+                  input_shape=(self.configuration._num_states,),
                   activation='sigmoid'))
-        model.add(Dense(self._num_actions,
-                        input_shape=(self._num_states * self._num_actions, ),
+        model.add(Dense(self.configuration._num_actions,
+                        input_shape=(self.configuration._num_states * self.configuration._num_actions,),
                         activation='linear'))
         model.compile(loss='mse', optimizer='adam', metrics=['mae'])
         model.summary()
@@ -30,7 +33,7 @@ class NN(object):
         char_to_append = ''
         while not solved:
             basename = 'model' + char_to_append + '.json'
-            fname = os.path.join(self._models_dir, basename)
+            fname = os.path.join(self.configuration._models_dir, basename)
             if os.path.isfile(fname) is not True:
                 solved = True
             else:
