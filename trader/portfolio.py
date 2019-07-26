@@ -1,3 +1,6 @@
+from common import Common
+from dictionary import Dictionary
+
 h1 = ' {:<3s} |{:>8s} |{:>9s} |{:>9s} |{:>9s} |{:>8s} |{:>7s} '
 h2 = '| {:<7s} | {:<9s}| {:20s}'
 h = h1 + h2
@@ -5,8 +8,8 @@ s = ' {:>03d} |{:>8.1f} |{:>9.1f} |{:>9.1f} |{:>+9.1f} |{:>8.1f} |{:>7.1f} '
 f = '                           {:>9.1f} |{:>9.1f} |{:>8.1f} |{:>7.1f}'
 
 
-class Portfolio:
-
+class Portfolio(Common):
+    configuration: Dictionary
     initial_budget = 0.
     budget = 0.
     investment = 0
@@ -16,44 +19,38 @@ class Portfolio:
     forecast: float = 0.
     reward = 0.
     movements = []
-    debug = False
+    history = []
 
     # Constants
     BUY = +1
     SELL = -1
 
     def __init__(self,
-                 context_dictionary,
+                 configuration,
                  initial_price=0.,
-                 forecast=0.,
-                 debug=False):
+                 forecast=0.):
 
         # copy the contents of the dictionary passed as argument. This dict
         # contains the parameters read in the initialization.
-        self.__dict__.update(context_dictionary)
+        self.configuration = configuration
 
-        self.debug = debug
-        self.budget = self.environment._initial_budget
-        self.initial_budget = self.environment._initial_budget
+        self.budget = self.configuration._environment._initial_budget
+        self.initial_budget = self.configuration._environment._initial_budget
         self.latest_price = initial_price
         self.forecast = forecast
         self.report(t=0, disp_header=True)
 
-    def _log(self, *args, **kwargs):
-        if self.debug is True:
-            print(*args, **kwargs)
-
     def do_nothing(self):
-        self._log('| {:<7s}'.format('none'), end='')
+        self.log('| {:<7s}'.format('none'), end='')
 
-        self.reward = self.environment._reward_do_nothing
+        self.reward = self.configuration._environment._reward_do_nothing
         return self.reward
 
     def buy(self, num_shares: float = 1.0) -> object:
         purchase_amount = num_shares * self.latest_price
         if purchase_amount > self.budget:
-            self._log('| {:<7s}'.format('n/a'), end='')
-            self.reward = self.environment._reward_failed_buy
+            self.log('| {:<7s}'.format('n/a'), end='')
+            self.reward = self.configuration._environment._reward_failed_buy
             return self.reward
 
         self.budget -= purchase_amount
@@ -62,17 +59,17 @@ class Portfolio:
         self.portfolio_value += purchase_amount
         self.movements.append((self.BUY, num_shares, self.latest_price))
 
-        self._log('| +{:6.1f}'.format(self.latest_price), end='')
+        self.log('| +{:6.1f}'.format(self.latest_price), end='')
 
-        self.reward = self.environment._reward_success_buy
+        self.reward = self.configuration._environment._reward_success_buy
 
         return self.reward
 
     def sell(self, num_shares=1.0):
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
-            self._log('| {:<7s}'.format('n/a'), end='')
-            self.reward = self.environment._reward_failed_sell
+            self.log('| {:<7s}'.format('n/a'), end='')
+            self.reward = self.configuration._environment._reward_failed_sell
             return self.reward
 
         self.budget += sell_price
@@ -81,12 +78,12 @@ class Portfolio:
         self.portfolio_value -= sell_price
         self.movements.append((self.SELL, num_shares, self.latest_price))
 
-        self._log('| -{:6.1f}'.format(self.latest_price), end='')
+        self.log('| -{:6.1f}'.format(self.latest_price), end='')
 
         if self.budget > self.initial_budget:
-            self.reward = self.environment._reward_positive_sell
+            self.reward = self.configuration._environment._reward_positive_sell
         else:
-            self.reward = self.environment._reward_negative_sell
+            self.reward = self.configuration._environment._reward_negative_sell
 
         return self.reward
 
@@ -100,19 +97,19 @@ class Portfolio:
         header = h.format('t', 'price', 'forecast', 'budget', 'net val.',
                           'value', 'shares', 'action', 'reward', 'state')
         if disp_header is True:
-            self._log(header)
-            self._log('{}'.format('-' * (len(header) + 8), sep=''))
+            self.log(header)
+            self.log('{}'.format('-' * (len(header) + 8), sep=''))
 
         if disp_footer is True:
             footer = f.format(self.budget,
                               self.investment * -1.,
                               self.portfolio_value,
                               self.shares)
-            self._log('{}'.format('-' * (len(header) + 8), sep=''))
-            self._log(footer)
+            self.log('{}'.format('-' * (len(header) + 8), sep=''))
+            self.log(footer)
             return
 
-        self._log(s.format(
+        self.log(s.format(
             t,
             self.latest_price,
             self.forecast,
@@ -121,6 +118,21 @@ class Portfolio:
             self.portfolio_value,
             self.shares), end='')
 
+    def reset_history(self):
+        # print('>> RESET HISTORY')
+        del self.history[:]
+
+    def append_to_history(self, environment):
+        # Stack the current state into the history
+        self.history.append({'price_': environment.price_,
+                             'forecast_': environment.forecast_})
+        if len(self.history) > self.configuration._stack_size:
+            self.history.pop(0)
+
     @property
-    def environment(self):
-        return self._environment
+    def last_forecast(self):
+        return self.history[-1]['forecast_']
+
+    @property
+    def last_price(self):
+        return self.history[-1]['price_']

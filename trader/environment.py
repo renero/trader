@@ -2,11 +2,14 @@ import importlib
 
 import pandas as pd
 
+from common import Common
 from portfolio import Portfolio
 from scombiner import SCombiner
 
 
-class Environment(object):
+class Environment(Common):
+
+    configuration = None
     max_states_ = 0
     data_ = None
     current_state_ = 0
@@ -16,27 +19,15 @@ class Environment(object):
     forecast_ = 0.
     max_actions_ = 0
     done_ = False
-    reward_ = 0.
+    reward_ = 0
     new_state_: int = 0
-    debug = False
 
-    def __init__(self, context_dictionary, debug=False):
-        # First, update the internal dictionary with the parameters read.
-        self.__dict__.update(context_dictionary)
-        self.context_dictionary = context_dictionary
-        self.debug = debug
-        self.states = SCombiner(self._states_list)
-        self._num_states = self.states.max_id
-        self.read_market_data(self._data_path)
+    def __init__(self, configuration):
+
+        self.configuration = configuration
+        self.states = SCombiner(self.configuration.states_list)
+        self.read_market_data(self.configuration._data_path)
         self.init_portfolio()
-
-        # Update the original contextual dictionary with the
-        # new parameters just set in this constructor
-        context_dictionary.update(self.__dict__)
-
-    def log(self, *args, **kwargs):
-        if self.debug is True:
-            print(*args, **kwargs)
 
     def init_portfolio(self):
         """
@@ -46,10 +37,9 @@ class Environment(object):
         :return: The initial state.
         """
         self.update_market_price()
-        self.portfolio_ = Portfolio(self.__dict__,
+        self.portfolio_ = Portfolio(self.configuration,
                                     self.price_,
-                                    self.forecast_,
-                                    self.debug)
+                                    self.forecast_)
         return self.update_state()
 
     def reset(self):
@@ -92,7 +82,7 @@ class Environment(object):
         # Iterate through the list of states defined in the parameters file
         # and call the update_state() static method in them.
         new_substates = []
-        for module_param_name in self._state.keys():
+        for module_param_name in self.configuration._state.keys():
             # The extended classes are defined in the params file and must
             # start with the 'state_' string.
             # The '[1:]' serves to remove the leading underscore.
@@ -112,13 +102,14 @@ class Environment(object):
         :param action: the action.
         :return: state, reward, done and iter count.
         """
-        assert action < self._num_actions, \
+        assert action < self.configuration._num_actions, \
             'Action ID must be between 0 and {}'.format(
-                self._num_actions)
+                self.configuration._num_actions)
 
         # Call to the proper portfolio method, based on the action number
         # passed to this argument.
-        self.reward_ = getattr(self.portfolio_, self._action_name[action])()
+        self.reward_ = getattr(self.portfolio_,
+                               self.configuration._action_name[action])()
         self.log(' | R: {:>+5.1f} | {:s}'.format(
             self.reward_, self.states.name(self.current_state_)))
 
@@ -126,6 +117,7 @@ class Environment(object):
         if self.t >= self.max_states_:
             self.done_ = True
             self.portfolio_.report(self.t - 1, disp_footer=True)
+            self.portfolio_.reset_history()
             self.log("")
             return self.new_state_, self.reward_, self.done_, self.t
 
@@ -133,5 +125,6 @@ class Environment(object):
         self.portfolio_.update(self.price_, self.forecast_)
         self.new_state_ = self.update_state()
         self.portfolio_.report(self.t)
+        self.portfolio_.append_to_history(self)
 
         return self.new_state_, self.reward_, self.done_, self.t
