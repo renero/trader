@@ -113,9 +113,9 @@ class Portfolio(Common):
                 total = self.budget + self.portfolio_value
             else:
                 total = self.budget
-            self.log('Final: €{:.2f} [{:.2f}%]'.format(
-                total,
-                100. * ((total / self.initial_budget) - 1.0)))
+            percentage = 100. * ((total / self.initial_budget) - 1.0)
+            self.log('Final: €{:.2f} [{}%]'.format(
+                total, self.color(percentage)))
             return
 
         self.log(s.format(
