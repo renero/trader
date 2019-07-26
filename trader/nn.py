@@ -50,7 +50,7 @@ class NN(object):
 
         # serialize weights to HDF5
         basename = 'model' + char_to_append + '.h5'
-        fname = os.path.join(self._models_dir, basename)
+        fname = os.path.join(self.configuration._models_dir, basename)
         model.save_weights(fname)
         print('Saved weights to disk: {}'.format(fname))
 

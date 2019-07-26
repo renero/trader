@@ -6,12 +6,12 @@
 # Data Path. Where is the data from which learning how to invest?
 data_path: ../data/forecast_Gold_Inflation
 models_dir: ../data/
-save_model: false
+save_model: true
 
 # Specify here if you want to load a pre-trained model
 load_model: false
-model_file: ../output/model1.json
-weights_file: ../output/model1.h5
+model_file: ../output/model.json
+weights_file: ../output/model.h5
 
 # Parameters for the Q-Learning function
 y: 0.95
@@ -25,7 +25,7 @@ num_episodes_update: 100
 stack_size: 3
 
 # Num. of episodes to run simulate and learn
-num_episodes: 10000
+num_episodes: 5000
 
 # Different states in which the environment might be.
 state:

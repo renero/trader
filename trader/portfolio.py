@@ -107,6 +107,15 @@ class Portfolio(Common):
                               self.shares)
             self.log('{}'.format('-' * (len(header) + 8), sep=''))
             self.log(footer)
+
+            # total outcome
+            if self.portfolio_value != 0.0:
+                total = self.budget + self.portfolio_value
+            else:
+                total = self.budget
+            self.log('Final: €{:.2f} [{:.2f}%]'.format(
+                total,
+                100. * ((total / self.initial_budget) - 1.0)))
             return
 
         self.log(s.format(
