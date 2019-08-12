@@ -8,7 +8,7 @@ class state_got_shares(RL_State):
     def update_state(portfolio: Portfolio):
         # Do I have shares in my portfolio?
         if portfolio.shares > 0.:
-            shares_state = 'HAVE'
+            shares_state = 'YESHAVE'
         else:
-            shares_state = 'DONTHAVE'
+            shares_state = 'NOTHAVE'
         return shares_state

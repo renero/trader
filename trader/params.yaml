@@ -34,21 +34,21 @@ state:
   portfolio_value:
     names:
       - EVEN
-      - WIN
+      - WINN
       - LOSE
   forecast:
     names:
-      - EVEN
-      - WIN
-      - LOSE
+      - STAL
+      - GOUP
+      - DOWN
   got_shares:
     names:
-      - HAVE
-      - DONTHAVE
+      - YESHAVE
+      - NOTHAVE
   last_prediction:
     names:
       - PRED_UNK
-      - PRED_OK
+      - PRED_OOK
       - PRED_NOK
 
 # Actions to be accomplished by the agent (Portfolio class)

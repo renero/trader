@@ -1,10 +1,14 @@
 from common import Common
 from dictionary import Dictionary
 
-h1 = ' {:<3s} |{:>8s} |{:>9s} |{:>9s} |{:>9s} |{:>8s} |{:>7s} '
-h2 = '| {:<7}| {:<9s}| {:20s}'
+h1 = ' {:<3s} |{:>8s} |{:>9s} |{:>9s} |{:>9s} |{:>9s} |{:>9s} |{:>7s} '
+h2 = '| {:<7}| {:<7s}| {:20s}'
 h = h1 + h2
-s = ' {:>03d} |{:>8.1f} |{:>9.1f} |{:>9.1f} |{:>18} |{:>8.1f} |{:>7.1f} '
+
+s1 = ' {:>03d} |'
+s2 = '{:>8.1f} |{:>18} |{:>9.1f} |{:>18} |{:>9.1f} |{:>18} |{:>7.1f} '
+s = s1 + s2
+
 f = '                           {:>9.1f} |{:>18} |{:>8.1f} |{:>7.1f}'
 act_h = '| {:<15}'
 
@@ -96,8 +100,10 @@ class Portfolio(Common):
 
     def report(self, t, disp_header=False, disp_footer=False):
         header = h.format('t', 'price', 'forecast', 'budget', '€.flow',
-                          'value', 'shares', 'action', 'reward', 'state')
+                          'value', 'net.Val', 'shares',
+                          'action', 'reward', 'state')
         if disp_header is True:
+            self.log()
             self.log(header)
             self.log('{}'.format('-' * (len(header) + 8), sep=''))
 
@@ -122,10 +128,11 @@ class Portfolio(Common):
         self.log(s.format(
             t,
             self.latest_price,
-            self.forecast,
+            self.cond_color(self.forecast, self.latest_price),
             self.budget,
             self.color(self.investment * -1.),
             self.portfolio_value,
+            self.color(self.portfolio_value - self.investment),
             self.shares), end='')
 
     def reset_history(self):

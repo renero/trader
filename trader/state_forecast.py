@@ -8,9 +8,9 @@ class state_forecast(RL_State):
     def update_state(portfolio: Portfolio):
         # guess what the state, given the forecast
         if portfolio.forecast == portfolio.latest_price:
-            forecast = 'EVEN'
+            forecast = 'STAL'
         elif portfolio.forecast > portfolio.latest_price:
-            forecast = 'WIN'
+            forecast = 'GOUP'
         else:
-            forecast = 'LOSE'
+            forecast = 'DOWN'
         return forecast

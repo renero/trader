@@ -110,7 +110,7 @@ class Environment(Common):
         # passed to this argument.
         self.reward_ = getattr(self.portfolio_,
                                self.configuration._action_name[action])()
-        self.log(' | R: {:>14} | {:s}'.format(
+        self.log(' | {:>15} | {:s}'.format(
             self.color(self.reward_), self.states.name(self.current_state_)))
 
         self.t += 1

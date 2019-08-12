@@ -28,3 +28,14 @@ class Common:
             number = 0.0
             string = '{:.1f}'.format(number)
             return self.white(string)
+
+    def cond_color(self, number, ref):
+        string = '{:.1f}'.format(number)
+        if number > ref:
+            return self.green(string)
+        elif number < ref:
+            return self.red(string)
+        else:
+            number = 0.0
+            string = '{:.1f}'.format(number)
+            return self.white(string)

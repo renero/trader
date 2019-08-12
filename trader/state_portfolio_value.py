@@ -9,7 +9,7 @@ class state_portfolio_value(RL_State):
         if portfolio.budget == portfolio.initial_budget:
             value = 'EVEN'
         elif portfolio.budget > portfolio.initial_budget:
-            value = 'WIN'
+            value = 'WINN'
         else:
             value = 'LOSE'
         return value
