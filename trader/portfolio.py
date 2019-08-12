@@ -9,7 +9,7 @@ s1 = ' {:>03d} |'
 s2 = '{:>8.1f} |{:>18} |{:>9.1f} |{:>18} |{:>9.1f} |{:>18} |{:>7.1f} '
 s = s1 + s2
 
-f = '                           {:>9.1f} |{:>18} |{:>8.1f} |{:>7.1f}'
+f = '                           {:>9.1f} |{:>18} |{:>9.1f} |{:>18} |{:>7.1f}'
 act_h = '| {:<15}'
 
 
@@ -111,6 +111,8 @@ class Portfolio(Common):
             footer = f.format(self.budget,
                               self.color(self.investment * -1.),
                               self.portfolio_value,
+                              self.color(
+                                  self.portfolio_value - self.investment),
                               self.shares)
             self.log('{}'.format('-' * (len(header) + 8), sep=''))
             self.log(footer)
