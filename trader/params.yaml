@@ -7,11 +7,11 @@
 data_path: ../data/forecast_Gold_Inflation.csv
 
 # Wanna save the model after training?
-save_model: false
+save_model: true
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
-load_model: true
+load_model: false
 model_file: ../output/model1.json
 weights_file: ../output/model1.h5
 
@@ -27,7 +27,7 @@ num_episodes_update: 10
 stack_size: 3
 
 # Num. of episodes to run simulate and learn
-num_episodes: 2500
+num_episodes: 10000
 
 # Different states in which the environment might be.
 state:

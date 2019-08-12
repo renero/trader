@@ -53,8 +53,9 @@ class QLearning(object):
             self.configuration._eps *= self.configuration._decay_factor
             if i % self.configuration._num_episodes_update == 0:
                 print(
-                    "Episode {} of {}".format(
-                        i, self.configuration._num_episodes))
+                    "Episode {} of {}. Avg rewards: {}".format(
+                        i, self.configuration._num_episodes,
+                        avg_rewards[-1]))
             done = False
             sum_rewards = 0
             while not done:
