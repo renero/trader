@@ -23,7 +23,8 @@ def main():
     configuration._debug = False
     environment = Environment(configuration)
     learner = QLearning(configuration)
-    strategy = learner.q_learn(environment)
+    strategy = learner.q_learn(environment,
+                               display_strategy=False, do_plot=True)
 
     done = False
     total_reward = 0.
