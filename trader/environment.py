@@ -110,8 +110,8 @@ class Environment(Common):
         # passed to this argument.
         self.reward_ = getattr(self.portfolio_,
                                self.configuration._action_name[action])()
-        self.log(' | R: {:>+5.1f} | {:s}'.format(
-            self.reward_, self.states.name(self.current_state_)))
+        self.log(' | {:>15} | {:s}'.format(
+            self.color(self.reward_), self.states.name(self.current_state_)))
 
         self.t += 1
         if self.t >= self.max_states_:

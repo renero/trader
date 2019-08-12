@@ -1,7 +1,7 @@
 """
 I will place here common functions used across all modules.
 """
-
+from termcolor import colored
 
 class Common:
 
@@ -10,14 +10,32 @@ class Common:
             print(*args, **kwargs)
 
     def green(self, string):
-        return '\033[92m{}\033[0m'.format(string)
+        return colored('{}'.format(string), 'green')
 
     def red(self, string):
-        return '\033[91m{}\033[0m'.format(string)
+        return colored('{}'.format(string), 'red')
+
+    def white(self, string):
+        return colored('{}'.format(string), 'white')
 
     def color(self, number):
-        string = '{:.1f}'.format(number)
-        if number >= 0.0:
+        string = '{:+.1f}'.format(number)
+        if number > 0.0:
             return self.green(string)
-        else:
+        elif number < 0.0:
             return self.red(string)
+        else:
+            number = 0.0
+            string = '{:.1f}'.format(number)
+            return self.white(string)
+
+    def cond_color(self, number, ref):
+        string = '{:.1f}'.format(number)
+        if number > ref:
+            return self.green(string)
+        elif number < ref:
+            return self.red(string)
+        else:
+            number = 0.0
+            string = '{:.1f}'.format(number)
+            return self.white(string)

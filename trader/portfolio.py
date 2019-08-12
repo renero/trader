@@ -1,11 +1,16 @@
 from common import Common
 from dictionary import Dictionary
 
-h1 = ' {:<3s} |{:>8s} |{:>9s} |{:>9s} |{:>9s} |{:>8s} |{:>7s} '
-h2 = '| {:<7s} | {:<9s}| {:20s}'
+h1 = ' {:<3s} |{:>8s} |{:>9s} |{:>9s} |{:>9s} |{:>9s} |{:>9s} |{:>7s} '
+h2 = '| {:<7}| {:<7s}| {:20s}'
 h = h1 + h2
-s = ' {:>03d} |{:>8.1f} |{:>9.1f} |{:>9.1f} |{:>+9.1f} |{:>8.1f} |{:>7.1f} '
-f = '                           {:>9.1f} |{:>9.1f} |{:>8.1f} |{:>7.1f}'
+
+s1 = ' {:>03d} |'
+s2 = '{:>8.1f} |{:>18} |{:>9.1f} |{:>18} |{:>9.1f} |{:>18} |{:>7.1f} '
+s = s1 + s2
+
+f = '                           {:>9.1f} |{:>18} |{:>8.1f} |{:>7.1f}'
+act_h = '| {:<15}'
 
 
 class Portfolio(Common):
@@ -41,7 +46,7 @@ class Portfolio(Common):
         self.report(t=0, disp_header=True)
 
     def do_nothing(self):
-        self.log('| {:<7s}'.format('none'), end='')
+        self.log(act_h.format('none'), end='')
 
         self.reward = self.configuration._environment._reward_do_nothing
         return self.reward
@@ -49,7 +54,7 @@ class Portfolio(Common):
     def buy(self, num_shares: float = 1.0) -> object:
         purchase_amount = num_shares * self.latest_price
         if purchase_amount > self.budget:
-            self.log('| {:<7s}'.format('n/a'), end='')
+            self.log(act_h.format('n/a'), end='')
             self.reward = self.configuration._environment._reward_failed_buy
             return self.reward
 
@@ -59,7 +64,7 @@ class Portfolio(Common):
         self.portfolio_value += purchase_amount
         self.movements.append((self.BUY, num_shares, self.latest_price))
 
-        self.log('| +{:6.1f}'.format(self.latest_price), end='')
+        self.log(act_h.format(self.red('buy')), end='')
 
         self.reward = self.configuration._environment._reward_success_buy
 
@@ -68,7 +73,7 @@ class Portfolio(Common):
     def sell(self, num_shares=1.0):
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
-            self.log('| {:<7s}'.format('n/a'), end='')
+            self.log(act_h.format(self.white('n/a')), end='')
             self.reward = self.configuration._environment._reward_failed_sell
             return self.reward
 
@@ -78,7 +83,7 @@ class Portfolio(Common):
         self.portfolio_value -= sell_price
         self.movements.append((self.SELL, num_shares, self.latest_price))
 
-        self.log('| -{:6.1f}'.format(self.latest_price), end='')
+        self.log(act_h.format(self.green('sell')), end='')
 
         if self.budget > self.initial_budget:
             self.reward = self.configuration._environment._reward_positive_sell
@@ -94,15 +99,17 @@ class Portfolio(Common):
         return self
 
     def report(self, t, disp_header=False, disp_footer=False):
-        header = h.format('t', 'price', 'forecast', 'budget', 'net val.',
-                          'value', 'shares', 'action', 'reward', 'state')
+        header = h.format('t', 'price', 'forecast', 'budget', '€.flow',
+                          'value', 'net.Val', 'shares',
+                          'action', 'reward', 'state')
         if disp_header is True:
+            self.log()
             self.log(header)
             self.log('{}'.format('-' * (len(header) + 8), sep=''))
 
         if disp_footer is True:
             footer = f.format(self.budget,
-                              self.investment * -1.,
+                              self.color(self.investment * -1.),
                               self.portfolio_value,
                               self.shares)
             self.log('{}'.format('-' * (len(header) + 8), sep=''))
@@ -114,17 +121,18 @@ class Portfolio(Common):
             else:
                 total = self.budget
             percentage = 100. * ((total / self.initial_budget) - 1.0)
-            self.log('Final: €{:.2f} [{}%]'.format(
+            self.log('Final: €{:.2f} [{} %]'.format(
                 total, self.color(percentage)))
             return
 
         self.log(s.format(
             t,
             self.latest_price,
-            self.forecast,
+            self.cond_color(self.forecast, self.latest_price),
             self.budget,
-            self.investment * -1.,
+            self.color(self.investment * -1.),
             self.portfolio_value,
+            self.color(self.portfolio_value - self.investment),
             self.shares), end='')
 
     def reset_history(self):

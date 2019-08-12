@@ -95,7 +95,10 @@ class QLearning(object):
             target_vec.reshape(-1, self.configuration._num_actions),
             epochs=1, verbose=0)
 
-    def q_learn(self, env: Environment, do_plot: bool = False) -> list:
+    def q_learn(self,
+                env: Environment,
+                display_strategy: bool = False,
+                do_plot: bool = False) -> list:
         """
         Learns or Load an strategy to follow over a given environment,
         using RL.
@@ -117,7 +120,11 @@ class QLearning(object):
         # display anything?
         if do_plot is True and self.configuration._load_model is False:
             plot.reinforcement(avg_rewards, do_plot)
-        display.strategy(self, env, self.model, self.configuration._num_states,
-                         strategy)
+        if display_strategy:
+            display.strategy(self,
+                             env,
+                             self.model,
+                             self.configuration._num_states,
+                             strategy)
 
         return strategy
