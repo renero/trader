@@ -37,7 +37,6 @@ class Portfolio(Common):
         self.display.report(self, t=0, disp_header=True)
 
     def do_nothing(self):
-        # self.log(act_h.format('none'), end='')
         self.display.report_action('none')
 
         self.reward = self.configuration._environment._reward_do_nothing
@@ -46,7 +45,6 @@ class Portfolio(Common):
     def buy(self, num_shares: float = 1.0) -> object:
         purchase_amount = num_shares * self.latest_price
         if purchase_amount > self.budget:
-            # self.log(act_h.format('n/a'), end='')
             self.display.report_action('n/a')
             self.reward = self.configuration._environment._reward_failed_buy
             return self.reward
@@ -57,7 +55,6 @@ class Portfolio(Common):
         self.portfolio_value += purchase_amount
         self.movements.append((self.BUY, num_shares, self.latest_price))
 
-        # self.log(act_h.format(self.red('buy')), end='')
         self.display.report_action('buy')
 
         self.reward = self.configuration._environment._reward_success_buy
@@ -67,7 +64,6 @@ class Portfolio(Common):
     def sell(self, num_shares=1.0):
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
-            # self.log(act_h.format(self.white('n/a')), end='')
             self.display.report_action('n/a')
             self.reward = self.configuration._environment._reward_failed_sell
             return self.reward
@@ -78,7 +74,6 @@ class Portfolio(Common):
         self.portfolio_value -= sell_price
         self.movements.append((self.SELL, num_shares, self.latest_price))
 
-        # self.log(act_h.format(self.green('sell')), end='')
         self.display.report_action('sell')
 
         if self.budget > self.initial_budget:

@@ -26,9 +26,9 @@ class Environment(Common):
         self.configuration = configuration
         self.states = SCombiner(self.configuration.states_list)
         self.read_market_data(self.configuration._data_path)
-        self.init_portfolio()
+        self.init_environment()
 
-    def init_portfolio(self):
+    def init_environment(self):
         """
         Initialize the portfolio by updating market price according to the
         current timeslot 't', creating a new object, and updating the
@@ -49,7 +49,7 @@ class Environment(Common):
         self.done_ = False
         self.t = 0
         del self.portfolio_
-        return self.init_portfolio()
+        return self.init_environment()
 
     def read_market_data(self, path):
         """
@@ -115,7 +115,6 @@ class Environment(Common):
         self.t += 1
         if self.t >= self.max_states_:
             self.done_ = True
-            # self.portfolio_.report(self.t - 1, disp_footer=True)
             self.portfolio_.display.report(self.portfolio_,
                                            self.t - 1,
                                            disp_footer=True)
@@ -126,7 +125,6 @@ class Environment(Common):
         self.update_market_price()
         self.portfolio_.update(self.price_, self.forecast_)
         self.new_state_ = self.update_state()
-        # self.portfolio_.report(self.t)
         self.portfolio_.display.report(self.portfolio_, self.t)
         self.portfolio_.append_to_history(self)
 

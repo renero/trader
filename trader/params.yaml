@@ -3,11 +3,11 @@
 # @renero
 #
 
-# Data Path. Where is the data from which learning how to invest?
+# Data Path. Where is the data from which l#earning how to invest?
 data_path: ../data/forecast20.csv
 
 # Wanna save the model after training?
-save_model: false
+save_model: true
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model

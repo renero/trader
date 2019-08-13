@@ -59,8 +59,10 @@ class QLearning(object):
                 if avg_rewards:
                     last_avg = avg_rewards[-1]
                 print(
-                    "Episode {:>5}/{:>5}. Avg reward: {:.1f}".format(
-                        i, self.configuration._num_episodes, last_avg))
+                    "Episode {:>5}/{:<5} [{}%] Avg reward: {:+.3f}".format(
+                        i, self.configuration._num_episodes,
+                        int(i / self.configuration._num_episodes),
+                        self.color(last_avg)))
 
             done = False
             sum_rewards = 0
