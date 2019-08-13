@@ -4,10 +4,10 @@
 #
 
 # Data Path. Where is the data from which learning how to invest?
-data_path: ../data/forecast_Gold_Inflation.csv
+data_path: ../data/forecast20.csv
 
 # Wanna save the model after training?
-save_model: true
+save_model: false
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
@@ -21,13 +21,13 @@ eps: 0.5
 decay_factor: 0.999
 
 # Every how many episodes display the update in q-learning?
-num_episodes_update: 10
+num_episodes_update: 100
 
 # How many previous states of the environment to store?
 stack_size: 3
 
 # Num. of episodes to run simulate and learn
-num_episodes: 10000
+num_episodes: 1000
 
 # Different states in which the environment might be.
 state:

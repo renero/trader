@@ -16,12 +16,16 @@ class NN(object):
         model.add(
             InputLayer(batch_input_shape=(1, self.configuration._num_states)))
         model.add(
-            Dense(self.configuration._num_states * self.configuration._num_actions,
-                  input_shape=(self.configuration._num_states,),
-                  activation='sigmoid'))
-        model.add(Dense(self.configuration._num_actions,
-                        input_shape=(self.configuration._num_states * self.configuration._num_actions,),
-                        activation='linear'))
+            Dense(
+                self.configuration._num_states * self.configuration._num_actions,
+                input_shape=(self.configuration._num_states,),
+                activation='sigmoid'))
+        model.add(
+            Dense(
+                self.configuration._num_actions,
+                input_shape=(
+                self.configuration._num_states * self.configuration._num_actions,),
+                activation='linear'))
         model.compile(loss='mse', optimizer='adam', metrics=['mae'])
         model.summary()
 

@@ -8,7 +8,6 @@ from scombiner import SCombiner
 
 
 class Environment(Common):
-
     configuration = None
     max_states_ = 0
     data_ = None
@@ -116,7 +115,10 @@ class Environment(Common):
         self.t += 1
         if self.t >= self.max_states_:
             self.done_ = True
-            self.portfolio_.report(self.t - 1, disp_footer=True)
+            # self.portfolio_.report(self.t - 1, disp_footer=True)
+            self.portfolio_.display.report(self.portfolio_,
+                                           self.t - 1,
+                                           disp_footer=True)
             self.portfolio_.reset_history()
             self.log("")
             return self.new_state_, self.reward_, self.done_, self.t
@@ -124,7 +126,8 @@ class Environment(Common):
         self.update_market_price()
         self.portfolio_.update(self.price_, self.forecast_)
         self.new_state_ = self.update_state()
-        self.portfolio_.report(self.t)
+        # self.portfolio_.report(self.t)
+        self.portfolio_.display.report(self.portfolio_, self.t)
         self.portfolio_.append_to_history(self)
 
         return self.new_state_, self.reward_, self.done_, self.t

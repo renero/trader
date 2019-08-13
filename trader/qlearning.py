@@ -47,17 +47,25 @@ class QLearning(object):
         """
         # now execute the q learning
         avg_rewards = []
+        avg_loss = []
+        avg_mae = []
+        last_avg: float = 0.0
+
         # Loop over 'num_episodes'
         for i in range(self.configuration._num_episodes):
             state = env.reset()
             self.configuration._eps *= self.configuration._decay_factor
             if i % self.configuration._num_episodes_update == 0:
+                if avg_rewards:
+                    last_avg = avg_rewards[-1]
                 print(
                     "Episode {} of {}. Avg rewards: {}".format(
-                        i, self.configuration._num_episodes,
-                        avg_rewards[-1]))
+                        i, self.configuration._num_episodes, last_avg))
+
             done = False
             sum_rewards = 0
+            sum_loss = 0
+            sum_mae = 0
             while not done:
                 # Decide whether generating random action or predict most
                 # likely from the give state.
@@ -70,12 +78,16 @@ class QLearning(object):
                 # Send the action to the environment and get new state,
                 # reward and information on whether we've finish.
                 new_state, reward, done, _ = env.step(action)
-                self.learn_step(action, new_state, reward, state)
+                loss, mae = self.learn_step(action, new_state, reward, state)
                 state = new_state
                 sum_rewards += reward
+                sum_loss += loss
+                sum_mae += mae
 
             avg_rewards.append(sum_rewards / self.configuration._num_episodes)
-        return avg_rewards
+            avg_loss.append(sum_loss / self.configuration._num_episodes)
+            avg_mae.append(sum_mae / self.configuration._num_episodes)
+        return avg_rewards, avg_loss, avg_mae
 
     def learn_step(self, action, new_state, reward, state):
         """
@@ -85,16 +97,17 @@ class QLearning(object):
         :param new_state:
         :param reward:
         :param state:
-        :return:
+        :return: the loss and the metric resulting from the training.
         """
         target = reward + self.configuration._y * self.predict_value(
             new_state)
         target_vec = self.model.predict(self.onehot(state))[0]
         target_vec[action] = target
-        self.model.fit(
+        history = self.model.fit(
             self.onehot(state),
             target_vec.reshape(-1, self.configuration._num_actions),
             epochs=1, verbose=0)
+        return history.history['loss'][0], history.history['mean_absolute_error'][0]
 
     def q_learn(self,
                 env: Environment,
@@ -113,14 +126,16 @@ class QLearning(object):
                                             self.configuration._weights_file)
         else:
             self.model = self.nn.create_model()
-            avg_rewards = self.learn(env)
+            avg_rewards, avg_loss, avg_mae = self.learn(env)
 
         # Extract the strategy matrix from the model.
         strategy = self.get_strategy()
 
         # display anything?
         if do_plot is True and self.configuration._load_model is False:
-            plot.reinforcement(avg_rewards, do_plot)
+            plot.chart(avg_rewards, 'Average reward per game', 'line', ma=True)
+            plot.chart(avg_loss, 'Avg loss', 'line', ma=True)
+            plot.chart(avg_mae, 'Avg MAE', 'line', ma=True)
         if display_strategy:
             display.strategy(self,
                              env,

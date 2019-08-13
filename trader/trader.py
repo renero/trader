@@ -19,13 +19,17 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def main():
+    # Init
     configuration = Dictionary()
     configuration._debug = False
     environment = Environment(configuration)
     learner = QLearning(configuration)
+
+    # Learn
     strategy = learner.q_learn(environment,
                                display_strategy=True, do_plot=True)
 
+    # Test
     done = False
     total_reward = 0.
     configuration._debug = True
