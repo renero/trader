@@ -7,13 +7,13 @@
 data_path: ../data/forecast20.csv
 
 # Wanna save the model after training?
-save_model: true
+save_model: false
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
-load_model: false
-model_file: ../output/model1.json
-weights_file: ../output/model1.h5
+load_model: true
+model_file: ../output/model3.json
+weights_file: ../output/model3.h5
 
 # Parameters for the Q-Learning function
 y: 0.95

@@ -20,7 +20,7 @@ from pathlib import Path
 
 from yaml import safe_load, YAMLError
 
-debug = True
+debug = False
 
 
 class MyDict(dict):

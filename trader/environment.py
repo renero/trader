@@ -3,6 +3,7 @@ import importlib
 import pandas as pd
 
 from common import Common
+from display import Display
 from portfolio import Portfolio
 from scombiner import SCombiner
 
@@ -24,6 +25,7 @@ class Environment(Common):
     def __init__(self, configuration):
 
         self.configuration = configuration
+        self.display = Display(configuration)
         self.states = SCombiner(self.configuration.states_list)
         self.read_market_data(self.configuration._data_path)
         self.init_environment()
@@ -115,9 +117,9 @@ class Environment(Common):
         self.t += 1
         if self.t >= self.max_states_:
             self.done_ = True
-            self.portfolio_.display.report(self.portfolio_,
-                                           self.t - 1,
-                                           disp_footer=True)
+            self.display.report(self.portfolio_,
+                                self.t - 1,
+                                disp_footer=True)
             self.portfolio_.reset_history()
             self.log("")
             return self.new_state_, self.reward_, self.done_, self.t
@@ -125,7 +127,7 @@ class Environment(Common):
         self.update_market_price()
         self.portfolio_.update(self.price_, self.forecast_)
         self.new_state_ = self.update_state()
-        self.portfolio_.display.report(self.portfolio_, self.t)
+        self.display.report(self.portfolio_, self.t)
         self.portfolio_.append_to_history(self)
 
         return self.new_state_, self.reward_, self.done_, self.t
