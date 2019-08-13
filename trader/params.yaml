@@ -27,7 +27,7 @@ num_episodes_update: 100
 stack_size: 3
 
 # Num. of episodes to run simulate and learn
-num_episodes: 1000
+num_episodes: 7500
 
 # Different states in which the environment might be.
 state:

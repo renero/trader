@@ -77,4 +77,4 @@ class Display(Common):
         elif action_name == 'buy':
             self.log(act_h.format(self.red('buy')), end='')
         else:
-            self.log(act_h.format('none'), end='')
+            self.log(act_h.format(self.white('none')), end='')

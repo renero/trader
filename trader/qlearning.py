@@ -59,7 +59,7 @@ class QLearning(object):
                 if avg_rewards:
                     last_avg = avg_rewards[-1]
                 print(
-                    "Episode {} of {}. Avg rewards: {}".format(
+                    "Episode {:>5}/{:>5}. Avg reward: {:.1f}".format(
                         i, self.configuration._num_episodes, last_avg))
 
             done = False
@@ -107,7 +107,8 @@ class QLearning(object):
             self.onehot(state),
             target_vec.reshape(-1, self.configuration._num_actions),
             epochs=1, verbose=0)
-        return history.history['loss'][0], history.history['mean_absolute_error'][0]
+        return history.history['loss'][0], \
+               history.history['mean_absolute_error'][0]
 
     def q_learn(self,
                 env: Environment,
