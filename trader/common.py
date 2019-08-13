@@ -3,6 +3,7 @@ I will place here common functions used across all modules.
 """
 from termcolor import colored
 
+
 class Common:
 
     def log(self, *args, **kwargs):
