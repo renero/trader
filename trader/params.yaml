@@ -4,14 +4,14 @@
 #
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../data/forecast20.csv
+data_path: ../data/forecast100.csv
 
 # Wanna save the model after training?
 save_model: false
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
-load_model: true
+load_model: false
 model_file: ../output/model3.json
 weights_file: ../output/model3.h5
 
@@ -50,6 +50,10 @@ state:
       - PRED_UNK
       - PRED_OOK
       - PRED_NOK
+  stop_loss:
+    names:
+      - STOPLOSS
+      - NOSTPLOS
 
 # Actions to be accomplished by the agent (Portfolio class)
 action:
@@ -60,12 +64,16 @@ action:
 # Environment variables
 environment:
   initial_budget: 2200.
+  stop_loss: .1
   reward_do_nothing: -1
   reward_failed_buy: -1
   reward_success_buy: 0
   reward_failed_sell: -3
   reward_positive_sell: +10
   reward_negative_sell: -1
+  reward_stoploss_donothing: -10
+  reward_stoploss_buy: -10
+  reward_stoploss_sell: +10
 
 # Debug flag
-debug: false
+debug: true

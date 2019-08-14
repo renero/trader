@@ -54,11 +54,9 @@ class Portfolio(Common):
         self.shares += num_shares
         self.portfolio_value += purchase_amount
         self.movements.append((self.BUY, num_shares, self.latest_price))
-
-        self.display.report_action('buy')
-
         self.reward = self.configuration._environment._reward_success_buy
 
+        self.display.report_action('buy')
         return self.reward
 
     def sell(self, num_shares=1.0):
@@ -73,14 +71,12 @@ class Portfolio(Common):
         self.shares -= num_shares
         self.portfolio_value -= sell_price
         self.movements.append((self.SELL, num_shares, self.latest_price))
-
-        self.display.report_action('sell')
-
         if self.budget > self.initial_budget:
             self.reward = self.configuration._environment._reward_positive_sell
         else:
             self.reward = self.configuration._environment._reward_negative_sell
 
+        self.display.report_action('sell')
         return self.reward
 
     def update(self, price, forecast):

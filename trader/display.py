@@ -78,3 +78,7 @@ class Display(Common):
             self.log(act_h.format(self.red('buy')), end='')
         else:
             self.log(act_h.format(self.white('none')), end='')
+
+    def report_reward(self, reward, current_state):
+        self.log(' | {:>15} | {:s}'.format(
+            self.color(reward), current_state))
