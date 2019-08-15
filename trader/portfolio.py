@@ -38,7 +38,6 @@ class Portfolio(Common):
 
     def do_nothing(self):
         self.display.report_action('none')
-
         self.reward = self.configuration._environment._reward_do_nothing
         return self.reward
 
