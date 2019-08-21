@@ -4,7 +4,7 @@
 #
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../data/forecast.csv
+data_path: ../data/forecast100.csv
 
 # Wanna save the model after training?
 save_model: true
@@ -27,7 +27,7 @@ num_episodes_update: 100
 stack_size: 3
 
 # Num. of episodes to run simulate and learn
-num_episodes: 7000
+num_episodes: 5000
 
 # Different states in which the environment might be.
 state:
@@ -47,13 +47,13 @@ state:
       - NOTHAVE
   last_prediction:
     names:
-      - PRED_UNK
-      - PRED_OOK
-      - PRED_NOK
-  stop_loss:
-    names:
-      - STOPLOSS
-      - NOSTPLOS
+      - PRED.UNKNW
+      - PRED.CRECT
+      - PRED.WRONG
+#  stop_loss:
+#    names:
+#      - STOPLOSS
+#      - NOSTPLOS
 
 # Actions to be accomplished by the agent (Portfolio class)
 action:

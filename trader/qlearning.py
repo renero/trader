@@ -1,7 +1,10 @@
+import sys
+import time
+
 import numpy as np
 
 from chart import Chart as plot
-from display import Display as display
+from display import Display
 from environment import Environment
 from nn import NN
 
@@ -13,6 +16,7 @@ class QLearning(object):
         self.configuration = configuration
         self.nn = NN(self.configuration)
         self.model = None
+        self.display = Display(configuration)
 
     def onehot(self, state: int) -> np.ndarray:
         return np.identity(self.configuration._num_states)[state:state + 1]
@@ -50,20 +54,18 @@ class QLearning(object):
         avg_loss = []
         avg_mae = []
         last_avg: float = 0.0
+        start = time.time()
 
         # Loop over 'num_episodes'
         for i in range(self.configuration._num_episodes):
             state = env.reset()
             self.configuration._eps *= self.configuration._decay_factor
             if i % self.configuration._num_episodes_update == 0:
+                end = time.time()
                 if avg_rewards:
                     last_avg = avg_rewards[-1]
-                print(
-                    "Episode {:>5}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
-                        i,
-                        self.configuration._num_episodes,
-                        (i / self.configuration._num_episodes)*100.0,
-                        last_avg))
+                self.display.progress(i, last_avg, start, end)
+                start = time.time()
 
             done = False
             sum_rewards = 0
