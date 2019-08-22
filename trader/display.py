@@ -100,6 +100,12 @@ class Display(Common):
 
     @staticmethod
     def timer(elapsed):
+        """
+        Returns a string with a time lapse duration passed in seconds as
+        a combination of hours, minutes and seconds.
+        :param elapsed: the period of time to express in hh:mm:ss
+        :return: a string
+        """
         hours, rem = divmod(elapsed, 3600)
         minutes, seconds = divmod(rem, 60)
         if int(seconds) == 0:

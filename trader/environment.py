@@ -125,7 +125,6 @@ class Environment(Common):
             self.done_ = True
             self.display.report(self.portfolio_, self.t - 1, disp_footer=True)
             self.portfolio_.reset_history()
-            self.log("")
             return self.new_state_, self.reward_, self.done_, self.t
 
         self.update_market_price()
@@ -137,8 +136,9 @@ class Environment(Common):
         return self.new_state_, self.reward_, self.done_, self.t
 
     def print_states(self):
-        self.log('List of states: ', end='')
-        self.log(','.join(self.configuration._state.keys()))
+        self.log('List of states: [{}]'.format(
+            '|'.join([(lambda x: x[1:])(s) for s in
+                      self.configuration._state.keys()])))
 
     def fix_reward(self, action_name: str) -> int:
         """
