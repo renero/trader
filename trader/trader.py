@@ -31,7 +31,7 @@ def main():
 
     # Learn
     strategy = learner.q_learn(environment,
-                               display_strategy=True, do_plot=True)
+                               display_strategy=False, do_plot=True)
 
     # Test
     done = False

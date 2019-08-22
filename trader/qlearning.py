@@ -1,4 +1,3 @@
-import sys
 import time
 
 import numpy as np
@@ -143,10 +142,10 @@ class QLearning(object):
             plot.chart(avg_loss, 'Avg loss', 'line', ma=True)
             plot.chart(avg_mae, 'Avg MAE', 'line', ma=True)
         if display_strategy:
-            display.strategy(self,
-                             env,
-                             self.model,
-                             self.configuration._num_states,
-                             strategy)
+            self.display.strategy(self,
+                                  env,
+                                  self.model,
+                                  self.configuration._num_states,
+                                  strategy)
 
         return strategy

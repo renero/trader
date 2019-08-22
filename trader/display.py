@@ -95,7 +95,7 @@ class Display(Common):
             print(' Est.time: UNKNOWN')
             return
         elapsed = end - start
-        remaining = ((1. - (percentage / 100.)) * elapsed) / percentage
+        remaining = ((100. - percentage) * elapsed) / percentage
         print(' Est.time: {}'.format(self.timer(remaining)))
 
     @staticmethod
