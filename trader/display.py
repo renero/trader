@@ -1,4 +1,6 @@
+import pandas as pd
 import numpy as np
+from pandas import Series
 
 from common import Common
 
@@ -21,6 +23,15 @@ class Display(Common):
 
     @staticmethod
     def strategy(trader, env, model, num_states, strategy):
+        """
+        Displays the strategy resulting from the learning process.
+        :param trader:
+        :param env:
+        :param model:
+        :param num_states:
+        :param strategy:
+        :return:
+        """
         print('\nStrategy learned')
         strategy_string = "State {{:<{}s}} -> {{:<10s}} {{}}".format(
             env.states.max_len)
@@ -31,37 +42,16 @@ class Display(Common):
                 model.predict(np.identity(num_states)[i:i + 1])))
         print()
 
-    def report(self, portfolio, t, disp_header=False, disp_footer=False):
-        header = h.format('t', 'price', 'forecast', 'budget', '€.flow',
-                          'value', 'net.Val', 'shares',
-                          'action', 'reward', 'state')
-        if disp_header is True:
-            self.log()
-            self.log(header)
-            self.log('{}'.format('-' * (len(header) + 8), sep=''))
-
-        if disp_footer is True:
-            footer = f.format(
-                portfolio.budget,
-                self.color(portfolio.investment * -1.),
-                portfolio.portfolio_value,
-                self.color(
-                    portfolio.portfolio_value - portfolio.investment),
-                portfolio.shares)
-            self.log('{}'.format('-' * (len(header) + 8), sep=''))
-            self.log(footer)
-
-            # total outcome
-            if portfolio.portfolio_value != 0.0:
-                total = portfolio.budget + portfolio.portfolio_value
-            else:
-                total = portfolio.budget
-            percentage = 100. * ((total / portfolio.initial_budget) - 1.0)
-            self.log('Final: €{:.2f} [{} %]'.format(
-                total, self.color(percentage)))
-            return
-
-        self.log(s.format(
+    def report(self, portfolio, t: int, disp_header=False, disp_footer=False):
+        """
+        Displays a simple report of tha main variables in the QLearning algo
+        :param portfolio:
+        :param t:
+        :param disp_header:
+        :param disp_footer:
+        :return:
+        """
+        values_to_report = [
             t,
             portfolio.latest_price,
             self.cond_color(portfolio.forecast, portfolio.latest_price),
@@ -69,9 +59,66 @@ class Display(Common):
             self.color(portfolio.investment * -1.),
             portfolio.portfolio_value,
             self.color(portfolio.portfolio_value - portfolio.investment),
-            portfolio.shares), end='')
+            portfolio.shares
+        ]
+
+        header = h.format(*self.configuration._table_headers)
+        if disp_header is True:
+            self.log('\n{}'.format(header))
+            self.log('{}'.format('-' * (len(header) + 8), sep=''))
+
+        if disp_footer is True:
+            self.report_footer(portfolio, len(header))
+            return
+
+        self.log(s.format(*values_to_report), end='')
+        self.add_to_table(values_to_report)
+
+    def add_to_table(self, values_to_report):
+        """
+        Add the report values to the results table.
+        :param values_to_report: the list of values
+        :return:
+        """
+        row = Series(dict(zip(
+            self.configuration._table_headers,
+            values_to_report
+        )))
+        self.configuration.results = self.configuration.results.append(
+            row, ignore_index=True)
+
+    def report_footer(self, portfolio, header_length):
+        """
+        Display only the summary
+        :param portfolio:
+        :param header_length:
+        :return:
+        """
+        footer = f.format(
+            portfolio.budget,
+            self.color(portfolio.investment * -1.),
+            portfolio.portfolio_value,
+            self.color(
+                portfolio.portfolio_value - portfolio.investment),
+            portfolio.shares)
+        self.log('{}'.format('-' * (header_length + 8), sep=''))
+        self.log(footer)
+
+        # total outcome
+        if portfolio.portfolio_value != 0.0:
+            total = portfolio.budget + portfolio.portfolio_value
+        else:
+            total = portfolio.budget
+        percentage = 100. * ((total / portfolio.initial_budget) - 1.0)
+        self.log('Final: €{:.2f} [{} %]'.format(
+            total, self.color(percentage)))
 
     def report_action(self, action_name):
+        """
+        Display only what action was selected.
+        :param action_name:
+        :return:
+        """
         if action_name == 'sell':
             self.log(act_h.format(self.green('sell')), end='')
         elif action_name == 'buy':
@@ -80,10 +127,24 @@ class Display(Common):
             self.log(act_h.format(self.white('none')), end='')
 
     def report_reward(self, reward, current_state):
+        """
+        Display only what is the reward resulting from the action selected.
+        :param reward:
+        :param current_state:
+        :return:
+        """
         self.log(' | {:>15} | {:s}'.format(
             self.color(reward), current_state))
 
     def progress(self, i, last_avg, start, end):
+        """
+        Report the progress during learning
+        :param i:
+        :param last_avg:
+        :param start:
+        :param end:
+        :return:
+        """
         percentage = (i / self.configuration._num_episodes) * 100.0
         print(
             "Episode {:>5}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(

@@ -21,7 +21,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 def main():
     # Init
     configuration = Dictionary()
-    configuration._debug = False
     environment = Environment(configuration)
     learner = QLearning(configuration)
 
@@ -30,8 +29,7 @@ def main():
     configuration._debug = False
 
     # Learn
-    strategy = learner.q_learn(environment,
-                               display_strategy=False, do_plot=True)
+    strategy = learner.q_learn(environment, do_plot=True)
 
     # Test
     done = False
@@ -46,6 +44,5 @@ def main():
     # Save the model?
     if configuration.save_model is True:
         learner.nn.save_model(learner.model)
-
 
 main()

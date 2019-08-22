@@ -28,13 +28,12 @@ class Portfolio(Common):
         # copy the contents of the dictionary passed as argument. This dict
         # contains the parameters read in the initialization.
         self.configuration = configuration
-        self.display = Display(configuration)
+        self.display = self.configuration.display
 
         self.budget = self.configuration._environment._initial_budget
         self.initial_budget = self.configuration._environment._initial_budget
         self.latest_price = initial_price
         self.forecast = forecast
-        self.display.report(self, t=0, disp_header=True)
 
     def do_nothing(self):
         self.display.report_action('none')

@@ -3,12 +3,24 @@ I will place here common functions used across all modules.
 """
 from termcolor import colored
 
+import pandas as pd
+from pandas import DataFrame
+
 
 class Common:
 
     def log(self, *args, **kwargs):
         if self.configuration._debug is True:
             print(*args, **kwargs)
+
+    def append(self, table: object, kvp: dict) -> DataFrame:
+        for key in kvp:
+            table[key] = kvp[key]
+        return table
+
+    def add(self, table, key, value):
+        table[key] = value
+        return table
 
     def green(self, string):
         return colored('{}'.format(string), 'green')

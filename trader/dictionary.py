@@ -17,7 +17,9 @@ The structure of attributes is built recursively if they contain a dictionary.
 
 from os import getcwd
 from pathlib import Path
+from pandas import DataFrame
 
+from display import Display
 from yaml import safe_load, YAMLError
 
 debug = False
@@ -122,6 +124,19 @@ class Dictionary(MyDict):
         self._num_states = 1
         for state in self._state.keys():
             self._num_states = self._num_states * len(self._state[state]._names)
+
+        # Create a display property to centralize all reporting activity into
+        # a single function. That way I can store it all in a single dataframe
+        # for later analysis.
+        setattr(self, 'display', Display)
+        self.display = Display(self)
+
+        # Create a DataFrame within the configuration to store all the values
+        # that are relevant to later perform data analysis.
+        # The YAML file contains the column names in a parameter called
+        # table_headers.
+        setattr(self, 'results', DataFrame)
+        self.results = DataFrame(columns=self._table_headers)
 
     @property
     def save_model(self):

@@ -15,7 +15,6 @@ class QLearning(object):
         self.configuration = configuration
         self.nn = NN(self.configuration)
         self.model = None
-        self.display = Display(configuration)
 
     def onehot(self, state: int) -> np.ndarray:
         return np.identity(self.configuration._num_states)[state:state + 1]
