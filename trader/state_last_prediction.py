@@ -12,12 +12,12 @@ class state_last_prediction(RL_State, Common):
         sign = lambda x: copysign(1, x)
 
         if len(portfolio.history) < 1:
-            return 'PRED_UNK'
+            return 'PRED.UNKNW'
         prediction_sign = sign(portfolio.last_forecast - portfolio.last_price)
         actual_sign = sign(portfolio.latest_price - portfolio.last_price)
 
         # guess what the state, given the forecast
         if prediction_sign == actual_sign:
-            return 'PRED_OOK'
+            return 'PRED.CRECT'
         else:
-            return 'PRED_NOK'
+            return 'PRED.WRONG'

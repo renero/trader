@@ -78,3 +78,32 @@ class Display(Common):
             self.log(act_h.format(self.red('buy')), end='')
         else:
             self.log(act_h.format(self.white('none')), end='')
+
+    def report_reward(self, reward, current_state):
+        self.log(' | {:>15} | {:s}'.format(
+            self.color(reward), current_state))
+
+    def progress(self, i, last_avg, start, end):
+        percentage = (i / self.configuration._num_episodes) * 100.0
+        print(
+            "Episode {:>5}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
+                i,
+                self.configuration._num_episodes,
+                percentage,
+                last_avg), end='')
+        if percentage == 0.0:
+            print(' Est.time: UNKNOWN')
+            return
+        elapsed = end - start
+        remaining = ((100. - percentage) * elapsed) / percentage
+        print(' Est.time: {}'.format(self.timer(remaining)))
+
+    @staticmethod
+    def timer(elapsed):
+        hours, rem = divmod(elapsed, 3600)
+        minutes, seconds = divmod(rem, 60)
+        if int(seconds) == 0:
+            return 'UNKNOWN'
+        else:
+            return '{:0>2}:{:0>2}:{:0>2}'.format(
+                int(hours), int(minutes), int(seconds))

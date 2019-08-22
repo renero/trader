@@ -1,5 +1,7 @@
 import importlib
+from math import fabs
 
+import numpy as np
 import pandas as pd
 
 from common import Common
@@ -21,9 +23,10 @@ class Environment(Common):
     done_ = False
     reward_ = 0
     new_state_: int = 0
+    stop_loss_alert: bool = False
 
     def __init__(self, configuration):
-
+        np.random.seed(1)
         self.configuration = configuration
         self.display = Display(configuration)
         self.states = SCombiner(self.configuration.states_list)
@@ -111,15 +114,16 @@ class Environment(Common):
         # passed to this argument.
         self.reward_ = getattr(self.portfolio_,
                                self.configuration._action_name[action])()
-        self.log(' | {:>15} | {:s}'.format(
-            self.color(self.reward_), self.states.name(self.current_state_)))
+
+        # If I'm in stop loss situation, rewards gets a different value
+        self.reward_ = self.fix_reward(self.configuration._action_name[action])
+        self.display.report_reward(
+            self.reward_, self.states.name(self.current_state_))
 
         self.t += 1
         if self.t >= self.max_states_:
             self.done_ = True
-            self.display.report(self.portfolio_,
-                                self.t - 1,
-                                disp_footer=True)
+            self.display.report(self.portfolio_, self.t - 1, disp_footer=True)
             self.portfolio_.reset_history()
             self.log("")
             return self.new_state_, self.reward_, self.done_, self.t
@@ -131,3 +135,54 @@ class Environment(Common):
         self.portfolio_.append_to_history(self)
 
         return self.new_state_, self.reward_, self.done_, self.t
+
+    def print_states(self):
+        self.log('List of states: ', end='')
+        self.log(','.join(self.configuration._state.keys()))
+
+    def fix_reward(self, action_name: str) -> int:
+        """
+        Reward cannot be the same under stop loss alarm.
+        :param action_name: the name of the action determined.
+        :return: the new reward value, given that we might be under stop loss
+        """
+        if self.stop_loss is not True:
+            return self.reward_
+        # Fix the reward if I try to buy and it is not a failed attempt cause
+        # I've no money to buy.
+        if action_name == 'buy' and \
+                self.portfolio_.latest_price > self.portfolio_.budget:
+            return self.configuration._environment._reward_stoploss_buy
+        # Fix the reward if I'm trying to sell and I DO have shares to sell
+        elif action_name == 'sell' and self.portfolio_.shares > 0.:
+            return self.configuration._environment._reward_stoploss_sell
+        else:
+            return self.configuration._environment._reward_stoploss_donothing
+
+    @property
+    def stop_loss(self) -> bool:
+        """
+        Determine if we're under stop loss alarm condition. It is based on the
+        net value of my investment at current moment in time.
+        The parameter can be expressed as a percentage or actual value.
+        :return: True or False
+        """
+        net_value = self.portfolio_.portfolio_value - self.portfolio_.investment
+        stop_loss = self.portfolio_.configuration._environment._stop_loss
+
+        if net_value == 0.:
+            return False
+
+        if stop_loss < 1.0:  # percentage of initial budget
+            if (net_value / self.portfolio_.initial_budget) < 0.0 and \
+                    fabs(
+                        net_value / self.portfolio_.initial_budget) >= stop_loss:
+                value = True
+            else:
+                value = False
+        else:  # actual value
+            if net_value < stop_loss:
+                value = True
+            else:
+                value = False
+        return value
