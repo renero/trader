@@ -137,17 +137,6 @@ class Environment(Common):
 
         return self.new_state_, self.reward_, self.done_, self.t
 
-    def print_states(self):
-        """
-        Simply print the list of states that have been read from configuration
-        file.
-        :return: None
-        """
-        self.log('List of states: [{}]'.format(
-            ' | '.join([(lambda x: x[1:])(s) for s in
-                        self.configuration._state.keys()])))
-        return
-
     def fix_reward(self, action_name: str) -> int:
         """
         Reward cannot be the same under stop loss alarm.

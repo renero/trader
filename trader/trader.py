@@ -8,11 +8,12 @@
 
 import os
 
+import pandas as pd
 import tensorflow as tf
 
+from dictionary import Dictionary
 from environment import Environment
 from qlearning import QLearning
-from dictionary import Dictionary
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -25,7 +26,7 @@ def main():
     learner = QLearning(configuration)
 
     configuration._debug = True
-    environment.print_states()
+    configuration.display.states_list(configuration._state)
     configuration._debug = False
 
     # Learn
@@ -44,5 +45,10 @@ def main():
     # Save the model?
     if configuration.save_model is True:
         learner.nn.save_model(learner.model)
+
+    pd.set_option('display.max_colwidth', -1)
+    pd.set_option('display.max_columns', None)
+    print(configuration.results.head())
+    configuration.results.head()
 
 main()

@@ -3,7 +3,6 @@ import time
 import numpy as np
 
 from chart import Chart as plot
-from display import Display
 from environment import Environment
 from nn import NN
 
@@ -62,7 +61,8 @@ class QLearning(object):
                 end = time.time()
                 if avg_rewards:
                     last_avg = avg_rewards[-1]
-                self.display.progress(i, last_avg, start, end)
+                self.display.progress(i, self.configuration._num_episodes,
+                                      last_avg, start, end)
                 start = time.time()
 
             done = False

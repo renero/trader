@@ -39,13 +39,13 @@ class MyDict(dict):
         self[key] = value
 
     @staticmethod
-    def log(*args, **kwargs):
+    def debug(*args, **kwargs):
         if debug is True:
             print(*args, **kwargs)
 
     def add_dict(self, this_object, param_dictionary, add_underscore=True):
         for param_name in param_dictionary.keys():
-            self.log('ATTR: <{}> type is {}'.format(
+            self.debug('ATTR: <{}> type is {}'.format(
                 param_name, type(param_dictionary[param_name])))
 
             if add_underscore is True:
@@ -54,24 +54,24 @@ class MyDict(dict):
                 attribute_name = param_name
 
             if type(param_dictionary[param_name]) is not dict:
-                self.log(' - Setting attr name {} to {}'.format(
+                self.debug(' - Setting attr name {} to {}'.format(
                     attribute_name, param_dictionary[param_name]))
                 setattr(this_object, attribute_name,
                         param_dictionary[param_name])
             else:
-                self.log(' x Dictionary Found!')
+                self.debug(' x Dictionary Found!')
 
-                self.log('   > Creating new dict() with name <{}>'.format(
+                self.debug('   > Creating new dict() with name <{}>'.format(
                     attribute_name))
                 setattr(this_object, attribute_name, MyDict())
 
-                self.log('     > New Attribute <{}> type is: {}'.format(
+                self.debug('     > New Attribute <{}> type is: {}'.format(
                     attribute_name, type(getattr(this_object, attribute_name))
                 ))
                 new_object = getattr(this_object, attribute_name)
 
-                self.log('   > Calling recursively with dict')
-                self.log('     {}'.format(param_dictionary[param_name]))
+                self.debug('   > Calling recursively with dict')
+                self.debug('     {}'.format(param_dictionary[param_name]))
                 this_object.add_dict(new_object, param_dictionary[param_name])
 
 

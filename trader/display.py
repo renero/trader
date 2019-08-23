@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 from pandas import Series
 
@@ -62,7 +61,7 @@ class Display(Common):
             portfolio.shares
         ]
 
-        header = h.format(*self.configuration._table_headers)
+        header = h.format(*portfolio.configuration._table_headers)
         if disp_header is True:
             self.log('\n{}'.format(header))
             self.log('{}'.format('-' * (len(header) + 8), sep=''))
@@ -72,16 +71,19 @@ class Display(Common):
             return
 
         self.log(s.format(*values_to_report), end='')
-        self.add_to_table(values_to_report)
+        self.add_to_table(values_to_report,
+                          portfolio.configuration._table_headers)
 
-    def add_to_table(self, values_to_report):
+    def add_to_table(self, values_to_report, table_headers):
         """
         Add the report values to the results table.
-        :param values_to_report: the list of values
+        :param results:
+         :param values_to_report: the list of values
+        :param table_headers:
         :return:
         """
         row = Series(dict(zip(
-            self.configuration._table_headers,
+            table_headers,
             values_to_report
         )))
         self.configuration.results = self.configuration.results.append(
@@ -136,20 +138,22 @@ class Display(Common):
         self.log(' | {:>15} | {:s}'.format(
             self.color(reward), current_state))
 
-    def progress(self, i, last_avg, start, end):
+    def progress(self, i, num_episodes, last_avg, start, end):
         """
         Report the progress during learning
+        :return:
         :param i:
+        :param num_episodes:
         :param last_avg:
         :param start:
         :param end:
         :return:
         """
-        percentage = (i / self.configuration._num_episodes) * 100.0
+        percentage = (i / num_episodes) * 100.0
         print(
             "Episode {:>5}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
                 i,
-                self.configuration._num_episodes,
+                num_episodes,
                 percentage,
                 last_avg), end='')
         if percentage == 0.0:
@@ -174,3 +178,14 @@ class Display(Common):
         else:
             return '{:0>2}:{:0>2}:{:0>2}'.format(
                 int(hours), int(minutes), int(seconds))
+
+    def states_list(self, states):
+        """
+        Simply print the list of states that have been read from configuration
+        file.
+        :return: None
+        """
+        self.log('List of states: [{}]'.format(
+            ' | '.join([(lambda x: x[1:])(s) for s in
+                        states.keys()])))
+        return
