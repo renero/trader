@@ -56,6 +56,8 @@ class Environment(Common):
         self.done_ = False
         self.t = 0
         del self.portfolio_
+        self.configuration.results.drop(self.configuration.results.index,
+                                        inplace=True)
         return self.init_environment(creation_time=False)
 
     def read_market_data(self, path):

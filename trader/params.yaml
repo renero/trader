@@ -4,14 +4,14 @@
 #
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../data/forecast100.csv
+data_path: ../data/forecast20.csv
 
 # Wanna save the model after training?
 save_model: false
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
-load_model: true
+load_model: false
 model_file: ../output/model2.json
 weights_file: ../output/model2.h5
 
@@ -27,7 +27,7 @@ num_episodes_update: 100
 stack_size: 3
 
 # Num. of episodes to run simulate and learn
-num_episodes: 5000
+num_episodes: 1000
 
 # Different states in which the environment might be.
 state:

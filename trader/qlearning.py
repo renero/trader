@@ -12,6 +12,7 @@ class QLearning(object):
 
     def __init__(self, configuration):
         self.configuration = configuration
+        self.display = self.configuration.display
         self.nn = NN(self.configuration)
         self.model = None
 
@@ -73,8 +74,8 @@ class QLearning(object):
                 # Decide whether generating random action or predict most
                 # likely from the give state.
                 if np.random.random() < self.configuration._eps:
-                    action = np.random.randint(0,
-                                               self.configuration._num_actions)
+                    action = np.random.randint(
+                        0, self.configuration._num_actions)
                 else:
                     action = self.predict(state)
 
