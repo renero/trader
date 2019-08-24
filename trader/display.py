@@ -1,5 +1,7 @@
 import numpy as np
+import pandas as pd
 from pandas import Series
+from tabulate import tabulate
 
 from common import Common
 
@@ -50,16 +52,15 @@ class Display(Common):
         :param disp_footer:
         :return:
         """
-        values_to_report = [
-            t,
-            portfolio.latest_price,
-            self.cond_color(portfolio.forecast, portfolio.latest_price),
-            portfolio.budget,
-            self.color(portfolio.investment * -1.),
-            portfolio.portfolio_value,
-            self.color(portfolio.portfolio_value - portfolio.investment),
-            portfolio.shares
-        ]
+        values = [t] + portfolio.values_to_report()
+        formatted_values = [values[0], values[1],
+                            self.cond_color(values[2], values[1]),
+                            values[3],
+                            self.color(values[4] * -1.),
+                            values[5],
+                            self.color(values[6]),
+                            values[7]
+                            ]
 
         header = h.format(*portfolio.configuration._table_headers)
         if disp_header is True:
@@ -70,9 +71,8 @@ class Display(Common):
             self.report_footer(portfolio, len(header))
             return
 
-        self.log(s.format(*values_to_report), end='')
-        self.add_to_table(values_to_report,
-                          portfolio.configuration._table_headers)
+        self.log(s.format(*formatted_values), end='')
+        self.add_to_table(values, self.configuration._table_headers)
 
     def add_to_table(self, values_to_report, table_headers):
         """
@@ -127,6 +127,8 @@ class Display(Common):
             self.log(act_h.format(self.red('buy')), end='')
         else:
             self.log(act_h.format(self.white('none')), end='')
+        last_index = self.configuration.results.shape[0] - 1
+        self.configuration.results.loc[last_index, 'action'] = action_name
 
     def report_reward(self, reward, current_state):
         """
@@ -137,6 +139,9 @@ class Display(Common):
         """
         self.log(' | {:>15} | {:s}'.format(
             self.color(reward), current_state))
+        last_index = self.configuration.results.shape[0] - 1
+        self.configuration.results.loc[last_index, 'reward'] = reward
+        self.configuration.results.loc[last_index, 'state'] = current_state
 
     def progress(self, i, num_episodes, last_avg, start, end):
         """
@@ -189,3 +194,19 @@ class Display(Common):
             ' | '.join([(lambda x: x[1:])(s) for s in
                         states.keys()])))
         return
+
+    def results(self):
+        df = self.configuration.results.copy()
+        self.recolor_ref(df, 'forecast', 'price')
+        self.reformat(df, 'price')
+        self.reformat(df, 'value')
+        self.reformat(df, 'shares')
+        self.recolor(df, 'budget')
+        self.recolor(df, 'netValue')
+        self.recolor(df, 'cashflow')
+        self.recolor(df, 'reward')
+        print(tabulate(df,
+                       headers='keys',
+                       tablefmt='psql',
+                       showindex=False,
+                       floatfmt=['.0f']+['.1f' for i in range(6)]))

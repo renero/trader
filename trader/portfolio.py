@@ -34,7 +34,7 @@ class Portfolio(Common):
         self.latest_price = initial_price
         self.forecast = forecast
 
-    def do_nothing(self):
+    def wait(self):
         self.display.report_action('none')
         self.reward = self.configuration._environment._reward_do_nothing
         return self.reward
@@ -83,7 +83,6 @@ class Portfolio(Common):
         return self
 
     def reset_history(self):
-        # print('>> RESET HISTORY')
         del self.history[:]
 
     def append_to_history(self, environment):
@@ -100,3 +99,13 @@ class Portfolio(Common):
     @property
     def last_price(self):
         return self.history[-1]['price_']
+
+    def values_to_report(self):
+        return [
+            self.latest_price,
+            self.forecast,
+            self.budget,
+            self.investment,
+            self.portfolio_value,
+            self.portfolio_value - self.investment,
+            self.shares]

@@ -57,7 +57,7 @@ state:
 
 # Actions to be accomplished by the agent (Portfolio class)
 action:
-  - do_nothing
+  - wait
   - buy
   - sell
 
@@ -84,9 +84,9 @@ table_headers:
   - price
   - forecast
   - budget
-  - cshflow
+  - cashflow
   - value
-  - net.Val
+  - netValue
   - shares
   - action
   - reward

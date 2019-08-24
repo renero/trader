@@ -9,37 +9,35 @@ from pandas import DataFrame
 
 class Common:
 
+    Reset = '\033[0m'
+    Green = '\033[32m'
+    White = '\033[37m'
+    Red = '\033[31m'
+
     def log(self, *args, **kwargs):
         if self.configuration._debug is True:
             print(*args, **kwargs)
 
-    def append(self, table: object, kvp: dict) -> DataFrame:
-        for key in kvp:
-            table[key] = kvp[key]
-        return table
-
-    def add(self, table, key, value):
-        table[key] = value
-        return table
-
     def green(self, string):
-        return colored('{}'.format(string), 'green')
+        return colored(string, 'green')
 
     def red(self, string):
-        return colored('{}'.format(string), 'red')
+        return colored(string, 'red')
 
     def white(self, string):
-        return colored('{}'.format(string), 'white')
+        return colored(string, 'white')
+
+    def no_color(self, number):
+        string = '{:.1f}'.format(number)
+        return self.white(string)
 
     def color(self, number):
-        string = '{:+.1f}'.format(number)
+        string = '{:.1f}'.format(number)
         if number > 0.0:
             return self.green(string)
         elif number < 0.0:
             return self.red(string)
         else:
-            number = 0.0
-            string = '{:.1f}'.format(number)
             return self.white(string)
 
     def cond_color(self, number, ref):
@@ -52,3 +50,17 @@ class Common:
             number = 0.0
             string = '{:.1f}'.format(number)
             return self.white(string)
+
+    def recolor(self, df, column_name):
+        df[column_name] = df[column_name].apply(
+            lambda x: '{}'.format(self.color(x)))
+
+    def reformat(self, df, column_name):
+        df[column_name] = df[column_name].apply(
+            lambda x: '{}'.format(self.no_color(x)))
+
+    def recolor_ref(self, df, col1, col2):
+        df[col1] = df.apply(
+            lambda row: self.cond_color(row[col1], row[col2]),
+            axis=1
+        )
