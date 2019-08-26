@@ -100,6 +100,14 @@ class Portfolio(Common):
     def last_price(self):
         return self.history[-1]['price_']
 
+    @property
+    def prevlast_forecast(self):
+        return self.history[-2]['forecast_']
+
+    @property
+    def prevlast_price(self):
+        return self.history[-2]['price_']
+
     def values_to_report(self):
         return [
             self.latest_price,

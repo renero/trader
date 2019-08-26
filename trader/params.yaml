@@ -27,7 +27,7 @@ num_episodes_update: 100
 stack_size: 3
 
 # Num. of episodes to run simulate and learn
-num_episodes: 1000
+num_episodes: 5000
 
 # Different states in which the environment might be.
 state:
@@ -47,9 +47,14 @@ state:
       - NOTHAVE
   last_prediction:
     names:
-      - PRED.UNKNW
-      - PRED.CRECT
-      - PRED.WRONG
+      - PUNKNW
+      - PVALID
+      - PWRONG
+  prevlast_pred:
+    names:
+      - PPUNKNW
+      - PPVALID
+      - PPWRONG
 #  stop_loss:
 #    names:
 #      - STOPLOSS

@@ -78,7 +78,7 @@ class Display(Common):
         """
         Add the report values to the results table.
         :param results:
-         :param values_to_report: the list of values
+        :param values_to_report: the list of values
         :param table_headers:
         :return:
         """

@@ -64,7 +64,7 @@ class QLearning(object):
                     last_avg = avg_rewards[-1]
                 self.display.progress(i, self.configuration._num_episodes,
                                       last_avg, start, end)
-                start = time.time()
+                # start = time.time()
 
             done = False
             sum_rewards = 0
