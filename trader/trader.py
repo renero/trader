@@ -8,13 +8,11 @@
 
 import os
 
-import pandas as pd
 import tensorflow as tf
 
 from dictionary import Dictionary
 from environment import Environment
 from qlearning import QLearning
-from tabulate import tabulate
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -28,10 +26,10 @@ def main():
 
     configuration._debug = True
     configuration.display.states_list(configuration._state)
-    configuration._debug = False
 
     # Learn
     strategy = learner.q_learn(environment, do_plot=True)
+    configuration._debug = False
 
     # Test
     done = False

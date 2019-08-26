@@ -64,7 +64,6 @@ class QLearning(object):
                     last_avg = avg_rewards[-1]
                 self.display.progress(i, self.configuration._num_episodes,
                                       last_avg, start, end)
-                # start = time.time()
 
             done = False
             sum_rewards = 0
@@ -121,8 +120,8 @@ class QLearning(object):
         """
         Learns or Load an strategy to follow over a given environment,
         using RL.
-
         :type env: Environment
+        :param display_strategy:
         :type do_plot: bool
         """
         # create the Keras model and learn, or load it from disk.

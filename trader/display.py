@@ -1,20 +1,8 @@
 import numpy as np
-import pandas as pd
 from pandas import Series
 from tabulate import tabulate
 
 from common import Common
-
-h1 = ' {:<3s} |{:>8s} |{:>9s} |{:>9s} |{:>9s} |{:>9s} |{:>9s} |{:>7s} '
-h2 = '| {:<7}| {:<7s}| {:20s}'
-h = h1 + h2
-
-s1 = ' {:>03d} |'
-s2 = '{:>8.1f} |{:>18} |{:>9.1f} |{:>18} |{:>9.1f} |{:>18} |{:>7.1f} '
-s = s1 + s2
-
-f = '                           {:>9.1f} |{:>18} |{:>9.1f} |{:>18} |{:>7.1f}'
-act_h = '| {:<15}'
 
 
 class Display(Common):
@@ -53,25 +41,6 @@ class Display(Common):
         :return:
         """
         values = [t] + portfolio.values_to_report()
-        formatted_values = [values[0], values[1],
-                            self.cond_color(values[2], values[1]),
-                            values[3],
-                            self.color(values[4] * -1.),
-                            values[5],
-                            self.color(values[6]),
-                            values[7]
-                            ]
-
-        header = h.format(*portfolio.configuration._table_headers)
-        if disp_header is True:
-            self.log('\n{}'.format(header))
-            self.log('{}'.format('-' * (len(header) + 8), sep=''))
-
-        if disp_footer is True:
-            self.report_footer(portfolio, len(header))
-            return
-
-        self.log(s.format(*formatted_values), end='')
         self.add_to_table(values, self.configuration._table_headers)
 
     def add_to_table(self, values_to_report, table_headers):
@@ -88,24 +57,6 @@ class Display(Common):
         )))
         self.configuration.results = self.configuration.results.append(
             row, ignore_index=True)
-
-    def report_footer(self, portfolio, header_length):
-        """
-        Display only the summary
-        :param portfolio:
-        :param header_length:
-        :return:
-        """
-        footer = f.format(
-            portfolio.budget,
-            self.color(portfolio.investment * -1.),
-            portfolio.portfolio_value,
-            self.color(
-                portfolio.portfolio_value - portfolio.investment),
-            portfolio.shares)
-        self.log('{}'.format('-' * (header_length + 8), sep=''))
-        self.log(footer)
-        self.report_final(portfolio)
 
     def report_final(self, portfolio):
         # total outcome and final metrics.
@@ -132,12 +83,6 @@ class Display(Common):
         :param action_name:
         :return:
         """
-        if action_name == 'sell':
-            self.log(act_h.format(self.green('sell')), end='')
-        elif action_name == 'buy':
-            self.log(act_h.format(self.red('buy')), end='')
-        else:
-            self.log(act_h.format(self.white('none')), end='')
         last_index = self.configuration.results.shape[0] - 1
         self.configuration.results.loc[last_index, 'action'] = action_name
 
@@ -148,8 +93,6 @@ class Display(Common):
         :param current_state:
         :return:
         """
-        self.log(' | {:>15} | {:s}'.format(
-            self.color(reward), current_state))
         last_index = self.configuration.results.shape[0] - 1
         self.configuration.results.loc[last_index, 'reward'] = reward
         self.configuration.results.loc[last_index, 'state'] = current_state
@@ -166,18 +109,18 @@ class Display(Common):
         :return:
         """
         percentage = (i / num_episodes) * 100.0
-        print(
+        self.log(
             "Epoch {:>5}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
                 i,
                 num_episodes,
                 percentage,
                 last_avg), end='')
         if percentage == 0.0:
-            print(' Est.time: UNKNOWN')
+            self.log(' Est.time: UNKNOWN')
             return
         elapsed = end - start
         remaining = ((100. - percentage) * elapsed) / percentage
-        print(' Est.time: {}'.format(self.timer(remaining)))
+        self.log(' Est.time: {}'.format(self.timer(remaining)))
 
     @staticmethod
     def timer(elapsed):
@@ -220,5 +163,5 @@ class Display(Common):
                        headers='keys',
                        tablefmt='psql',
                        showindex=False,
-                       floatfmt=['.0f']+['.1f' for i in range(6)]))
+                       floatfmt=['.0f'] + ['.1f' for i in range(6)]))
         self.report_final(portfolio)
