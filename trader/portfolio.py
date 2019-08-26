@@ -1,4 +1,3 @@
-from display import Display
 from common import Common
 from dictionary import Dictionary
 
@@ -28,15 +27,14 @@ class Portfolio(Common):
         # copy the contents of the dictionary passed as argument. This dict
         # contains the parameters read in the initialization.
         self.configuration = configuration
-        self.display = Display(configuration)
+        self.display = self.configuration.display
 
         self.budget = self.configuration._environment._initial_budget
         self.initial_budget = self.configuration._environment._initial_budget
         self.latest_price = initial_price
         self.forecast = forecast
-        self.display.report(self, t=0, disp_header=True)
 
-    def do_nothing(self):
+    def wait(self):
         self.display.report_action('none')
         self.reward = self.configuration._environment._reward_do_nothing
         return self.reward
@@ -85,7 +83,6 @@ class Portfolio(Common):
         return self
 
     def reset_history(self):
-        # print('>> RESET HISTORY')
         del self.history[:]
 
     def append_to_history(self, environment):
@@ -102,3 +99,21 @@ class Portfolio(Common):
     @property
     def last_price(self):
         return self.history[-1]['price_']
+
+    @property
+    def prevlast_forecast(self):
+        return self.history[-2]['forecast_']
+
+    @property
+    def prevlast_price(self):
+        return self.history[-2]['price_']
+
+    def values_to_report(self):
+        return [
+            self.latest_price,
+            self.forecast,
+            self.budget,
+            self.investment,
+            self.portfolio_value,
+            self.portfolio_value - self.investment,
+            self.shares]

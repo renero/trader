@@ -10,9 +10,9 @@ import os
 
 import tensorflow as tf
 
+from dictionary import Dictionary
 from environment import Environment
 from qlearning import QLearning
-from dictionary import Dictionary
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -21,17 +21,15 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 def main():
     # Init
     configuration = Dictionary()
-    configuration._debug = False
     environment = Environment(configuration)
     learner = QLearning(configuration)
 
     configuration._debug = True
-    environment.print_states()
-    configuration._debug = False
+    configuration.display.states_list(configuration._state)
 
     # Learn
-    strategy = learner.q_learn(environment,
-                               display_strategy=False, do_plot=True)
+    strategy = learner.q_learn(environment, do_plot=True)
+    configuration._debug = False
 
     # Test
     done = False
@@ -46,6 +44,8 @@ def main():
     # Save the model?
     if configuration.save_model is True:
         learner.nn.save_model(learner.model)
+
+    configuration.display.results(environment.portfolio_)
 
 
 main()

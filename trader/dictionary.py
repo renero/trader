@@ -17,7 +17,9 @@ The structure of attributes is built recursively if they contain a dictionary.
 
 from os import getcwd
 from pathlib import Path
+from pandas import DataFrame
 
+from display import Display
 from yaml import safe_load, YAMLError
 
 debug = False
@@ -37,13 +39,13 @@ class MyDict(dict):
         self[key] = value
 
     @staticmethod
-    def log(*args, **kwargs):
+    def debug(*args, **kwargs):
         if debug is True:
             print(*args, **kwargs)
 
     def add_dict(self, this_object, param_dictionary, add_underscore=True):
         for param_name in param_dictionary.keys():
-            self.log('ATTR: <{}> type is {}'.format(
+            self.debug('ATTR: <{}> type is {}'.format(
                 param_name, type(param_dictionary[param_name])))
 
             if add_underscore is True:
@@ -52,24 +54,24 @@ class MyDict(dict):
                 attribute_name = param_name
 
             if type(param_dictionary[param_name]) is not dict:
-                self.log(' - Setting attr name {} to {}'.format(
+                self.debug(' - Setting attr name {} to {}'.format(
                     attribute_name, param_dictionary[param_name]))
                 setattr(this_object, attribute_name,
                         param_dictionary[param_name])
             else:
-                self.log(' x Dictionary Found!')
+                self.debug(' x Dictionary Found!')
 
-                self.log('   > Creating new dict() with name <{}>'.format(
+                self.debug('   > Creating new dict() with name <{}>'.format(
                     attribute_name))
                 setattr(this_object, attribute_name, MyDict())
 
-                self.log('     > New Attribute <{}> type is: {}'.format(
+                self.debug('     > New Attribute <{}> type is: {}'.format(
                     attribute_name, type(getattr(this_object, attribute_name))
                 ))
                 new_object = getattr(this_object, attribute_name)
 
-                self.log('   > Calling recursively with dict')
-                self.log('     {}'.format(param_dictionary[param_name]))
+                self.debug('   > Calling recursively with dict')
+                self.debug('     {}'.format(param_dictionary[param_name]))
                 this_object.add_dict(new_object, param_dictionary[param_name])
 
 
@@ -122,6 +124,19 @@ class Dictionary(MyDict):
         self._num_states = 1
         for state in self._state.keys():
             self._num_states = self._num_states * len(self._state[state]._names)
+
+        # Create a display property to centralize all reporting activity into
+        # a single function. That way I can store it all in a single dataframe
+        # for later analysis.
+        setattr(self, 'display', Display)
+        self.display = Display(self)
+
+        # Create a DataFrame within the configuration to store all the values
+        # that are relevant to later perform data analysis.
+        # The YAML file contains the column names in a parameter called
+        # table_headers.
+        setattr(self, 'results', DataFrame)
+        self.results = DataFrame(columns=self._table_headers)
 
     @property
     def save_model(self):

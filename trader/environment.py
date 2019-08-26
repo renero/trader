@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 
 from common import Common
-from display import Display
 from portfolio import Portfolio
 from scombiner import SCombiner
 
@@ -28,12 +27,13 @@ class Environment(Common):
     def __init__(self, configuration):
         np.random.seed(1)
         self.configuration = configuration
-        self.display = Display(configuration)
+        self.display = self.configuration.display
+
         self.states = SCombiner(self.configuration.states_list)
         self.read_market_data(self.configuration._data_path)
-        self.init_environment()
+        self.init_environment(creation_time=True)
 
-    def init_environment(self):
+    def init_environment(self, creation_time):
         """
         Initialize the portfolio by updating market price according to the
         current timeslot 't', creating a new object, and updating the
@@ -44,6 +44,8 @@ class Environment(Common):
         self.portfolio_ = Portfolio(self.configuration,
                                     self.price_,
                                     self.forecast_)
+        if creation_time is not True:
+            self.display.report(self.portfolio_, t=0, disp_header=True)
         return self.update_state()
 
     def reset(self):
@@ -54,7 +56,9 @@ class Environment(Common):
         self.done_ = False
         self.t = 0
         del self.portfolio_
-        return self.init_environment()
+        self.configuration.results.drop(self.configuration.results.index,
+                                        inplace=True)
+        return self.init_environment(creation_time=False)
 
     def read_market_data(self, path):
         """
@@ -125,7 +129,6 @@ class Environment(Common):
             self.done_ = True
             self.display.report(self.portfolio_, self.t - 1, disp_footer=True)
             self.portfolio_.reset_history()
-            self.log("")
             return self.new_state_, self.reward_, self.done_, self.t
 
         self.update_market_price()
@@ -135,10 +138,6 @@ class Environment(Common):
         self.portfolio_.append_to_history(self)
 
         return self.new_state_, self.reward_, self.done_, self.t
-
-    def print_states(self):
-        self.log('List of states: ', end='')
-        self.log(','.join(self.configuration._state.keys()))
 
     def fix_reward(self, action_name: str) -> int:
         """

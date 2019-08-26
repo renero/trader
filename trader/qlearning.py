@@ -3,7 +3,6 @@ import time
 import numpy as np
 
 from chart import Chart as plot
-from display import Display
 from environment import Environment
 from nn import NN
 
@@ -13,9 +12,9 @@ class QLearning(object):
 
     def __init__(self, configuration):
         self.configuration = configuration
+        self.display = self.configuration.display
         self.nn = NN(self.configuration)
         self.model = None
-        self.display = Display(configuration)
 
     def onehot(self, state: int) -> np.ndarray:
         return np.identity(self.configuration._num_states)[state:state + 1]
@@ -63,8 +62,8 @@ class QLearning(object):
                 end = time.time()
                 if avg_rewards:
                     last_avg = avg_rewards[-1]
-                self.display.progress(i, last_avg, start, end)
-                start = time.time()
+                self.display.progress(i, self.configuration._num_episodes,
+                                      last_avg, start, end)
 
             done = False
             sum_rewards = 0
@@ -74,8 +73,8 @@ class QLearning(object):
                 # Decide whether generating random action or predict most
                 # likely from the give state.
                 if np.random.random() < self.configuration._eps:
-                    action = np.random.randint(0,
-                                               self.configuration._num_actions)
+                    action = np.random.randint(
+                        0, self.configuration._num_actions)
                 else:
                     action = self.predict(state)
 
@@ -121,8 +120,8 @@ class QLearning(object):
         """
         Learns or Load an strategy to follow over a given environment,
         using RL.
-
         :type env: Environment
+        :param display_strategy:
         :type do_plot: bool
         """
         # create the Keras model and learn, or load it from disk.

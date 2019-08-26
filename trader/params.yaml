@@ -4,16 +4,16 @@
 #
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../data/forecast100.csv
+data_path: ../data/forecast20.csv
 
 # Wanna save the model after training?
-save_model: true
+save_model: false
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
 load_model: false
-model_file: ../output/model.json
-weights_file: ../output/model.h5
+model_file: ../output/model2.json
+weights_file: ../output/model2.h5
 
 # Parameters for the Q-Learning function
 y: 0.95
@@ -27,7 +27,7 @@ num_episodes_update: 100
 stack_size: 3
 
 # Num. of episodes to run simulate and learn
-num_episodes: 5000
+num_episodes: 1000
 
 # Different states in which the environment might be.
 state:
@@ -47,9 +47,14 @@ state:
       - NOTHAVE
   last_prediction:
     names:
-      - PRED.UNKNW
-      - PRED.CRECT
-      - PRED.WRONG
+      - PUNKNW
+      - PVALID
+      - PWRONG
+  prevlast_pred:
+    names:
+      - PPUNKNW
+      - PPVALID
+      - PPWRONG
 #  stop_loss:
 #    names:
 #      - STOPLOSS
@@ -57,7 +62,7 @@ state:
 
 # Actions to be accomplished by the agent (Portfolio class)
 action:
-  - do_nothing
+  - wait
   - buy
   - sell
 
@@ -77,3 +82,17 @@ environment:
 
 # Debug flag
 debug: true
+
+# Log headers
+table_headers:
+  - t
+  - price
+  - forecast
+  - budget
+  - cashflow
+  - value
+  - netValue
+  - shares
+  - action
+  - reward
+  - state
