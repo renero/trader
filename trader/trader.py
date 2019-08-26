@@ -47,7 +47,7 @@ def main():
     if configuration.save_model is True:
         learner.nn.save_model(learner.model)
 
-    configuration.display.results()
+    configuration.display.results(environment.portfolio_)
 
 
 main()

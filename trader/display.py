@@ -105,15 +105,26 @@ class Display(Common):
             portfolio.shares)
         self.log('{}'.format('-' * (header_length + 8), sep=''))
         self.log(footer)
+        self.report_final(portfolio)
 
-        # total outcome
+    def report_final(self, portfolio):
+        # total outcome and final metrics.
         if portfolio.portfolio_value != 0.0:
             total = portfolio.budget + portfolio.portfolio_value
         else:
             total = portfolio.budget
         percentage = 100. * ((total / portfolio.initial_budget) - 1.0)
-        self.log('Final: €{:.2f} [{} %]'.format(
+        self.log('Final....: €{:.2f} [{} %]'.format(
             total, self.color(percentage)))
+        self.log('Budget...: €{:.1f} [{} %]'.format(
+            portfolio.budget,
+            self.color(portfolio.budget / portfolio.initial_budget)))
+        self.log('Cash Flow: €{}'.format(
+            self.color(portfolio.investment * -1.)))
+        self.log('Value....: €{:.1f}'.format(portfolio.portfolio_value))
+        self.log('Net Value: €{}'.format(
+            self.color(portfolio.portfolio_value - portfolio.investment)))
+        self.log('Shares...: €{}'.format(portfolio.shares))
 
     def report_action(self, action_name):
         """
@@ -195,7 +206,7 @@ class Display(Common):
                         states.keys()])))
         return
 
-    def results(self):
+    def results(self, portfolio):
         df = self.configuration.results.copy()
         self.recolor_ref(df, 'forecast', 'price')
         self.reformat(df, 'price')
@@ -210,3 +221,4 @@ class Display(Common):
                        tablefmt='psql',
                        showindex=False,
                        floatfmt=['.0f']+['.1f' for i in range(6)]))
+        self.report_final(portfolio)
