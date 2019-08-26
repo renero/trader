@@ -47,9 +47,14 @@ state:
       - NOTHAVE
   last_prediction:
     names:
-      - PRED.UNKNW
-      - PRED.CRECT
-      - PRED.WRONG
+      - PUNKNW
+      - PVALID
+      - PWRONG
+  prevlast_pred:
+    names:
+      - PPUNKNW
+      - PPVALID
+      - PPWRONG
 #  stop_loss:
 #    names:
 #      - STOPLOSS

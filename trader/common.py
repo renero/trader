@@ -27,11 +27,11 @@ class Common:
     def white(self, string):
         return colored(string, 'white')
 
-    def no_color(self, number):
+    def no_color(self, number: float):
         string = '{:.1f}'.format(number)
         return self.white(string)
 
-    def color(self, number):
+    def color(self, number: float):
         string = '{:.1f}'.format(number)
         if number > 0.0:
             return self.green(string)
