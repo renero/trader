@@ -5,9 +5,10 @@ import numpy as np
 from chart import Chart as plot
 from environment import Environment
 from nn import NN
+from common import Common
 
 
-class QLearning(object):
+class QLearning(Common):
     configuration = None
 
     def __init__(self, configuration):
@@ -58,7 +59,8 @@ class QLearning(object):
         for i in range(self.configuration._num_episodes):
             state = env.reset()
             self.configuration._eps *= self.configuration._decay_factor
-            if i % self.configuration._num_episodes_update == 0:
+            if (i % self.configuration._num_episodes_update == 0) or\
+                (i == (self.configuration._num_episodes - 1)):
                 end = time.time()
                 if avg_rewards:
                     last_avg = avg_rewards[-1]
@@ -124,6 +126,7 @@ class QLearning(object):
         :param display_strategy:
         :type do_plot: bool
         """
+        start = time.time()
         # create the Keras model and learn, or load it from disk.
         if self.configuration._load_model is True:
             self.model = self.nn.load_model(self.configuration._model_file,
@@ -147,4 +150,6 @@ class QLearning(object):
                                   self.configuration._num_states,
                                   strategy)
 
+        self.log('Time elapsed: {}'.format(
+            self.configuration.display.timer(time.time() - start)))
         return strategy

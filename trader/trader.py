@@ -24,10 +24,8 @@ def main():
     environment = Environment(configuration)
     learner = QLearning(configuration)
 
-    configuration._debug = True
-    configuration.display.states_list(configuration._state)
-
     # Learn
+    configuration._debug = True
     strategy = learner.q_learn(environment, do_plot=True)
     configuration._debug = False
 
@@ -41,11 +39,11 @@ def main():
         state, reward, done, _ = environment.step(action)
         total_reward += reward
 
+    configuration.display.results(environment.portfolio_, do_plot=True)
+
     # Save the model?
     if configuration.save_model is True:
         learner.nn.save_model(learner.model)
-
-    configuration.display.results(environment.portfolio_)
 
 
 main()

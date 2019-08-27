@@ -59,7 +59,7 @@ class Common:
         df[column_name] = df[column_name].apply(
             lambda x: '{}'.format(self.no_color(x)))
 
-    def recolor_ref(self, df, col1, col2):
+    def recolor_ref(self, df: DataFrame, col1: str, col2: str):
         df[col1] = df.apply(
             lambda row: self.cond_color(row[col1], row[col2]),
             axis=1

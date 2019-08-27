@@ -1,7 +1,7 @@
 import numpy as np
 from pandas import Series
 from tabulate import tabulate
-
+import matplotlib.pyplot as plt
 from common import Common
 
 
@@ -65,17 +65,17 @@ class Display(Common):
         else:
             total = portfolio.budget
         percentage = 100. * ((total / portfolio.initial_budget) - 1.0)
-        self.log('Final....: €{:.2f} [{} %]'.format(
+        self.log('Final....: € {:.2f} [{} %]'.format(
             total, self.color(percentage)))
-        self.log('Budget...: €{:.1f} [{} %]'.format(
+        self.log('Budget...: € {:.1f} [{} %]'.format(
             portfolio.budget,
-            self.color(portfolio.budget / portfolio.initial_budget)))
-        self.log('Cash Flow: €{}'.format(
+            self.color((portfolio.budget / portfolio.initial_budget) * 100.)))
+        self.log('Cash Flow: {}'.format(
             self.color(portfolio.investment * -1.)))
-        self.log('Value....: €{:.1f}'.format(portfolio.portfolio_value))
-        self.log('Net Value: €{}'.format(
+        self.log('Shares...: {:d}'.format(int(portfolio.shares)))
+        self.log('Sh.Value.: {:.1f}'.format(portfolio.portfolio_value))
+        self.log('P/L......: € {}'.format(
             self.color(portfolio.portfolio_value - portfolio.investment)))
-        self.log('Shares...: €{}'.format(portfolio.shares))
 
     def report_action(self, action_name):
         """
@@ -149,7 +149,7 @@ class Display(Common):
                         states.keys()])))
         return
 
-    def results(self, portfolio):
+    def results(self, portfolio, do_plot=False):
         df = self.configuration.results.copy()
         self.recolor_ref(df, 'forecast', 'price')
         self.reformat(df, 'price')
@@ -165,3 +165,20 @@ class Display(Common):
                        showindex=False,
                        floatfmt=['.0f'] + ['.1f' for i in range(6)]))
         self.report_final(portfolio)
+        if do_plot is True:
+            self.plot_value()
+
+    def plot_value(self):
+        plt.figure(figsize=(12, 8))
+        plt.scatter(range(self.configuration.results.shape[0]),
+                    self.configuration.results.loc[:, 'netValue'],
+                    marker='.')
+        plt.plot(self.configuration.results.loc[:, 'netValue'],
+                 linewidth=0.3, c='k')
+        plt.plot(self.configuration.results.loc[:, 'price'], c='k')
+        plt.plot(self.configuration.results.loc[:, 'forecast'],
+                 c='blue', linestyle=':')
+        plt.scatter(range(len(self.configuration.results.shares)),
+                    self.configuration.results.shares * 100, s=0.2)
+        plt.axhline(y=0, c='r', linewidth=0.5)
+        plt.show()

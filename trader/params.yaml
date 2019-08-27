@@ -4,11 +4,11 @@
 #
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../data/forecast20.csv
+data_path: ../data/forecast100.csv
 
 # Wanna save the model after training?
-save_model: false
-models_dir: ../output/
+save_model: true
+models_dir: /Users/renero/Code/trader/output/
 
 # Specify here if you want to load a pre-trained model
 load_model: false
@@ -20,6 +20,11 @@ y: 0.95
 eps: 0.5
 decay_factor: 0.999
 
+# Reduction factor is the amount by which the number of cells in the network
+# is to be reduced. If 1.0, then the num of cells will be the number of
+# possible states times the number of actions.
+cells_reduction_factor: 0.25
+
 # Every how many episodes display the update in q-learning?
 num_episodes_update: 100
 
@@ -27,7 +32,7 @@ num_episodes_update: 100
 stack_size: 3
 
 # Num. of episodes to run simulate and learn
-num_episodes: 1000
+num_episodes: 200
 
 # Different states in which the environment might be.
 state:
@@ -55,6 +60,11 @@ state:
       - PPUNKNW
       - PPVALID
       - PPWRONG
+  pplast_pred:
+    names:
+      - PPPUNKNW
+      - PPPVALID
+      - PPPWRONG
 #  stop_loss:
 #    names:
 #      - STOPLOSS

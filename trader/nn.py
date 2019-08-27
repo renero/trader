@@ -4,34 +4,44 @@ from keras.layers import Dense, InputLayer
 from keras.models import Sequential, model_from_json
 
 from dictionary import Dictionary
+from common import Common
 
 
-class NN(object):
+class NN(Common):
 
     def __init__(self, configuration: Dictionary):
         self.configuration = configuration
 
     def create_model(self) -> Sequential:
+        num_cells = int(
+            self.configuration._num_states * \
+            self.configuration._num_actions * \
+            self.configuration._cells_reduction_factor)
+
         model = Sequential()
         model.add(
             InputLayer(batch_input_shape=(1, self.configuration._num_states)))
         model.add(
             Dense(
-                self.configuration._num_states * self.configuration._num_actions,
+                num_cells,
                 input_shape=(self.configuration._num_states,),
                 activation='sigmoid'))
         model.add(
             Dense(
                 self.configuration._num_actions,
                 input_shape=(
-                self.configuration._num_states * self.configuration._num_actions,),
+                    num_cells,),
                 activation='linear'))
         model.compile(loss='mse', optimizer='adam', metrics=['mae'])
-        model.summary()
+
+        if self.configuration._debug is True:
+            self.log('Model Summary')
+            model.summary()
 
         return model
 
     def save_model(self, model):
+        self.log('\nSaving model, weights and results.')
         # Check if file exists to abort saving operation
         solved = False
         char_to_append = ''
@@ -50,13 +60,22 @@ class NN(object):
         model_json = model.to_json()
         with open(fname, 'w') as json_file:
             json_file.write(model_json)
-        print('Saved model to disk: {}'.format(fname))
+        self.log('  Model: {}'.format(fname))
 
-        # serialize weights to HDF5
+        # Serialize weights to HDF5
         basename = 'model' + char_to_append + '.h5'
         fname = os.path.join(self.configuration._models_dir, basename)
         model.save_weights(fname)
-        print('Saved weights to disk: {}'.format(fname))
+        print('  Weights: {}'.format(fname))
+
+        # Save also the results table
+        basename = 'model' + char_to_append + '.csv'
+        fname = os.path.join(self.configuration._models_dir, basename)
+        self.configuration.results.to_csv(fname,
+                                          sep=',',
+                                          header=True,
+                                          float_format='%.2f')
+        print('  Results: {}'.format(fname))
 
     def load_model(self, model, weights):
         # load json and create model
