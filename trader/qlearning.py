@@ -59,8 +59,8 @@ class QLearning(Common):
         for i in range(self.configuration._num_episodes):
             state = env.reset()
             self.configuration._eps *= self.configuration._decay_factor
-            if (i % self.configuration._num_episodes_update == 0) or\
-                (i == (self.configuration._num_episodes - 1)):
+            if (i % self.configuration._num_episodes_update == 0) or \
+                    (i == (self.configuration._num_episodes - 1)):
                 end = time.time()
                 if avg_rewards:
                     last_avg = avg_rewards[-1]
@@ -134,15 +134,15 @@ class QLearning(Common):
         else:
             self.model = self.nn.create_model()
             avg_rewards, avg_loss, avg_mae = self.learn(env)
+            # display anything?
+            if do_plot is True and self.configuration._load_model is False:
+                plot.chart(avg_rewards, 'Average reward per game', 'line',
+                           ma=True)
+                plot.chart(avg_loss, 'Avg loss', 'line', ma=True)
+                plot.chart(avg_mae, 'Avg MAE', 'line', ma=True)
 
         # Extract the strategy matrix from the model.
         strategy = self.get_strategy()
-
-        # display anything?
-        if do_plot is True and self.configuration._load_model is False:
-            plot.chart(avg_rewards, 'Average reward per game', 'line', ma=True)
-            plot.chart(avg_loss, 'Avg loss', 'line', ma=True)
-            plot.chart(avg_mae, 'Avg MAE', 'line', ma=True)
         if display_strategy:
             self.display.strategy(self,
                                   env,
@@ -150,6 +150,6 @@ class QLearning(Common):
                                   self.configuration._num_states,
                                   strategy)
 
-        self.log('Time elapsed: {}'.format(
+        self.log('\nTime elapsed: {}'.format(
             self.configuration.display.timer(time.time() - start)))
         return strategy

@@ -46,7 +46,6 @@ class Display(Common):
     def add_to_table(self, values_to_report, table_headers):
         """
         Add the report values to the results table.
-        :param results:
         :param values_to_report: the list of values
         :param table_headers:
         :return:
@@ -169,7 +168,7 @@ class Display(Common):
             self.plot_value()
 
     def plot_value(self):
-        plt.figure(figsize=(12, 8))
+        plt.title('Price, forecast and P/L')
         plt.scatter(range(self.configuration.results.shape[0]),
                     self.configuration.results.loc[:, 'netValue'],
                     marker='.')
