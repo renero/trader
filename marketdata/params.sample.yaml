@@ -1,0 +1,6 @@
+world_trading_data:
+    base_url: https://api.worldtradingdata.com/api/v1/
+    api_token: CHANGE_ME
+    forex:
+        - base: EUR
+          convert_to: USD
