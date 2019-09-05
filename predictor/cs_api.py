@@ -54,7 +54,7 @@ def plot_move_prediction(y, Y_pred, pred_move_cs, num_predictions,
     plt.show()
 
 
-def prepare_datasets(encoder, cse, subtypes):
+def split_datasets(encoder, cse, subtypes):
     """
     Prepare the training and test datasets from an list of existing CSE, for
     each of the model names considered (body and move).

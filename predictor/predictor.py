@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-from cs_api import prepare_datasets, train_nn, load_nn, load_encoders, \
+from cs_api import split_datasets, train_nn, load_nn, load_encoders, \
     single_prediction, add_supervised_info, save_predictions
 from cs_encoder import CSEncoder
 from cs_logger import CSLogger
@@ -27,7 +27,7 @@ ohlc_data = ticks.read_ohlc()
 if params.do_train is True:
     encoder = CSEncoder().fit(ohlc_data)
     cse = encoder.ticks2cse(ohlc_data)
-    dataset = prepare_datasets(encoder, cse, params.subtypes)
+    dataset = split_datasets(encoder, cse, params.subtypes)
     nn = train_nn(dataset, params.subtypes)
     encoder.save()
 else:
