@@ -1,11 +1,14 @@
 import pickle
+from os.path import splitext, basename
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from tabulate import tabulate
 
 from cs_encoder import CSEncoder
 from cs_nn import Csnn
+from cs_utils import valid_output_name
 from dataset import Dataset
 from predict import Predict
 
@@ -309,3 +312,20 @@ def reorder_predictions(predictions, params):
                                        range(actual_position)] + avg_position
         predictions = predictions.iloc[:, columns]
     return predictions
+
+
+def save_predictions(predictions, params, log):
+    predictions = reorder_predictions(predictions, params)
+    if params._save_predictions is True:
+        # Find a valid filename and save everything
+        filename = valid_output_name(
+            filename='pred_{}_{}'.format(
+                splitext(basename(params._ticks_file))[0],
+                '_'.join(params.model_names)),
+            path=params._predictions_path,
+            extension='csv')
+        predictions.to_csv(filename, index=False)
+        log.info('predictions saved to: {}'.format(filename))
+    else:
+        print('\n', tabulate(predictions, headers='keys', tablefmt='psql',
+                             showindex=False, floatfmt=['.1f']), sep='')

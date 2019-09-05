@@ -2,18 +2,15 @@
 
 import os
 import sys
-from os.path import basename, splitext
 
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from tabulate import tabulate
 
 from cs_api import prepare_datasets, train_nn, load_nn, load_encoders, \
-    single_prediction, add_supervised_info, reorder_predictions
+    single_prediction, add_supervised_info, save_predictions
 from cs_encoder import CSEncoder
 from cs_logger import CSLogger
-from cs_utils import valid_output_name
 from params import Params
 from ticks import Ticks
 
@@ -25,6 +22,7 @@ params = Params(args=sys.argv)
 log = CSLogger(params._log_level)
 ticks = Ticks()
 ohlc_data = ticks.read_ohlc()
+
 
 if params.do_train is True:
     encoder = CSEncoder().fit(ohlc_data)
@@ -53,20 +51,7 @@ else:
         prediction = single_prediction(tick_group, nn, encoder, params)
         predictions = predictions.append(prediction)
 
-    predictions = reorder_predictions(predictions, params)
-    if params._save_predictions is True:
-        # Find a valid filename and save everything
-        filename = valid_output_name(
-            filename='pred_{}_{}'.format(
-                splitext(basename(params._ticks_file))[0],
-                '_'.join(params.model_names)),
-            path=params._predictions_path,
-            extension='csv')
-        predictions.to_csv(filename, index=False)
-        log.info('predictions saved to: {}'.format(filename))
-    else:
-        print('\n', tabulate(predictions, headers='keys', tablefmt='psql',
-                             showindex=False, floatfmt=['.1f']), sep='')
+    save_predictions(predictions, params, log)
 #
 # EOF
 #
