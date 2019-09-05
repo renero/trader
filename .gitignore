@@ -2,6 +2,7 @@
 resources/DeepLearningInFinance/
 resources/LSTM-Neural-Network-for-Time-Series-Prediction/
 output/
+data/
 
 # Project dependent ignores
 params.yaml
