@@ -4,10 +4,10 @@ import numpy as np
 from params import Params
 
 
-class Predict(Params):
+class CSPredict(Params):
 
     def __init__(self, X_test, y_test=None, oh_encoder=None):
-        super(Predict, self).__init__()
+        super(CSPredict, self).__init__()
         self._X_test = X_test
         if y_test is not None:
             self._y_test = y_test

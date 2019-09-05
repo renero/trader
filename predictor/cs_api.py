@@ -1,7 +1,6 @@
 import pickle
 from os.path import splitext, basename
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from tabulate import tabulate
@@ -10,48 +9,6 @@ from cs_encoder import CSEncoder
 from cs_nn import Csnn
 from cs_utils import valid_output_name
 from dataset import Dataset
-from predict import Predict
-
-
-def plot_body_prediction(raw_prediction, pred_body_cs):
-    # Plot the raw prediction from the NN
-    fig, ax = plt.subplots(figsize=(6, 4))
-    plt.plot(raw_prediction)
-    winner_prediction = max(raw_prediction, key=abs)
-    pos = np.where(raw_prediction == winner_prediction)[0][0]
-    plt.plot(pos, winner_prediction, 'yo')
-    plt.annotate(
-        '{}={}'.format(pos, pred_body_cs[0]),
-        xy=(pos, winner_prediction),
-        xytext=(pos + 0.5, winner_prediction))
-    plt.xticks(np.arange(0, len(raw_prediction), 1.0))
-    ax.xaxis.label.set_size(6)
-
-
-def plot_move_prediction(y, Y_pred, pred_move_cs, num_predictions,
-                         pred_length):
-    # find the position of the absmax mvalue in each of the arrays
-    y_maxed = np.zeros(y.shape)
-    for i in range(num_predictions):
-        winner_prediction = max(Y_pred[i], key=abs)
-        pos = np.where(Y_pred[i] == winner_prediction)[0][0]
-        y_maxed[(i * pred_length) + pos] = winner_prediction
-
-    # Plot the raw prediction from the NN
-    fig, ax = plt.subplots(figsize=(6, 4))
-    plt.plot(y)
-    for i in range(len(y_maxed)):
-        if y_maxed[i] != 0.0:
-            plt.plot(i, y[i], 'yo')
-            plt.annotate(
-                '{}={}'.format(i, pred_move_cs[int(i / pred_length)]),
-                xy=(i, y[i]),
-                xytext=(i + 0.6, y[i]))
-    plt.xticks(np.arange(0, len(y), 2.0))
-    ax.xaxis.label.set_size(2)
-    for vl in [i * pred_length for i in range(num_predictions + 1)]:
-        plt.axvline(x=vl, linestyle=':', color='red')
-    plt.show()
 
 
 def split_datasets(encoder, cse, subtypes):
