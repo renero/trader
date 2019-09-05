@@ -4,9 +4,24 @@ from params import Params
 
 
 class Ticks(Params):
+    min_value = 0.
+    max_value = 0.
 
     def __init__(self):
         super(Ticks, self).__init__()
+
+    def normalize(self, x):
+        return (x - self.min_value) / (self.max_value - self.min_value)
+
+    def denormalize(self, x):
+        return (x * (self.max_value - self.min_value)) + self.min_value
+
+    def scale_back(self, df):
+        if len(list(self.params['model_names'].keys())) == 1:
+            return df.applymap(np.vectorize(self.denormalize))
+        else:
+            return df.loc[:, df.columns != 'winner'].applymap(
+                np.vectorize(self.denormalize))
 
     def read_ohlc(self,
                   filepath=None,
@@ -21,14 +36,11 @@ class Ticks(Params):
         df = pd.read_csv(_filepath, delimiter=self._delimiter)
         df = df[list(cols_mapper.keys())].rename(
             index=str, columns=cols_mapper)
-        max_value = df.values.max()
-        min_value = df.values.min()
-
-        def normalize(x):
-            return (x - min_value) / (max_value - min_value)
+        self.max_value = df.values.max()
+        self.min_value = df.values.min()
 
         if do_normalize is True:
-            df = df.applymap(np.vectorize(normalize))
+            df = df.applymap(np.vectorize(self.normalize))
 
         info_msg = 'Read ticksfile: {}, output DF dim{}'
         self.log.info(info_msg.format(self._ticks_file, df.shape))

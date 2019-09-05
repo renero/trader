@@ -18,7 +18,7 @@ class Params(Arguments):
 
         with open(params_filepath, 'r') as stream:
             try:
-                self.params = yaml.load(stream)
+                self.params = yaml.load(stream, Loader=yaml.FullLoader)
             except yaml.YAMLError as exc:
                 print(exc)
 

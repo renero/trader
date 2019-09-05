@@ -58,7 +58,7 @@ def prepare_datasets(encoder, cse, subtypes):
 
     :param encoder: The encoder used to build the CSE list.
     :param cse: The list of CSE objects
-    :param params: The parameters read from file
+    :param subtypes: The parameters read from file
     :return: The datasets for each of the models that need to be built. The
         names of the models specify the 'body' part and the 'move' part.
     """
@@ -110,20 +110,29 @@ def load_encoders(model_names):
     return encoder
 
 
-def predict_testset(dataset, encoder, nn, subtypes):
+def predict_dataset(dataset, encoder, nn, subtypes=None, split='test'):
     """
     Run prediction for body and move over the testsets in the dataset object
-    :param dataset: the data
-    :param encoder:
-    :param nn:
-    :param params:
+    :param dataset: the dataset
+    :param encoder: the encoder to be used
+    :param nn: the network to be used to make the prediction
+    :param subtypes: normally 'body' and 'move'
+    :param split: whether to perform the prediction over the 'test' or 'train'
+        splits
     :return:
     """
+    if subtypes is None:
+        subtypes = ['body', 'move']
     prediction = {}
     for name in subtypes:
-        prediction[name] = Predict(dataset[name].X_test,
-                                   dataset[name].y_test,
-                                   encoder.onehot[name])
+        if split == 'test':
+            prediction[name] = Predict(dataset[name].X_test,
+                                       dataset[name].y_test,
+                                       encoder.onehot[name])
+        else:
+            prediction[name] = Predict(dataset[name].X_train,
+                                       dataset[name].y_train,
+                                       encoder.onehot[name])
         call_predict = getattr(prediction[name],
                                'predict_{}_batch'.format(name))
         call_predict(nn[name])
@@ -182,7 +191,7 @@ def predict_close(ticks, encoder, nn, params):
     prediction_cs = np.concatenate((pred_body_cs, pred_move_cs), axis=0)
     this_prediction = dict(zip(params._cse_tags, prediction_cs))
     prediction_df = prediction_df.append(this_prediction, ignore_index=True)
-    params.log.info('Net {} ID 0x{} -> {}:{}|{}|{}|{}'.format(
+    params.log.info('Net {} ID {} -> {}:{}|{}|{}|{}'.format(
         nn['body'].name,
         hex(id(nn)),
         prediction_df[params._cse_tags[0]].values[0],
@@ -207,19 +216,26 @@ def single_prediction(tick_group, nn, encoder, params):
     for name in params.model_names:
         next_close = predict_close(tick_group, encoder[name], nn[name], params)
         predictions = np.append(predictions, [next_close])
-    model_names = list(params.model_names.keys())
-    new_columns = ['actual', 'avg', 'avg_diff', 'median', 'med_diff',
-                   'winner']
 
-    # If I decide to use ensembles, I must add two new columns
-    if params._ensemble is True:
-        new_columns = new_columns + ['ensemble', 'ens_diff']
+    # If the number of models is greater than 1, I also add statistics about
+    # their result.
+    model_names = list(params.model_names.keys())
+    if len(model_names) > 1:
+        new_columns = ['actual', 'avg', 'avg_diff', 'median', 'med_diff',
+                       'winner']
+        # If I decide to use ensembles, I must add two new columns
+        if params._ensemble is True:
+            new_columns = new_columns + ['ensemble', 'ens_diff']
+    else:
+        new_columns = []
 
     df = pd.DataFrame([], columns=model_names + new_columns)
     df = df.append(dict(zip(params.model_names.keys(), predictions)),
                    ignore_index=True)
-    df['avg'] = df.mean(axis=1)
-    df['median'] = df.median(axis=1)
+
+    if len(model_names) > 1:
+        df['avg'] = df.mean(axis=1)
+        df['median'] = df.median(axis=1)
 
     # When using ensemble, compute what the ensemble predicts, and add it.
     if params._ensemble:
@@ -251,17 +267,45 @@ def add_supervised_info(prediction, real_value, params):
     def diff_with(column_label):
         return abs(prediction['actual'] - prediction[column_label])
 
+    model_names = list(params.model_names.keys())
     prediction['actual'] = real_value
-    prediction['avg_diff'] = diff_with('avg')
-    prediction['med_diff'] = diff_with('median')
-    if params._ensemble is True:
-        prediction['ens_diff'] = diff_with('ensemble')
-    max_diff = 10000000.0
-    winner = ''
-    for name in params.model_names.keys():
-        diff = abs(prediction[name].iloc[-1] - prediction['actual'].iloc[-1])
-        if diff < max_diff:
-            max_diff = diff
-            winner = name
-    prediction.loc[:, 'winner'] = winner
+    if len(model_names) > 1:
+        prediction['avg_diff'] = diff_with('avg')
+        prediction['med_diff'] = diff_with('median')
+        if params._ensemble is True:
+            prediction['ens_diff'] = diff_with('ensemble')
+        max_diff = 10000000.0
+        winner = ''
+        for name in params.model_names.keys():
+            diff = abs(
+                prediction[name].iloc[-1] - prediction['actual'].iloc[-1])
+            if diff < max_diff:
+                max_diff = diff
+                winner = name
+        prediction.loc[:, 'winner'] = winner
     return prediction
+
+
+def reorder_predictions(predictions, params):
+    """
+    Reorder predictions: If I'm producing predictions for the training set I
+    reorder 'actual' values column in first column position. If I'm only
+    producing a single prediction then, I simply drop all columns referring
+    to the case when I know the response.
+    :param predictions: the data frame with the predictions
+    :param params: the parameters file.
+    :return: the predictions reordered.
+    """
+    if params._predict_training is False:
+        predictions = predictions.drop(
+            ['actual', 'avg_diff', 'med_diff', 'winner'], axis=1)
+    else:
+        # Reorder columns to set 'actual' in first position
+        actual_position = list(predictions.columns).index('actual')
+        avg_position = []
+        if len(params.model_names.keys()) > 1:
+            avg_position = list(predictions.columns).index('avg')
+        columns = [actual_position] + [i for i in
+                                       range(actual_position)] + avg_position
+        predictions = predictions.iloc[:, columns]
+    return predictions

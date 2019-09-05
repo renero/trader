@@ -65,7 +65,7 @@ class Csnn(Params):
             self.name = self._metadata['dataset']
         self.subtype = subtype
         self._metadata['subtype'] = subtype
-        self.log.info(
+        self.log.debug(
             'NN {}.{} created'.format(self.name, self._metadata['subtype']))
 
     def build_model(self, window_size=None, num_categories=None, summary=True):
@@ -124,7 +124,7 @@ class Csnn(Params):
         Make a prediction over the internal X_test set.
         """
         info_msg = 'Network {}/{} making prediction'
-        self.log.info(info_msg.format(self.name, self.subtype))
+        self.log.debug(info_msg.format(self.name, self.subtype))
         self._yhat = self._model.predict(test_set)
         return self._yhat
 

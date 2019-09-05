@@ -95,7 +95,7 @@ class Predict(Params):
             y_pred = [
                 nn.hardmax(
                     y[0][i * self._pred_length:(
-                                                       i * self._pred_length) + self._pred_length])
+                                                           i * self._pred_length) + self._pred_length])
                 for i in range(num_predictions)
             ]
             move_predicted = [
