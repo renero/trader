@@ -1,6 +1,8 @@
-from os.path import join
+from os.path import join, dirname, realpath
 from pathlib import Path
-from random import randint, seed
+from random import randint
+
+from utils.file_io import file_exists
 
 
 def letter_in_string(string, letter):
@@ -59,6 +61,7 @@ def valid_output_name(filename, path, extension=None):
     Returns The filename if the name is valid and file does not exists,
             None otherwise.
     """
+    path = file_exists(path, dirname(realpath(__file__)))
     if extension:
         base_filepath = join(path, filename) + '.{}'.format(extension)
     else:
@@ -67,8 +70,9 @@ def valid_output_name(filename, path, extension=None):
     idx = 1
     while Path(output_filepath).is_file() is True:
         if extension:
-            output_filepath = join(path, filename) + '_{:d}.{}'.format(idx,
-                                                                     extension)
+            output_filepath = join(
+                path, filename) + '_{:d}.{}'.format(
+                    idx, extension)
         else:
             output_filepath = join(path, filename + '_{}'.format(idx))
         idx += 1

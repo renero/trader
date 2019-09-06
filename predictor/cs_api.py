@@ -7,6 +7,7 @@ from tabulate import tabulate
 
 from cs_encoder import CSEncoder
 from cs_nn import Csnn
+from cs_predict import CSPredict
 from cs_utils import valid_output_name
 from dataset import Dataset
 
@@ -86,13 +87,13 @@ def predict_dataset(dataset, encoder, nn, subtypes=None, split='test'):
     prediction = {}
     for name in subtypes:
         if split == 'test':
-            prediction[name] = Predict(dataset[name].X_test,
-                                       dataset[name].y_test,
-                                       encoder.onehot[name])
+            prediction[name] = CSPredict(dataset[name].X_test,
+                                         dataset[name].y_test,
+                                         encoder.onehot[name])
         else:
-            prediction[name] = Predict(dataset[name].X_train,
-                                       dataset[name].y_train,
-                                       encoder.onehot[name])
+            prediction[name] = CSPredict(dataset[name].X_train,
+                                         dataset[name].y_train,
+                                         encoder.onehot[name])
         call_predict = getattr(prediction[name],
                                'predict_{}_batch'.format(name))
         call_predict(nn[name])
@@ -102,11 +103,13 @@ def predict_dataset(dataset, encoder, nn, subtypes=None, split='test'):
 def predict_close(ticks, encoder, nn, params):
     """
     From a list of ticks, make a prediction of what will be the next CS.
+
     :param ticks: a dataframe of ticks with the expected headers and size
-    corresponding to the window size of the network to be used.
+        corresponding to the window size of the network to be used.
     :param encoder: the encoder used to train the network
     :param nn: the recurrent network to make the prediction with
     :param params: the parameters file read from configuration.
+
     :return: the close value of the CS predicted.
     """
     # Check that the input group of ticks match the size of the window of
@@ -144,7 +147,6 @@ def predict_close(ticks, encoder, nn, params):
         encoder.onehot['move'].decode(Y_pred[i])[0] for i in
         range(num_predictions)
     ]
-    # plot_move_prediction(y, Y_pred, pred_move_cs, num_predictions, pred_length)
 
     # Decode the prediction into a normal tick (I'm here!!!)
     prediction_df = pd.DataFrame([], columns=params._cse_tags)

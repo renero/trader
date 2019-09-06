@@ -1,4 +1,4 @@
-#!/Users/renero/anaconda3/envs/py36/bin/python
+# -*- coding: utf-8 -*-
 
 import os
 import sys
@@ -22,7 +22,6 @@ params = Params(args=sys.argv)
 log = CSLogger(params._log_level)
 ticks = Ticks()
 ohlc_data = ticks.read_ohlc()
-
 
 if params.do_train is True:
     encoder = CSEncoder().fit(ohlc_data)

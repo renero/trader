@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 import pickle
 from pathlib import Path
-from os.path import basename, join, splitext
-from datetime import datetime
+from os.path import basename, join, splitext, dirname, realpath
 
+from utils.file_io import file_exists
 from oh_encoder import OHEncoder
 from cs_utils import which_string
 from params import Params
@@ -511,6 +511,7 @@ class CSEncoder(Params):
         else:
             path = pickle_file_path
         pickle_file = join(self._models_dir, '{}'.format(path))
+        pickle_file = file_exists(pickle_file, dirname(realpath(__file__)))
         with open(pickle_file, 'rb') as f:
             self.__dict__.update(pickle.load(f).__dict__)
         # Overwrite log level from pickle file.
