@@ -8,7 +8,7 @@ from tabulate import tabulate
 from cs_encoder import CSEncoder
 from cs_nn import Csnn
 from cs_predict import CSPredict
-from cs_utils import valid_output_name
+from utils.file_io import valid_output_name
 from dataset import Dataset
 
 
