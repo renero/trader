@@ -1,57 +1,15 @@
 import pickle
 from os.path import splitext, basename
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from tabulate import tabulate
 
 from cs_encoder import CSEncoder
 from cs_nn import Csnn
-from cs_utils import valid_output_name
+from cs_predict import CSPredict
 from dataset import Dataset
-from predict import Predict
-
-
-def plot_body_prediction(raw_prediction, pred_body_cs):
-    # Plot the raw prediction from the NN
-    fig, ax = plt.subplots(figsize=(6, 4))
-    plt.plot(raw_prediction)
-    winner_prediction = max(raw_prediction, key=abs)
-    pos = np.where(raw_prediction == winner_prediction)[0][0]
-    plt.plot(pos, winner_prediction, 'yo')
-    plt.annotate(
-        '{}={}'.format(pos, pred_body_cs[0]),
-        xy=(pos, winner_prediction),
-        xytext=(pos + 0.5, winner_prediction))
-    plt.xticks(np.arange(0, len(raw_prediction), 1.0))
-    ax.xaxis.label.set_size(6)
-
-
-def plot_move_prediction(y, Y_pred, pred_move_cs, num_predictions,
-                         pred_length):
-    # find the position of the absmax mvalue in each of the arrays
-    y_maxed = np.zeros(y.shape)
-    for i in range(num_predictions):
-        winner_prediction = max(Y_pred[i], key=abs)
-        pos = np.where(Y_pred[i] == winner_prediction)[0][0]
-        y_maxed[(i * pred_length) + pos] = winner_prediction
-
-    # Plot the raw prediction from the NN
-    fig, ax = plt.subplots(figsize=(6, 4))
-    plt.plot(y)
-    for i in range(len(y_maxed)):
-        if y_maxed[i] != 0.0:
-            plt.plot(i, y[i], 'yo')
-            plt.annotate(
-                '{}={}'.format(i, pred_move_cs[int(i / pred_length)]),
-                xy=(i, y[i]),
-                xytext=(i + 0.6, y[i]))
-    plt.xticks(np.arange(0, len(y), 2.0))
-    ax.xaxis.label.set_size(2)
-    for vl in [i * pred_length for i in range(num_predictions + 1)]:
-        plt.axvline(x=vl, linestyle=':', color='red')
-    plt.show()
+from utils.file_io import valid_output_name
 
 
 def split_datasets(encoder, cse, subtypes):
@@ -129,13 +87,13 @@ def predict_dataset(dataset, encoder, nn, subtypes=None, split='test'):
     prediction = {}
     for name in subtypes:
         if split == 'test':
-            prediction[name] = Predict(dataset[name].X_test,
-                                       dataset[name].y_test,
-                                       encoder.onehot[name])
+            prediction[name] = CSPredict(dataset[name].X_test,
+                                         dataset[name].y_test,
+                                         encoder.onehot[name])
         else:
-            prediction[name] = Predict(dataset[name].X_train,
-                                       dataset[name].y_train,
-                                       encoder.onehot[name])
+            prediction[name] = CSPredict(dataset[name].X_train,
+                                         dataset[name].y_train,
+                                         encoder.onehot[name])
         call_predict = getattr(prediction[name],
                                'predict_{}_batch'.format(name))
         call_predict(nn[name])
@@ -145,11 +103,13 @@ def predict_dataset(dataset, encoder, nn, subtypes=None, split='test'):
 def predict_close(ticks, encoder, nn, params):
     """
     From a list of ticks, make a prediction of what will be the next CS.
+
     :param ticks: a dataframe of ticks with the expected headers and size
-    corresponding to the window size of the network to be used.
+        corresponding to the window size of the network to be used.
     :param encoder: the encoder used to train the network
     :param nn: the recurrent network to make the prediction with
     :param params: the parameters file read from configuration.
+
     :return: the close value of the CS predicted.
     """
     # Check that the input group of ticks match the size of the window of
@@ -187,7 +147,6 @@ def predict_close(ticks, encoder, nn, params):
         encoder.onehot['move'].decode(Y_pred[i])[0] for i in
         range(num_predictions)
     ]
-    # plot_move_prediction(y, Y_pred, pred_move_cs, num_predictions, pred_length)
 
     # Decode the prediction into a normal tick (I'm here!!!)
     prediction_df = pd.DataFrame([], columns=params._cse_tags)
@@ -327,5 +286,5 @@ def save_predictions(predictions, params, log):
         predictions.to_csv(filename, index=False)
         log.info('predictions saved to: {}'.format(filename))
     else:
-        print('\n', tabulate(predictions, headers='keys', tablefmt='psql',
-                             showindex=False, floatfmt=['.1f']), sep='')
+        print(tabulate(predictions, headers='keys', tablefmt='psql',
+                       showindex=False, floatfmt=['.1f']))

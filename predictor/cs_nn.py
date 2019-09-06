@@ -1,13 +1,14 @@
+from datetime import datetime
+from os.path import join, basename, splitext, dirname, realpath
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
-
-from datetime import datetime
 from keras.layers import LSTM, Dense, Dropout
 from keras.models import Sequential, model_from_json
 from keras.regularizers import l2
-from os.path import join, basename, splitext
-from pathlib import Path
 
+from utils.file_io import file_exists
 from params import Params
 
 
@@ -173,15 +174,17 @@ class Csnn(Params):
     def load(self, model_name, summary=False):
         """ Load json and create model """
         self.log.info('Reading model file: {}'.format(model_name))
-        json_file = open(
-            join(self._models_dir, '{}.json'.format(model_name)), 'r')
+        nn_path = join(self._models_dir, '{}.json'.format(model_name))
+        nn_path = file_exists(nn_path, dirname(realpath(__file__)))
+        json_file = open(nn_path, 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         loaded_model = model_from_json(loaded_model_json)
 
         # load weights into new model
-        loaded_model.load_weights(
-            join(self._models_dir, '{}.h5'.format(model_name)))
+        weights_path = join(self._models_dir, '{}.h5'.format(model_name))
+        weights_path = file_exists(weights_path, dirname(realpath(__file__)))
+        loaded_model.load_weights(weights_path)
         loaded_model.compile(
             loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 

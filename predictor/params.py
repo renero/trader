@@ -1,12 +1,16 @@
+import sys
+
 import yaml
 
 from arguments import Arguments
 from cs_logger import CSLogger
+from utils.file_io import file_exists
+from os.path import dirname, realpath
 
 
 class Params(Arguments):
 
-    def __init__(self, params_filepath='./params.yaml', args=[]):
+    def __init__(self, filepath='params.yaml', args=[]):
         """
         Init a class with all the parameters in the default YAML file.
         For each of them, create a new class attribute, with the same name
@@ -16,7 +20,9 @@ class Params(Arguments):
         """
         super(Params, self).__init__(*args)
 
-        with open(params_filepath, 'r') as stream:
+        # Check if file exists
+        filepath = file_exists(filepath, dirname(realpath(__file__)))
+        with open(filepath, 'r') as stream:
             try:
                 self.params = yaml.load(stream, Loader=yaml.FullLoader)
             except yaml.YAMLError as exc:

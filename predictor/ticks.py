@@ -1,6 +1,10 @@
+from os.path import dirname, realpath
+
 import numpy as np
 import pandas as pd
+
 from params import Params
+from utils.file_io import file_exists
 
 
 class Ticks(Params):
@@ -33,7 +37,8 @@ class Ticks(Params):
         _ohlc_tags = self._ohlc_tags if ohlc_tags is None else ohlc_tags
 
         cols_mapper = dict(zip(_columns, _ohlc_tags))
-        df = pd.read_csv(_filepath, delimiter=self._delimiter)
+        filepath = file_exists(_filepath, dirname(realpath(__file__)))
+        df = pd.read_csv(filepath, delimiter=self._delimiter)
         df = df[list(cols_mapper.keys())].rename(
             index=str, columns=cols_mapper)
         self.max_value = df.values.max()

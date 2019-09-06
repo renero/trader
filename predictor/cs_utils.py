@@ -1,6 +1,4 @@
-from os.path import join
-from pathlib import Path
-from random import randint, seed
+from random import randint
 
 
 def letter_in_string(string, letter):
@@ -51,25 +49,3 @@ def random_tick_group(ticks, max_len):
     start = randint(0, ticks.shape[0] - max_len - 1)
     end = start + max_len
     return ticks.iloc[start:end]
-
-
-def valid_output_name(filename, path, extension=None):
-    """
-    Builds a valid name with the encoder metadata the date.
-    Returns The filename if the name is valid and file does not exists,
-            None otherwise.
-    """
-    if extension:
-        base_filepath = join(path, filename) + '.{}'.format(extension)
-    else:
-        base_filepath = join(path, filename)
-    output_filepath = base_filepath
-    idx = 1
-    while Path(output_filepath).is_file() is True:
-        if extension:
-            output_filepath = join(path, filename) + '_{:d}.{}'.format(idx,
-                                                                     extension)
-        else:
-            output_filepath = join(path, filename + '_{}'.format(idx))
-        idx += 1
-    return output_filepath

@@ -1,4 +1,4 @@
-#!/Users/renero/anaconda3/envs/py36/bin/python
+# -*- coding: utf-8 -*-
 
 import os
 import sys
@@ -23,7 +23,6 @@ log = CSLogger(params._log_level)
 ticks = Ticks()
 ohlc_data = ticks.read_ohlc()
 
-
 if params.do_train is True:
     encoder = CSEncoder().fit(ohlc_data)
     cse = encoder.ticks2cse(ohlc_data)
@@ -36,6 +35,7 @@ else:
     predictions = pd.DataFrame([])
 
     if params._predict_training:
+        cse = encoder.ticks2cse(ohlc_data)
         # for from_idx in range(0, ticks.shape[0] - params._window_size + 1):
         for from_idx in range(0, 50 - params._window_size + 1):
             tick_group = ohlc_data.iloc[from_idx:from_idx + params._window_size]
