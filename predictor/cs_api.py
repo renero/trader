@@ -8,8 +8,8 @@ from tabulate import tabulate
 from cs_encoder import CSEncoder
 from cs_nn import Csnn
 from cs_predict import CSPredict
-from utils.file_io import valid_output_name
 from dataset import Dataset
+from utils.file_io import valid_output_name
 
 
 def split_datasets(encoder, cse, subtypes):
@@ -286,5 +286,5 @@ def save_predictions(predictions, params, log):
         predictions.to_csv(filename, index=False)
         log.info('predictions saved to: {}'.format(filename))
     else:
-        print('\n', tabulate(predictions, headers='keys', tablefmt='psql',
-                             showindex=False, floatfmt=['.1f']), sep='')
+        print(tabulate(predictions, headers='keys', tablefmt='psql',
+                       showindex=False, floatfmt=['.1f']))
