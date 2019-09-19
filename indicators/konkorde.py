@@ -39,10 +39,18 @@ Versión actualizada y reformulada
     bandacero COLOURED(0,0,0) as "cero"
 
 """
+from base_indicators import pvi, positive_volume_index
 
 
 class Konkorde(object):
 
     def __init__(self, configuration):
         self.configuration = configuration
+        print("here")
+
+    @staticmethod
+    def compute(data, periods=255, close_col="Close", vol_col="Volume"):
+        pos_vi = positive_volume_index(data, periods, close_col, vol_col)
+        data['pvi'] = pos_vi
+        return data
 

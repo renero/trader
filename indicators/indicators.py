@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib as plt
 
 from dictionary import Dictionary
+from konkorde import Konkorde
 
 
 def ticks_to_ohlc(input_file):
@@ -10,7 +11,7 @@ def ticks_to_ohlc(input_file):
     data['Fecha'] = pd.to_datetime(
         data['Fecha'], format='%d/%m/%Y %H:%M:%S', errors='coerce')
     data = data.set_index('Fecha')
-    return data.resample('D').agg('last')
+    return data.resample('D').agg('last').ohlc()
 
 
 def plot_comp(data, column):
@@ -27,14 +28,16 @@ def plot_comp(data, column):
     plt.show()
 
 
-def read_data(file_path):
-    data = pd.read_csv(file_path, sep=';')
+def read_data(file_path, separator=','):
+    data = pd.read_csv(file_path, sep=separator)
     return data
 
 
 if __name__ == "__main__":
     configuration = Dictionary()
-    input_data = read_data(configuration._input_data)
+    input_data = read_data(configuration._input_data, configuration._separator)
     konkorde = Konkorde(configuration)
-    output = konkorde.compute(input_data)
-    save_data(output)
+
+    result = konkorde.compute(input_data, close_col='Price', vol_col='Volume')
+    print(result.head(10))
+    # save_data(output)

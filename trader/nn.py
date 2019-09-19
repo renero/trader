@@ -3,7 +3,7 @@ import os
 from keras.layers import Dense, InputLayer
 from keras.models import Sequential, model_from_json
 
-from dictionary import Dictionary
+from utils.dictionary import Dictionary
 from common import Common
 
 
