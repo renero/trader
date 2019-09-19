@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib as plt
 
+from base_indicators import ema
 from dictionary import Dictionary
 from konkorde import Konkorde
 

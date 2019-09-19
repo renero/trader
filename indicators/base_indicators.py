@@ -5,59 +5,59 @@ License: GNU General Public License
 
 import numpy as np
 import pandas as pd
+from pandas import Series
 
 
-def positive_volume_index(data, periods=255, close_col='Close',
-                          vol_col='Volume'):
+def positive_volume_index(close: Series, volume: Series, start_pos: int = 6):
     """
     Positive Volume Index (PVI)
     Source: https://www.equities.com/news/the-secret-to-the-positive-volume-index
-    Params:
-        data: pandas DataFrame
-        periods: period for calculating PVI (255 days recommended)
-        close_col: the name of the CLOSE values column
-        vol_col: the name of the VOL values column
-
-    Returns:
-        copy of 'data' DataFrame with 'pvi' and 'pvi_ema' columns added
     """
-    start_pos = 5
-    pvi = pd.Series(
-        data=np.nan, index=data.index, dtype='float64', name='pvi')
-
-    for index, row in data.iterrows():
-        if index > start_pos:
-            prev_pvi = pvi.at[index - 1]
-            close = data.at[index, close_col]
-            prev_close = data.at[index - 1, close_col]
-            vol = data.at[index, vol_col]
-            prev_vol = data.at[index - 1, vol_col]
-            if (vol - prev_vol) / prev_vol > 0.:
-                pvi.iloc[index] = prev_pvi + (
-                        ((close - prev_close) / prev_close) * 100.)
-            else:
-                pvi.iloc[index] = prev_pvi
+    pvi = pd.Series(index=close.index, dtype='float64', name='pvi')
+    pvi.iloc[:] = 1000.0
+    price_chg = close.pct_change()
+    vol_change = volume.pct_change()
+    for i in range(start_pos, len(pvi)):
+        if vol_change.iloc[i] > 0:
+            pvi.iloc[i] = pvi.iloc[i - 1] + (
+                    price_chg.iloc[i] * 100.)
         else:
-            pvi.iloc[index] = 1000
+            pvi.iloc[i] = pvi.iloc[i - 1]
     return pvi
 
 
-def ema(data, period=0, column='<CLOSE>'):
+def negative_volume_index(close: Series, volume: Series, start_pos: int = 1):
+    """
+    Negative Volume Index (PVI)
+    Source: https://www.equities.com/news/the-secret-to-the-positive-volume-index
+    """
+    nvi = pd.Series(index=close.index, dtype='float64', name='nvi')
+    nvi.iloc[:] = 1000.0
+    price_chg = close.pct_change()
+    vol_change = volume.pct_change()
+    for i in range(start_pos, len(nvi)):
+        if vol_change.iloc[i] < 0:
+            nvi.iloc[i] = nvi.iloc[i - 1] + (
+                    price_chg.iloc[i] * 100.)
+        else:
+            nvi.iloc[i] = nvi.iloc[i - 1]
+    return nvi
+
+
+def ema(data_series):
     """
     Exponential moving average
     Source: http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:moving_averages
     Params:
         data: pandas DataFrame
         period: smoothing period
-        column: the name of the column with values for calculating EMA in the 'data' DataFrame
+        column: the name of the column with values for calculating EMA in
+        the 'data' DataFrame
 
     Returns:
         copy of 'data' DataFrame with 'ema[period]' column added
     """
-    data['ema' + str(period)] = data[column].ewm(ignore_na=False,
-                                                 min_periods=period, com=period,
-                                                 adjust=True).mean()
-    return data
+    return data_series.ewm(span=1, adjust=False).mean()
 
 
 def macd(data, period_long=26, period_short=12, period_signal=9,
@@ -546,28 +546,6 @@ Params:
 Returns:
     copy of 'data' DataFrame with 'nvi' and 'nvi_ema' columns added
 """
-
-
-def negative_volume_index(data, periods=255, close_col='Close',
-                          vol_col='Volume'):
-    data['nvi'] = 0.
-
-    for index, row in data.iterrows():
-        if index > 0:
-            prev_nvi = data.at[index - 1, 'nvi']
-            prev_close = data.at[index - 1, close_col]
-            if row[vol_col] < data.at[index - 1, vol_col]:
-                nvi = prev_nvi + (
-                        row[close_col] - prev_close / prev_close * prev_nvi)
-            else:
-                nvi = prev_nvi
-        else:
-            nvi = 1000
-        data.set_value(index, 'nvi', nvi)
-    data['nvi_ema'] = data['nvi'].ewm(ignore_na=False, min_periods=0,
-                                      com=periods, adjust=True).mean()
-
-    return data
 
 
 def momentum(data, periods=14, close_col='Close'):
