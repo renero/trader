@@ -7,58 +7,6 @@ import numpy as np
 import pandas as pd
 
 
-def pvi(close, volume, fillna=False):
-    """
-    Positive Volume Index (PVI)
-    http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:negative_volume_inde
-    The Negative Volume Index (NVI) is a cumulative indicator that uses the
-    change in volume to decide when the smart money is active. Paul Dysart
-    first developed this indicator in the 1930s. [...] Dysart's Negative Volume
-    Index works under the assumption that the smart money is active on days
-    when volume decreases and the not-so-smart money is active on days when
-    volume increases.
-    The cumulative NVI line was unchanged when volume increased from one
-    period to the other. In other words, nothing was done. Norman Fosback, of
-    Stock Market Logic, adjusted the indicator by substituting the percentage
-    price change for Net Advances.
-    This implementation is the Fosback version.
-    If today's volume is more than yesterday's volume then:
-        pvi(t) = pvi(t-1) * ( 1 + (close(t) - close(t-1)) / close(t-1) )
-    Else
-        pvi(t) = pvi(t-1)
-    Please note: the "stockcharts.com" example calculation just adds the
-    percentange change of price to previous NVI when volumes decline; other
-    sources indicate that the same percentage of the previous NVI value should
-    be added, which is what is implemented here.
-    Args:
-        close(pandas.Series): dataset 'Close' column.
-        volume(pandas.Series): dataset 'Volume' column.
-        fillna(bool): if True, fill nan values with 1000.
-    Returns:
-        pandas.Series: New feature generated.
-    See also:
-    https://en.wikipedia.org/wiki/Positive_volume_index
-    """
-    price_change = close.pct_change()
-    vol_increase = (volume.shift(1) > volume)
-    start_pos = 5
-    pvi = pd.Series(
-        data=np.nan, index=close.index, dtype='float64', name='pvi')
-
-    pvi.iloc[0:start_pos - 1] = 1000
-    for i in range(start_pos, len(pvi)):
-        if vol_increase.iloc[i]:
-            pvi.iloc[i] = pvi.iloc[i - 1] * (1.0 + price_change.iloc[i])
-        else:
-            pvi.iloc[i] = pvi.iloc[i - 1]
-
-    if fillna:
-        # IDEA: There shouldn't be any na; might be better to throw exception
-        pvi = pvi.replace([np.inf, -np.inf], np.nan).fillna(1000)
-
-    return pd.Series(pvi, name='pvi')
-
-
 def positive_volume_index(data, periods=255, close_col='Close',
                           vol_col='Volume'):
     """
