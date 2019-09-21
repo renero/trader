@@ -218,7 +218,7 @@ def rsi(close, window_size=14):
 
 def stoch_osc(high, low, close, window_size=14, fillna=False):
     """
-    Stochastic Oscillator
+    Stochastic Oscillator Index.
     """
     smin = low.rolling(window_size, min_periods=window_size).min()
     smax = high.rolling(window_size, min_periods=window_size).max()
