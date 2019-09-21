@@ -61,4 +61,6 @@ class Konkorde(object):
         data['b_up'] = bollinger_band(data['Price'], 'up')
         data['b_down'] = bollinger_band(data['Price'], 'down')
         data['b_osc'] = b_osc(data['Price'], data['b_up'], data['b_down'])
+        data['rsi'] = rsi(data['Price'])
+
         return data

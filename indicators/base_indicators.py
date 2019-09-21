@@ -1,6 +1,5 @@
 """
-Copyright, Rinat Maksutov, 2017.
-License: GNU General Public License
+Copyright, J. Renero, 2019
 """
 
 import numpy as np
@@ -121,12 +120,6 @@ def oscp(pvi: Series, pvim: Series) -> Series:
 
 def money_flow_index(high, low, close, volume, n=14, fillna=False):
     """Money Flow Index (MFI)
-    Uses both price and volume to measure buying and selling pressure. It is
-    positive when the typical price rises (buying pressure) and negative when
-    the typical price declines (selling pressure). A ratio of positive and
-    negative money flow is then plugged into an RSI formula to create an
-    oscillator that moves between zero and one hundred.
-    http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:money_flow_index_mfi
     Args:
         high(pandas.Series): dataset 'High' column.
         low(pandas.Series): dataset 'Low' column.
@@ -171,7 +164,7 @@ def money_flow_index(high, low, close, volume, n=14, fillna=False):
     return pd.Series(mr, name='mfi')
 
 
-def bollinger_band(close, which, n=20, ndev=2, fillna=False):
+def bollinger_band(close, which, n=20):
     assert which is 'up' or which is 'down', \
         "Parameter which can only be 'up' or 'down'"
     mavg = close.rolling(n).mean()
@@ -199,3 +192,25 @@ def b_osc(close: Series, bup, bdown, n=20) -> Series:
     b['b_osc'] = ((b['close'] - b['b1']) / b['b2']) * 100.
 
     return pd.Series(b['b_osc'], name='b_osc')
+
+
+def rsi(close, window_size=14):
+    """ rsi indicator """
+    # Get the difference in price from previous step
+    delta = close.diff()
+    # Get rid of the first row, which is NaN since it did not have a previous
+    # row to calculate the differences
+    delta = delta[1:]
+
+    # Make the positive gains (up) and negative gains (down) Series
+    up, down = delta.copy(), delta.copy()
+    up[up < 0] = 0
+    down[down > 0] = 0
+
+    # Calculate the SMA
+    roll_up = up.rolling(window_size).mean()
+    roll_down = down.abs().rolling(window_size).mean()
+
+    # Calculate the RSI based on SMA
+    rs = roll_up / roll_down
+    return 100.0 - (100.0 / (1.0 + rs))

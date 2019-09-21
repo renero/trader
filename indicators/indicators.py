@@ -39,5 +39,5 @@ if __name__ == "__main__":
     konkorde = Konkorde(configuration)
 
     result = konkorde.compute(input_data, close_col='Price', vol_col='Volume')
-    print(result.iloc[:, [0, 1, -5, -4, -3, -2, -1]].head(30))
+    print(result.iloc[:, [0, 1, -3, -2, -1]].head(30))
     # save_data(output)
