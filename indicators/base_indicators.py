@@ -200,7 +200,7 @@ def rsi(close, window_size=14):
     delta = close.diff()
     # Get rid of the first row, which is NaN since it did not have a previous
     # row to calculate the differences
-    delta = delta[1:]
+    # delta = delta[1:]
 
     # Make the positive gains (up) and negative gains (down) Series
     up, down = delta.copy(), delta.copy()
@@ -214,3 +214,17 @@ def rsi(close, window_size=14):
     # Calculate the RSI based on SMA
     rs = roll_up / roll_down
     return 100.0 - (100.0 / (1.0 + rs))
+
+
+def stoch_osc(high, low, close, window_size=14, fillna=False):
+    """
+    Stochastic Oscillator
+    """
+    smin = low.rolling(window_size, min_periods=window_size).min()
+    smax = high.rolling(window_size, min_periods=window_size).max()
+    stoch_k = 100 * (close - smin) / (smax - smin)
+
+    if fillna:
+        stoch_k = stoch_k.replace([np.inf, -np.inf], np.nan).fillna(50)
+
+    return pd.Series(stoch_k, name='stoch_k')
