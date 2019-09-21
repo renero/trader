@@ -22,8 +22,8 @@ Versión actualizada y reformulada
     BollOsc = ((TotalPrice - OB1) / OB2 ) * 100
     xrsi = rsi [14](TotalPrice)
     STOC = Stochastic[21,3](TotalPrice)
-    marron = (xrsi + xmf + BollOsc + (STOC / 3))/2
 
+    marron = (xrsi + xmf + BollOsc + (STOC / 3))/2
     verde = marron + oscp
     media = ExponentialAverage[m](marron)
     bandacero= 0
@@ -48,14 +48,13 @@ class Konkorde(object):
         self.configuration = configuration
 
     @staticmethod
-    def compute(data, periods=255, close_col="Close", vol_col="Volume"):
+    def compute(data):
+        data['close_m'] = data['Price'].rolling(10).mean()
         data['pvi'] = positive_volume_index(data.Price, data.Volume)
         data['pvim'] = ewma(data['pvi'], alpha=0.1)
         data['nvi'] = negative_volume_index(data.Price, data.Volume)
         data['nvim'] = ewma(data['nvi'], alpha=0.1)
         data['oscp'] = oscp(data['pvi'], data['pvim'])
-        data['azul'] = (data['nvi'] - data['nvim']) * 100. / (
-                data['nvi'].max() - data['nvi'].min())
         data['mfi'] = money_flow_index(data['High'], data['Low'],
                                        data['Price'], data['Volume'])
         data['b_up'] = bollinger_band(data['Price'], 'up')
@@ -63,5 +62,11 @@ class Konkorde(object):
         data['b_osc'] = b_osc(data['Price'], data['b_up'], data['b_down'])
         data['rsi'] = rsi(data['Price'])
         data['stoch'] = stoch_osc(data['High'], data['Low'], data['Price'])
+
+        data['marron'] = (data['rsi'] + data['mfi'] + data['b_osc'] + (
+                    data['stoch'] / 3.)) / 2.
+        data['verde'] = data['marron'] + data['oscp']
+        data['azul'] = (data['nvi'] - data['nvim']) * 100. / (
+                data['nvi'].max() - data['nvi'].min())
 
         return data

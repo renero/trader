@@ -1,4 +1,4 @@
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import pandas as pd
 
 from dictionary import Dictionary
@@ -38,6 +38,15 @@ if __name__ == "__main__":
     input_data = read_data(configuration._input_data, configuration._separator)
     konkorde = Konkorde(configuration)
 
-    result = konkorde.compute(input_data, close_col='Price', vol_col='Volume')
+    result = konkorde.compute(input_data)
     print(result.iloc[:, [0, 1, -3, -2, -1]].head(30))
+
+    fig, (ax1, ax2) = plt.subplots(2, 1)
+    ax1.plot(result.Price, 'k')
+    ax1.plot(result.close_m, 'k--')
+    ax2.plot(result.marron, 'brown')
+    ax2.fill_between(range(len(result.verde)), 0, result.verde, 'green')
+    ax2.fill_between(range(len(result.azul)), 0, result.azul, 'blue')
+    fig.tight_layout()
+    plt.show()
     # save_data(output)
