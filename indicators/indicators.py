@@ -1,7 +1,6 @@
-import pandas as pd
 import matplotlib as plt
+import pandas as pd
 
-from base_indicators import ema
 from dictionary import Dictionary
 from konkorde import Konkorde
 
@@ -40,5 +39,5 @@ if __name__ == "__main__":
     konkorde = Konkorde(configuration)
 
     result = konkorde.compute(input_data, close_col='Price', vol_col='Volume')
-    print(result.head(10))
+    print(result.iloc[:, [0, 1, -5, -4, -3, -2, -1]].head(30))
     # save_data(output)

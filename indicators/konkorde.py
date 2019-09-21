@@ -9,7 +9,7 @@ Versión actualizada y reformulada
     pvimax = highest[90](pvim)
     pvimin = lowest[90](pvim)
     oscp = (pvi - pvim) * 100/ (pvimax - pvimin)
-    nvi =NegativeVolumeIndex(close)
+    nvi = NegativeVolumeIndex(close)
     nvim = ExponentialAverage[m](nvi)
     nvimax = highest[90](nvim)
     nvimin = lowest[90](nvim)
@@ -39,18 +39,26 @@ Versión actualizada y reformulada
     bandacero COLOURED(0,0,0) as "cero"
 
 """
-from base_indicators import positive_volume_index, negative_volume_index
+from base_indicators import *
 
 
 class Konkorde(object):
 
     def __init__(self, configuration):
         self.configuration = configuration
-        print("here")
 
     @staticmethod
     def compute(data, periods=255, close_col="Close", vol_col="Volume"):
         data['pvi'] = positive_volume_index(data.Price, data.Volume)
+        data['pvim'] = ewma(data['pvi'], alpha=0.1)
         data['nvi'] = negative_volume_index(data.Price, data.Volume)
+        data['nvim'] = ewma(data['nvi'], alpha=0.1)
+        data['oscp'] = oscp(data['pvi'], data['pvim'])
+        data['azul'] = (data['nvi'] - data['nvim']) * 100. / (
+                data['nvi'].max() - data['nvi'].min())
+        data['mfi'] = money_flow_index(data['High'], data['Low'],
+                                       data['Price'], data['Volume'])
+        data['b_up'] = bollinger_band(data['Price'], 'up')
+        data['b_down'] = bollinger_band(data['Price'], 'down')
+        data['b_osc'] = b_osc(data['Price'], data['b_up'], data['b_down'])
         return data
-
