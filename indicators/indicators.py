@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+from pandas import Series
 
 from dictionary import Dictionary
 from konkorde import Konkorde
@@ -33,20 +35,59 @@ def read_data(file_path, separator=','):
     return data
 
 
-def plot_result(result):
-    fig, (ax1, ax2) = plt.subplots(2, 1)
-    ax1.plot(result.Price, 'k')
-    ax1.plot(result.close_m, 'k--')
-    result.Day = pd.to_datetime(result.Day)
-    result.set_index(result.Day)
-    k_size = result['verde'].loc[19:].shape[0]
+def compare(data):
+    k = pd.read_csv('../data/repsol_konkorde.csv', sep=';')
+    r = data.loc[25:,
+        ['Price', 'marron', 'verde', 'azul']].reset_index().drop('index',
+                                                                 axis=1)
+    plt.plot(k.azul, 'b--', alpha=0.4)
+    plt.plot(r.azul, 'k', alpha=0.4)
+    plt.show()
+    plt.plot(k.verde, 'g--', alpha=0.4)
+    plt.plot(r.verde, 'k', alpha=0.4)
+    plt.show()
+    plt.plot(k.marron, 'brown', linestyle='--', alpha=0.4)
+    plt.plot(r.marron, 'k', alpha=0.4)
+    plt.show()
+
+
+def plot_result(data):
+    k_size = data['verde'].shape[0]
+
+    def trends(data: Series) -> Series:
+        s = data.rolling(2).apply(
+            lambda x: 1 if np.sign(x.iloc[0]) != np.sign(x.iloc[1]) else 0,
+            raw=False)
+        s.iloc[0] = 0.
+        return s
+
+    trend = pd.DataFrame(
+        {'green': trends(data.verde), 'blue': trends(data.azul)})
+
+    # plot stock price
+    plt.figure(figsize=(12,6))
+    ax1 = plt.subplot(211)
+    ax1.plot(data.Price, 'k', linewidth=0.8)
+    plt.setp(ax1.get_xticklabels(), visible=False)
+
+    # plot lines where trend changes
+    for x in trend.index[trend.green == 1].values:
+        ax1.axvline(x, color='green', linestyle='--', alpha=0.2)
+    for x in trend.index[trend.blue == 1].values:
+        ax1.axvline(x, color='blue', linestyle='-.', alpha=0.2)
+
+    # plot green and blue
+    ax2 = plt.subplot(212, sharex=ax1)
     ax2.axhline(0, color='lightgrey')
-    ax2.plot(result.marron, 'brown')
-    ax2.fill_between(range(k_size), result.verde.loc[19:], facecolor='green',
-                     alpha=0.2)
-    ax2.fill_between(range(k_size), result.azul.loc[19:], facecolor='blue',
-                     alpha=0.2)
-    fig.tight_layout()
+    ax2.fill_between(range(k_size), data.verde,
+                     facecolor='green', alpha=0.2)
+    ax2.fill_between(range(k_size), data.azul,
+                     facecolor='blue', alpha=0.2)
+    ax2.plot(data.verde, 'g--', linewidth=0.6)
+    ax2.plot(data.azul, 'b-.', linewidth=0.6)
+
+    # finish job and leave, quitely...
+    plt.tight_layout()
     plt.show()
 
 
@@ -56,6 +97,7 @@ if __name__ == "__main__":
     konkorde = Konkorde(configuration)
 
     result = konkorde.compute(input_data)
-    print(result.iloc[:, [0, 1, -3, -2, -1]].head(30))
+    result = konkorde.cleanup(result, start_pos=20)
+
+    print(result.iloc[:, [0, 1, -3, -2, -1]].head(20))
     plot_result(result)
-    # save_data(output)
