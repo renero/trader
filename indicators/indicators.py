@@ -59,7 +59,7 @@ def trend_lines(ax1, trend, **kwargs):
         ax1.axvline(x, color='blue', linestyle='-.', alpha=0.2, **kwargs)
 
 
-def plot_result(data):
+def plot_result(data, close='Price'):
     k_size = data['verde'].shape[0]
 
     def trends(data: Series) -> Series:
@@ -75,7 +75,7 @@ def plot_result(data):
     # plot stock price
     plt.figure(figsize=(12, 8))
     ax1 = plt.subplot(211)
-    ax1.plot(data.Price, 'k', linewidth=0.8)
+    ax1.plot(data[close], 'k', linewidth=0.8)
     plt.setp(ax1.get_xticklabels(), visible=False)
     trend_lines(ax1, trend)
 
@@ -100,9 +100,9 @@ if __name__ == "__main__":
     input_data = read_data(conf._input_data, conf._separator)
     konkorde = Konkorde(conf)
 
-    result = konkorde.compute(input_data,
+    result = konkorde.compute(input_data, date=conf._date,
                               close=conf._close, high=conf._high, low=conf._low)
     result = konkorde.cleanup(result, close=conf._close, start_pos=20)
 
     print(result.iloc[:, [0, 1, -3, -2, -1]].head(20))
-    plot_result(result)
+    plot_result(result, close=conf._close)

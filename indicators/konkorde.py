@@ -46,6 +46,7 @@ class Konkorde(object):
 
     @staticmethod
     def compute(input_data: DataFrame,
+                date='Day',
                 close='Price', high='High', low='Low') -> DataFrame:
 
         data = input_data.copy(deep=True)
@@ -70,8 +71,8 @@ class Konkorde(object):
         data['azul'] = (data['nvi'] - data['nvim']) * 100. / (
                 data['nvi'].max() - data['nvi'].min())
 
-        data.Day = pd.to_datetime(data.Day)
-        data.set_index(data.Day)
+        data[date] = pd.to_datetime(data[date])
+        data.set_index(data[date])
 
         return data
 
