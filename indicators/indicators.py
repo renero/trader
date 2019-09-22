@@ -73,7 +73,7 @@ def plot_result(data):
         {'green': trends(data.verde), 'blue': trends(data.azul)})
 
     # plot stock price
-    plt.figure(figsize=(12,8))
+    plt.figure(figsize=(12, 8))
     ax1 = plt.subplot(211)
     ax1.plot(data.Price, 'k', linewidth=0.8)
     plt.setp(ax1.get_xticklabels(), visible=False)
@@ -96,12 +96,13 @@ def plot_result(data):
 
 
 if __name__ == "__main__":
-    configuration = Dictionary()
-    input_data = read_data(configuration._input_data, configuration._separator)
-    konkorde = Konkorde(configuration)
+    conf = Dictionary()
+    input_data = read_data(conf._input_data, conf._separator)
+    konkorde = Konkorde(conf)
 
-    result = konkorde.compute(input_data)
-    result = konkorde.cleanup(result, start_pos=20)
+    result = konkorde.compute(input_data,
+                              close=conf._close, high=conf._high, low=conf._low)
+    result = konkorde.cleanup(result, close=conf._close, start_pos=20)
 
     print(result.iloc[:, [0, 1, -3, -2, -1]].head(20))
     plot_result(result)

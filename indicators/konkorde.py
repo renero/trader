@@ -45,22 +45,24 @@ class Konkorde(object):
         self.configuration = configuration
 
     @staticmethod
-    def compute(input_data: DataFrame) -> DataFrame:
+    def compute(input_data: DataFrame,
+                close='Price', high='High', low='Low') -> DataFrame:
+
         data = input_data.copy(deep=True)
 
-        data['close_m'] = data['Price'].rolling(10).mean()
-        data['pvi'] = positive_volume_index(data.Price, data.Volume)
+        data['close_m'] = data[close].rolling(10).mean()
+        data['pvi'] = positive_volume_index(data[close], data.Volume)
         data['pvim'] = ewma(data['pvi'], alpha=0.1)
-        data['nvi'] = negative_volume_index(data.Price, data.Volume)
+        data['nvi'] = negative_volume_index(data[close], data.Volume)
         data['nvim'] = ewma(data['nvi'], alpha=0.1)
         data['oscp'] = oscp(data['pvi'], data['pvim'])
-        data['mfi'] = money_flow_index(data['High'], data['Low'],
-                                       data['Price'], data['Volume'])
-        data['b_up'] = bollinger_band(data['Price'], 'up')
-        data['b_down'] = bollinger_band(data['Price'], 'down')
-        data['b_osc'] = b_osc(data['Price'], data['b_up'], data['b_down'])
-        data['rsi'] = rsi(data['Price'])
-        data['stoch'] = stoch_osc(data['High'], data['Low'], data['Price'])
+        data['mfi'] = money_flow_index(data[high], data[low],
+                                       data[close], data['Volume'])
+        data['b_up'] = bollinger_band(data[close], 'up')
+        data['b_down'] = bollinger_band(data[close], 'down')
+        data['b_osc'] = b_osc(data[close], data['b_up'], data['b_down'])
+        data['rsi'] = rsi(data[close])
+        data['stoch'] = stoch_osc(data[high], data[low], data[close])
 
         data['marron'] = (data['rsi'] + data['mfi'] + data['b_osc'] + (
                 data['stoch'] / 3.)) / 2.
@@ -73,8 +75,9 @@ class Konkorde(object):
 
         return data
 
+
     @staticmethod
-    def cleanup(data, start_pos=25):
-        cols = ['Day', 'Price', 'marron', 'verde', 'azul']
+    def cleanup(data, close='Price', start_pos=25):
+        cols = ['Day', close, 'marron', 'verde', 'azul']
         r = data.loc[start_pos:, cols].reset_index().drop('index', axis=1)
         return r
