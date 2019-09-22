@@ -33,6 +33,23 @@ def read_data(file_path, separator=','):
     return data
 
 
+def plot_result(result):
+    fig, (ax1, ax2) = plt.subplots(2, 1)
+    ax1.plot(result.Price, 'k')
+    ax1.plot(result.close_m, 'k--')
+    result.Day = pd.to_datetime(result.Day)
+    result.set_index(result.Day)
+    k_size = result['verde'].loc[19:].shape[0]
+    ax2.axhline(0, color='lightgrey')
+    ax2.plot(result.marron, 'brown')
+    ax2.fill_between(range(k_size), result.verde.loc[19:], facecolor='green',
+                     alpha=0.2)
+    ax2.fill_between(range(k_size), result.azul.loc[19:], facecolor='blue',
+                     alpha=0.2)
+    fig.tight_layout()
+    plt.show()
+
+
 if __name__ == "__main__":
     configuration = Dictionary()
     input_data = read_data(configuration._input_data, configuration._separator)
@@ -40,13 +57,5 @@ if __name__ == "__main__":
 
     result = konkorde.compute(input_data)
     print(result.iloc[:, [0, 1, -3, -2, -1]].head(30))
-
-    fig, (ax1, ax2) = plt.subplots(2, 1)
-    ax1.plot(result.Price, 'k')
-    ax1.plot(result.close_m, 'k--')
-    ax2.plot(result.marron, 'brown')
-    ax2.fill_between(range(len(result.verde)), 0, result.verde, 'green')
-    ax2.fill_between(range(len(result.azul)), 0, result.azul, 'blue')
-    fig.tight_layout()
-    plt.show()
+    plot_result(result)
     # save_data(output)
