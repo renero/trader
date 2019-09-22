@@ -1,5 +1,5 @@
 from common import Common
-from dictionary import Dictionary
+from utils.dictionary import Dictionary
 
 
 class Portfolio(Common):

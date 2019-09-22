@@ -10,17 +10,17 @@ import os
 
 import tensorflow as tf
 
-from dictionary import Dictionary
 from environment import Environment
+from extended_dictionary import ExtendedDictionary
 from qlearning import QLearning
 
-tf.logging.set_verbosity(tf.logging.ERROR)
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def main():
     # Init
-    configuration = Dictionary()
+    configuration = ExtendedDictionary()
     environment = Environment(configuration)
     learner = QLearning(configuration)
 

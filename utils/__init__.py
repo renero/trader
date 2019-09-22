@@ -1,1 +1,1 @@
-__all__ = ['my_dict', 'file_io']
+__all__ = ['my_dict', 'file_io', 'dictionary']
