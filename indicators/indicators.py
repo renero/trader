@@ -51,6 +51,14 @@ def compare(data):
     plt.show()
 
 
+def trend_lines(ax1, trend, **kwargs):
+    # plot lines where trend changes
+    for x in trend.index[trend.green == 1].values:
+        ax1.axvline(x, color='green', linestyle='--', alpha=0.2, **kwargs)
+    for x in trend.index[trend.blue == 1].values:
+        ax1.axvline(x, color='blue', linestyle='-.', alpha=0.2, **kwargs)
+
+
 def plot_result(data):
     k_size = data['verde'].shape[0]
 
@@ -65,16 +73,11 @@ def plot_result(data):
         {'green': trends(data.verde), 'blue': trends(data.azul)})
 
     # plot stock price
-    plt.figure(figsize=(12,6))
+    plt.figure(figsize=(12,8))
     ax1 = plt.subplot(211)
     ax1.plot(data.Price, 'k', linewidth=0.8)
     plt.setp(ax1.get_xticklabels(), visible=False)
-
-    # plot lines where trend changes
-    for x in trend.index[trend.green == 1].values:
-        ax1.axvline(x, color='green', linestyle='--', alpha=0.2)
-    for x in trend.index[trend.blue == 1].values:
-        ax1.axvline(x, color='blue', linestyle='-.', alpha=0.2)
+    trend_lines(ax1, trend)
 
     # plot green and blue
     ax2 = plt.subplot(212, sharex=ax1)
@@ -85,6 +88,7 @@ def plot_result(data):
                      facecolor='blue', alpha=0.2)
     ax2.plot(data.verde, 'g--', linewidth=0.6)
     ax2.plot(data.azul, 'b-.', linewidth=0.6)
+    trend_lines(ax2, trend, linewidth=0.5)
 
     # finish job and leave, quitely...
     plt.tight_layout()
