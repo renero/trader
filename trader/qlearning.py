@@ -2,7 +2,6 @@ import time
 
 import numpy as np
 
-from chart import Chart as plot
 from environment import Environment
 from nn import NN
 from common import Common
@@ -136,10 +135,7 @@ class QLearning(Common):
             avg_rewards, avg_loss, avg_mae = self.learn(env)
             # display anything?
             if do_plot is True and self.configuration._load_model is False:
-                plot.chart(avg_rewards, 'Average reward per game', 'line',
-                           ma=True)
-                plot.chart(avg_loss, 'Avg loss', 'line', ma=True)
-                plot.chart(avg_mae, 'Avg MAE', 'line', ma=True)
+                self.display.plot_metrics(avg_loss, avg_mae, avg_rewards)
 
         # Extract the strategy matrix from the model.
         strategy = self.get_strategy()
