@@ -15,7 +15,7 @@ class Common:
     Red = '\033[31m'
 
     def log(self, *args, **kwargs):
-        if self.configuration._debug is True:
+        if self.configuration.debug is True:
             print(*args, **kwargs)
 
     def green(self, string):

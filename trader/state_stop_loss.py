@@ -9,7 +9,7 @@ class state_stop_loss(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
         net_value = portfolio.portfolio_value - portfolio.investment
-        stop_loss = portfolio.configuration._environment._stop_loss
+        stop_loss = portfolio.configuration.environment.stop_loss
         if net_value == 0.:
             return 'NOSTPLOS'
         if stop_loss < 1.0:  # percentage of initial budget

@@ -14,27 +14,27 @@ class NN(Common):
 
     def create_model(self) -> Sequential:
         num_cells = int(
-            self.configuration._num_states * \
-            self.configuration._num_actions * \
-            self.configuration._cells_reduction_factor)
+            self.configuration.num_states * \
+            self.configuration.num_actions * \
+            self.configuration.cells_reduction_factor)
 
         model = Sequential()
         model.add(
-            InputLayer(batch_input_shape=(1, self.configuration._num_states)))
+            InputLayer(batch_input_shape=(1, self.configuration.num_states)))
         model.add(
             Dense(
                 num_cells,
-                input_shape=(self.configuration._num_states,),
+                input_shape=(self.configuration.num_states,),
                 activation='sigmoid'))
         model.add(
             Dense(
-                self.configuration._num_actions,
+                self.configuration.num_actions,
                 input_shape=(
                     num_cells,),
                 activation='linear'))
         model.compile(loss='mse', optimizer='adam', metrics=['mae'])
 
-        if self.configuration._debug is True:
+        if self.configuration.debug is True:
             self.log('Model Summary')
             model.summary()
 
@@ -47,7 +47,7 @@ class NN(Common):
         char_to_append = ''
         while not solved:
             basename = 'model' + char_to_append + '.json'
-            fname = os.path.join(self.configuration._models_dir, basename)
+            fname = os.path.join(self.configuration.models_dir, basename)
             if os.path.isfile(fname) is not True:
                 solved = True
             else:
@@ -64,13 +64,13 @@ class NN(Common):
 
         # Serialize weights to HDF5
         basename = 'model' + char_to_append + '.h5'
-        fname = os.path.join(self.configuration._models_dir, basename)
+        fname = os.path.join(self.configuration.models_dir, basename)
         model.save_weights(fname)
         print('  Weights: {}'.format(fname))
 
         # Save also the results table
         basename = 'model' + char_to_append + '.csv'
-        fname = os.path.join(self.configuration._models_dir, basename)
+        fname = os.path.join(self.configuration.models_dir, basename)
         self.configuration.results.to_csv(fname,
                                           sep=',',
                                           header=True,

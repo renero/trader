@@ -17,7 +17,7 @@ class QLearning(Common):
         self.model = None
 
     def onehot(self, state: int) -> np.ndarray:
-        return np.identity(self.configuration._num_states)[state:state + 1]
+        return np.identity(self.configuration.num_states)[state:state + 1]
 
     def predict(self, state) -> int:
         return int(
@@ -36,7 +36,7 @@ class QLearning(Common):
         strategy = [
             np.argmax(
                 self.model.predict(self.onehot(i))[0])
-            for i in range(self.configuration._num_states)
+            for i in range(self.configuration.num_states)
         ]
         return strategy
 
@@ -55,15 +55,15 @@ class QLearning(Common):
         start = time.time()
 
         # Loop over 'num_episodes'
-        for i in range(self.configuration._num_episodes):
+        for i in range(self.configuration.num_episodes):
             state = env.reset()
-            self.configuration._eps *= self.configuration._decay_factor
-            if (i % self.configuration._num_episodes_update == 0) or \
-                    (i == (self.configuration._num_episodes - 1)):
+            self.configuration.eps *= self.configuration.decay_factor
+            if (i % self.configuration.num_episodes_update == 0) or \
+                    (i == (self.configuration.num_episodes - 1)):
                 end = time.time()
                 if avg_rewards:
                     last_avg = avg_rewards[-1]
-                self.display.progress(i, self.configuration._num_episodes,
+                self.display.progress(i, self.configuration.num_episodes,
                                       last_avg, start, end)
 
             done = False
@@ -73,9 +73,9 @@ class QLearning(Common):
             while not done:
                 # Decide whether generating random action or predict most
                 # likely from the give state.
-                if np.random.random() < self.configuration._eps:
+                if np.random.random() < self.configuration.eps:
                     action = np.random.randint(
-                        0, self.configuration._num_actions)
+                        0, self.configuration.num_actions)
                 else:
                     action = self.predict(state)
 
@@ -88,9 +88,9 @@ class QLearning(Common):
                 sum_loss += loss
                 sum_mae += mae
 
-            avg_rewards.append(sum_rewards / self.configuration._num_episodes)
-            avg_loss.append(sum_loss / self.configuration._num_episodes)
-            avg_mae.append(sum_mae / self.configuration._num_episodes)
+            avg_rewards.append(sum_rewards / self.configuration.num_episodes)
+            avg_loss.append(sum_loss / self.configuration.num_episodes)
+            avg_mae.append(sum_mae / self.configuration.num_episodes)
         return avg_rewards, avg_loss, avg_mae
 
     def learn_step(self, action, new_state, reward, state):
@@ -103,13 +103,13 @@ class QLearning(Common):
         :param state:
         :return: the loss and the metric resulting from the training.
         """
-        target = reward + self.configuration._y * self.predict_value(
+        target = reward + self.configuration.y * self.predict_value(
             new_state)
         target_vec = self.model.predict(self.onehot(state))[0]
         target_vec[action] = target
         history = self.model.fit(
             self.onehot(state),
-            target_vec.reshape(-1, self.configuration._num_actions),
+            target_vec.reshape(-1, self.configuration.num_actions),
             epochs=1, verbose=0)
         return history.history['loss'][0], \
                history.history['mean_absolute_error'][0]
@@ -127,14 +127,14 @@ class QLearning(Common):
         """
         start = time.time()
         # create the Keras model and learn, or load it from disk.
-        if self.configuration._load_model is True:
-            self.model = self.nn.load_model(self.configuration._model_file,
-                                            self.configuration._weights_file)
+        if self.configuration.load_model is True:
+            self.model = self.nn.load_model(self.configuration.model_file,
+                                            self.configuration.weights_file)
         else:
             self.model = self.nn.create_model()
             avg_rewards, avg_loss, avg_mae = self.learn(env)
             # display anything?
-            if do_plot is True and self.configuration._load_model is False:
+            if do_plot is True and self.configuration.load_model is False:
                 self.display.plot_metrics(avg_loss, avg_mae, avg_rewards)
 
         # Extract the strategy matrix from the model.
@@ -143,7 +143,7 @@ class QLearning(Common):
             self.display.strategy(self,
                                   env,
                                   self.model,
-                                  self.configuration._num_states,
+                                  self.configuration.num_states,
                                   strategy)
 
         self.log('\nTime elapsed: {}'.format(
