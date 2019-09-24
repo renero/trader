@@ -1,11 +1,10 @@
 from math import copysign
 
-from common import Common
 from portfolio import Portfolio
 from rl_state import RL_State
 
 
-class state_prevlast_pred(RL_State, Common):
+class state_prevlast_pred(RL_State):
 
     @staticmethod
     def update_state(portfolio: Portfolio):

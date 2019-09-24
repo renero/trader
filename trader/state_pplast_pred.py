@@ -5,7 +5,7 @@ from portfolio import Portfolio
 from rl_state import RL_State
 
 
-class state_pplast_pred(RL_State, Common):
+class state_pplast_pred(RL_State):
 
     @staticmethod
     def update_state(portfolio: Portfolio):
