@@ -25,14 +25,14 @@ def main():
     learner = QLearning(configuration)
 
     # Learn
-    configuration._debug = True
+    configuration.debug = True
     strategy = learner.q_learn(environment, do_plot=True)
-    configuration._debug = False
+    configuration.debug = False
 
     # Test
     done = False
     total_reward = 0.
-    configuration._debug = True
+    configuration.debug = True
     state = environment.reset()
     while not done:
         action = environment.decide_next_action(state, strategy)

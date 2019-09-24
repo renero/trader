@@ -30,7 +30,7 @@ class Environment(Common):
         self.display = self.configuration.display
 
         self.states = SCombiner(self.configuration.states_list)
-        self.read_market_data(self.configuration._data_path)
+        self.read_market_data(self.configuration.data_path)
         self.init_environment(creation_time=True)
 
     def init_environment(self, creation_time):
@@ -90,11 +90,11 @@ class Environment(Common):
         # Iterate through the list of states defined in the parameters file
         # and call the update_state() static method in them.
         new_substates = []
-        for module_param_name in self.configuration._state.keys():
+        for module_param_name in self.configuration.state.keys():
             # The extended classes are defined in the params file and must
             # start with the 'state_' string.
             # The '[1:]' serves to remove the leading underscore.
-            module_name = 'state_' + module_param_name[1:]
+            module_name = 'state_' + module_param_name
             module = importlib.import_module(module_name)
             state_class = getattr(module, module_name)
             new_substate = state_class.update_state(self.portfolio_)
@@ -110,17 +110,17 @@ class Environment(Common):
         :param action: the action.
         :return: state, reward, done and iter count.
         """
-        assert action < self.configuration._num_actions, \
+        assert action < self.configuration.num_actions, \
             'Action ID must be between 0 and {}'.format(
-                self.configuration._num_actions)
+                self.configuration.num_actions)
 
         # Call to the proper portfolio method, based on the action number
         # passed to this argument.
         self.reward_ = getattr(self.portfolio_,
-                               self.configuration._action_name[action])()
+                               self.configuration.action_name[action])()
 
         # If I'm in stop loss situation, rewards gets a different value
-        self.reward_ = self.fix_reward(self.configuration._action_name[action])
+        self.reward_ = self.fix_reward(self.configuration.action_name[action])
         self.display.report_reward(
             self.reward_, self.states.name(self.current_state_))
 
@@ -151,12 +151,12 @@ class Environment(Common):
         # I've no money to buy.
         if action_name == 'buy' and \
                 self.portfolio_.latest_price > self.portfolio_.budget:
-            return self.configuration._environment._reward_stoploss_buy
+            return self.configuration.environment.reward_stoploss_buy
         # Fix the reward if I'm trying to sell and I DO have shares to sell
         elif action_name == 'sell' and self.portfolio_.shares > 0.:
-            return self.configuration._environment._reward_stoploss_sell
+            return self.configuration.environment.reward_stoploss_sell
         else:
-            return self.configuration._environment._reward_stoploss_donothing
+            return self.configuration.environment.reward_stoploss_donothing
 
     @property
     def stop_loss(self) -> bool:
@@ -167,7 +167,7 @@ class Environment(Common):
         :return: True or False
         """
         net_value = self.portfolio_.portfolio_value - self.portfolio_.investment
-        stop_loss = self.portfolio_.configuration._environment._stop_loss
+        stop_loss = self.portfolio_.configuration.environment.stop_loss
 
         if net_value == 0.:
             return False

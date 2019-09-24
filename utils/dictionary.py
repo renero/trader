@@ -16,13 +16,11 @@ The structure of attributes is built recursively if they contain a dictionary.
 """
 
 from os import getcwd
-from os.path import basename
 from pathlib import Path
-from pandas import DataFrame
+
+from yaml import safe_load, YAMLError
 
 from utils.my_dict import MyDict
-from display import Display
-from yaml import safe_load, YAMLError
 
 
 class Dictionary(MyDict):
@@ -45,14 +43,14 @@ class Dictionary(MyDict):
 
         self.add_dict(self, params)
 
-    @property
-    def save_model(self):
-        return self._save_model
-
-    @property
-    def state(self):
-        return self._state
-
-    @property
-    def states_list(self):
-        return self._states_list
+    # @property
+    # def save_model(self):
+    #     return self._save_model
+    #
+    # @property
+    # def state(self):
+    #     return self._state
+    #
+    #
+    #
+    #

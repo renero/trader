@@ -25,7 +25,7 @@ class MyDict(dict):
                 param_name, type(param_dictionary[param_name])))
 
             if add_underscore is True:
-                attribute_name = '_{}'.format(param_name)
+                attribute_name = '{}'.format(param_name)
             else:
                 attribute_name = param_name
 

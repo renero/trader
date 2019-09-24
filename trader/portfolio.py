@@ -29,21 +29,21 @@ class Portfolio(Common):
         self.configuration = configuration
         self.display = self.configuration.display
 
-        self.budget = self.configuration._environment._initial_budget
-        self.initial_budget = self.configuration._environment._initial_budget
+        self.budget = self.configuration.environment.initial_budget
+        self.initial_budget = self.configuration.environment.initial_budget
         self.latest_price = initial_price
         self.forecast = forecast
 
     def wait(self):
         self.display.report_action('none')
-        self.reward = self.configuration._environment._reward_do_nothing
+        self.reward = self.configuration.environment.reward_do_nothing
         return self.reward
 
     def buy(self, num_shares: float = 1.0) -> object:
         purchase_amount = num_shares * self.latest_price
         if purchase_amount > self.budget:
             self.display.report_action('n/a')
-            self.reward = self.configuration._environment._reward_failed_buy
+            self.reward = self.configuration.environment.reward_failed_buy
             return self.reward
 
         self.budget -= purchase_amount
@@ -51,7 +51,7 @@ class Portfolio(Common):
         self.shares += num_shares
         self.portfolio_value += purchase_amount
         self.movements.append((self.BUY, num_shares, self.latest_price))
-        self.reward = self.configuration._environment._reward_success_buy
+        self.reward = self.configuration.environment.reward_success_buy
 
         self.display.report_action('buy')
         return self.reward
@@ -60,7 +60,7 @@ class Portfolio(Common):
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
             self.display.report_action('n/a')
-            self.reward = self.configuration._environment._reward_failed_sell
+            self.reward = self.configuration.environment.reward_failed_sell
             return self.reward
 
         self.budget += sell_price
@@ -69,9 +69,9 @@ class Portfolio(Common):
         self.portfolio_value -= sell_price
         self.movements.append((self.SELL, num_shares, self.latest_price))
         if self.budget > self.initial_budget:
-            self.reward = self.configuration._environment._reward_positive_sell
+            self.reward = self.configuration.environment.reward_positive_sell
         else:
-            self.reward = self.configuration._environment._reward_negative_sell
+            self.reward = self.configuration.environment.reward_negative_sell
 
         self.display.report_action('sell')
         return self.reward
@@ -89,7 +89,7 @@ class Portfolio(Common):
         # Stack the current state into the history
         self.history.append({'price_': environment.price_,
                              'forecast_': environment.forecast_})
-        if len(self.history) > self.configuration._stack_size:
+        if len(self.history) > self.configuration.stack_size:
             self.history.pop(0)
 
     @property

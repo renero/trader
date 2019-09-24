@@ -30,7 +30,7 @@ class Display(Common):
         for i in range(num_states):
             print(strategy_string.format(
                 env.states.name(i),
-                trader.configuration._action_name[strategy[i]],
+                trader.configuration.action_name[strategy[i]],
                 model.predict(np.identity(num_states)[i:i + 1])))
         print()
 
@@ -44,7 +44,7 @@ class Display(Common):
         :return:
         """
         values = [t] + portfolio.values_to_report()
-        self.add_to_table(values, self.configuration._table_headers)
+        self.add_to_table(values, self.configuration.table_headers)
 
     def add_to_table(self, values_to_report, table_headers):
         """
