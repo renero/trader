@@ -36,7 +36,11 @@ else:
     predictions = pd.DataFrame([])
 
     if params._predict_training:
-        cse = encoder.ticks2cse(ohlc_data)
+        # TODO: I'm loading the first encoder, but I do need to use
+        #       all of them, in case I'm loading more than one network
+        cse = encoder[next(iter(params._model_names))].ticks2cse(ohlc_data)
+
+        # TODO: I'm producing only 50 predictions here, to speed up testing.
         # for from_idx in range(0, ticks.shape[0] - params._window_size + 1):
         for from_idx in range(0, 50 - params._window_size + 1):
             tick_group = ohlc_data.iloc[from_idx:from_idx + params._window_size]
@@ -48,9 +52,13 @@ else:
             predictions = predictions.append(prediction)
         predictions = ticks.scale_back(predictions)
     else:
+        # TODO: take only the 10 last elements, leaving the last as the actual value
         tick_group = ohlc_data.tail(params._window_size)
         prediction = single_prediction(tick_group, nn, encoder, params)
+        # TODO: Take the last element as the supervised information.
+        prediction = add_supervised_info(prediction, tick_group['c'], params)
         predictions = predictions.append(prediction)
+        predictions = ticks.scale_back(predictions)
 
     save_predictions(predictions, params, log)
 #
