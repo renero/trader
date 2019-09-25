@@ -262,8 +262,8 @@ def reorder_predictions(predictions, params):
         return predictions
 
     if params._predict_training is False:
-            predictions = predictions.drop(
-                ['actual', 'avg_diff', 'med_diff', 'winner'], axis=1)
+        predictions = predictions.drop(
+            ['actual', 'avg_diff', 'med_diff', 'winner'], axis=1)
     else:
         # Reorder columns to set 'actual' in first position
         actual_position = list(predictions.columns).index('actual')
@@ -271,7 +271,7 @@ def reorder_predictions(predictions, params):
         if len(params.model_names.keys()) > 1:
             avg_position = list(predictions.columns).index('avg')
         columns = [actual_position] + [i for i in
-                                       range(actual_position)] + avg_position
+                                       range(actual_position)]
         predictions = predictions.iloc[:, columns]
 
     return predictions

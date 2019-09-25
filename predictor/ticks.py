@@ -25,7 +25,7 @@ class Ticks(Params):
             return df.applymap(np.vectorize(self.denormalize))
         else:
             return df.loc[:, df.columns != 'winner'].applymap(
-                np.vectorize(self.denormalize))
+                    np.vectorize(self.denormalize))
 
     def read_ohlc(self,
                   filepath=None,

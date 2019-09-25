@@ -14,7 +14,7 @@ from cs_logger import CSLogger
 from params import Params
 from ticks import Ticks
 
-tf.compat.v1.logging.set_verbosity(tf.logging.ERROR)
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 np.random.seed(1)
@@ -52,13 +52,16 @@ else:
             predictions = predictions.append(prediction)
         predictions = ticks.scale_back(predictions)
     else:
-        # TODO: take only the 10 last elements, leaving the last as the actual value
-        tick_group = ohlc_data.tail(params._window_size)
+        # Take only the last window_size+1 elements, leaving
+        # the last as the actual value
+        tick_group = ohlc_data.tail(params._window_size + 1).iloc[
+                     -params._window_size - 1:-1]
+        # Perform a single prediction
         prediction = single_prediction(tick_group, nn, encoder, params)
-        # TODO: Take the last element as the supervised information.
-        prediction = add_supervised_info(prediction, tick_group['c'], params)
-        predictions = predictions.append(prediction)
-        predictions = ticks.scale_back(predictions)
+        # Take the last element as the supervised information.
+        prediction = add_supervised_info(prediction, ohlc_data.iloc[-1]['c'],
+                                         params)
+        predictions = ticks.scale_back(predictions.append(prediction))
 
     save_predictions(predictions, params, log)
 #
