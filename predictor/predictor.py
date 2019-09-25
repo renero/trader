@@ -24,6 +24,7 @@ ticks = Ticks()
 ohlc_data = ticks.read_ohlc()
 
 if params.do_train is True:
+
     encoder = CSEncoder().fit(ohlc_data)
     cse = encoder.ticks2cse(ohlc_data)
     dataset = split_datasets(encoder, cse, params.subtypes)
