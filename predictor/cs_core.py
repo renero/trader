@@ -43,21 +43,14 @@ class CSCore(Params):
         #       all of them, in case I'm loading more than one network
         cse = encoder[next(iter(self._model_names))].ticks2cse(data)
 
-        # TODO: I'm producing only 25 predictions here, to speed up testing.
         num_ticks = data.shape[0]
-        self.log.info('num ticks: {}'.format(num_ticks))
-        # train_range = range(0, ticks.shape[0] - params._window_size + 1)
-        train_range = range(num_ticks - 25, num_ticks - self._window_size)
-        self.log.info('range: {}'.format(train_range))
-
+        train_range = range(0, num_ticks - self._window_size)
         for from_idx in train_range:
-            self.log.info('processing [{}:{}]'.format(from_idx, from_idx+self._window_size))
             tick_group = data.iloc[from_idx:from_idx + self._window_size]
             prediction = single_prediction(tick_group, nn, encoder, self)
             prediction = self.add_supervised_info(
                 prediction,
-                data.iloc[from_idx + self._window_size]['c'],
-                self)
+                data.iloc[from_idx + self._window_size]['c'], self)
             predictions = predictions.append(prediction)
         predictions = ticks.scale_back(predictions)
 
@@ -184,7 +177,7 @@ class CSCore(Params):
         :param params: the parameters file.
         :return: the predictions reordered.
         """
-        if params.num_models == 1:
+        if params.num_models == 1 and params._predict_training is False:
             return predictions
 
         if params._predict_training is False:
@@ -195,7 +188,10 @@ class CSCore(Params):
         else:
             # Reorder columns to set 'actual' in first position
             actual_position = list(predictions.columns).index('actual')
-            columns = [actual_position] + [i for i in range(actual_position)]
+            num_cols = len(predictions.columns)
+            columns = [actual_position] + \
+                      [i for i in range(actual_position)] + \
+                      [j for j in range(actual_position+1, num_cols)]
             predictions = predictions.iloc[:, columns]
 
         return predictions
@@ -215,7 +211,8 @@ class CSCore(Params):
         predictions.to_csv(filename, index=False)
         log.info('predictions saved to: {}'.format(filename))
 
-    @staticmethod
-    def display_predictions(predictions):
-        print(tabulate(predictions, headers='keys', tablefmt='psql',
-                       showindex=False, floatfmt=['.1f']))
+    def display_predictions(self, predictions):
+        print(tabulate(predictions, headers='keys',
+                       tablefmt=self._table_format,
+                       showindex=False,
+                       floatfmt=['.1f']))

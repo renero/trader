@@ -118,15 +118,14 @@ def single_prediction(tick_group, nn, encoder, params):
     # their result.
     model_names = list(params.model_names.keys())
     if len(model_names) > 1:
-        new_columns = ['actual', 'avg', 'avg_diff', 'median', 'med_diff',
-                       'winner']
+        new_cols = ['actual', 'avg', 'avg_diff', 'median', 'med_diff', 'winner']
         # If I decide to use ensembles, I must add two new columns
         if params._ensemble is True:
-            new_columns = new_columns + ['ensemble', 'ens_diff']
+            new_cols = new_cols + ['ensemble', 'ens_diff']
     else:
-        new_columns = []
+        new_cols = []
 
-    df = pd.DataFrame([], columns=model_names + new_columns)
+    df = pd.DataFrame([], columns=model_names + new_cols)
     df = df.append(dict(zip(params.model_names.keys(), predictions)),
                    ignore_index=True)
 
