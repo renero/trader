@@ -4,6 +4,7 @@ from mpl_finance import candlestick_ohlc
 
 
 class CSPlot(object):
+
     _default_ohlc_names = ['Open', 'High', 'Low', 'Close']
     _open = _default_ohlc_names[0]
     _high = _default_ohlc_names[1]
@@ -22,9 +23,10 @@ class CSPlot(object):
     @classmethod
     def candlesticks(cls, data, title=None, ohlc_names=_default_ohlc_names):
         """
-        Plot a candlestick diagram from a Dataframe. The colum names that contains
-        the OHLC values can be specified as an array of strings to the arguments of
-        the plot function, in case your columns are called any other way.
+        Plot a candlestick diagram from a Dataframe. The colum names that
+        contains the OHLC values can be specified as an array of strings
+        to the arguments of the plot function, in case your columns are
+        called any other way.
         Arguments:
         - data: A dataframe with the open, high, low and close values in
                 columns

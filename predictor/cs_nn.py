@@ -158,18 +158,18 @@ class Csnn(Params):
         Returns The filename if the name is valid and file does not exists,
                 None otherwise.
         """
-        self._filename = '{}_{}_{}_w{}_e{}_a{:.4f}'.format(
+        self._filename = '{}_{}_w{}_e{}'.format(
             self._metadata['subtype'],
-            datetime.now().strftime('%Y%m%d_%H%M'),
+            # datetime.now().strftime('%Y%m%d_%H%M'),
             self._metadata['dataset'],
             self._window_size,
-            self._epochs,
-            self._metadata['accuracy'][-1])
+            self._epochs)
+            # self._metadata['accuracy'][-1])
         base_filepath = join(self._models_dir, self._filename)
         output_filepath = base_filepath
         idx = 1
         while Path(output_filepath).is_file() is True:
-            output_filepath = '{}_{:d}'.format(base_filepath + idx)
+            output_filepath = '{}_{:d}'.format(base_filepath, idx)
             idx += 1
         return output_filepath
 
@@ -207,25 +207,4 @@ class Csnn(Params):
             json_file.write(model_json)
         # serialize weights to HDF5
         self._model.save_weights('{}.h5'.format(modelname))
-        self.log.info("Saved model and weights to disk")
-
-    # TODO: Take this function out to the CSPlot class.
-    def plot_history(self):
-        if self._history is None:
-            raise ValidationException('Trying to plot without training')
-        """ summarize history for accuracy and loss """
-        plt.plot(self._history.history['acc'])
-        plt.plot(self._history.history['val_acc'])
-        plt.title('model accuracy')
-        plt.ylabel('accuracy')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-        plt.show()
-
-        plt.plot(self._history.history['loss'])
-        plt.plot(self._history.history['val_loss'])
-        plt.title('model loss')
-        plt.ylabel('loss')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-        plt.show()
+        self.log.info("Saved model and weights ({})".format(modelname))
