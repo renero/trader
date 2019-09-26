@@ -8,6 +8,7 @@ from keras.layers import LSTM, Dense, Dropout
 from keras.models import Sequential, model_from_json
 from keras.regularizers import l2
 
+from cs_plot import plot_history
 from utils.file_io import file_exists
 from params import Params
 
@@ -17,15 +18,15 @@ class ValidationException(Exception):
 
 
 class Csnn(Params):
-    _num_categories = 0
-    _window_size = 3
-    _num_predictions = 1
-    _test_size = 0.1
-    _dropout = 0.1
-    _history = None
-    _enc_data = None
-    _raw_data = None
-    _input_file = ''
+    # _num_categories = 0
+    # _window_size = 3
+    # _num_predictions = 1
+    # _test_size = 0.1
+    # _dropout = 0.1
+    # _history = None
+    # _enc_data = None
+    # _raw_data = None
+    # _input_file = ''
 
     # metadata
     _metadata = {'period': 'unk', 'epochs': 'unk', 'accuracy': 'unk'}
@@ -34,21 +35,21 @@ class Csnn(Params):
     _output_dir = ''
 
     # Model design
-    _l1units = 256
-    _l2units = 256
-    _activation = 'sigmoid'
-    _model = None
+    # _l1units = 256
+    # _l2units = 256
+    # _activation = 'sigmoid'
+    # _model = None
 
     # Training
-    _epochs = 100
-    _batch_size = 10
-    _validation_split = 0.1
-    _verbose = 1
+    # _epochs = 100
+    # _batch_size = 10
+    # _validation_split = 0.1
+    # _verbose = 1
 
     # Compilation
-    _loss = 'mean_squared_error'
-    _optimizer = 'adam'
-    _metrics = ['accuracy']
+    # _loss = 'mean_squared_error'
+    # _optimizer = 'adam'
+    # _metrics = ['accuracy']
 
     # Results
     _history = None
@@ -118,6 +119,7 @@ class Csnn(Params):
             verbose=self._verbose,
             validation_split=self._validation_split)
         self._metadata[self._metrics[0]] = self._history.history['acc']
+        plot_history(self._history)
         return self
 
     def predict(self, test_set):
@@ -156,18 +158,18 @@ class Csnn(Params):
         Returns The filename if the name is valid and file does not exists,
                 None otherwise.
         """
-        self._filename = '{}_{}_{}_w{}_e{}_a{:.4f}'.format(
+        self._filename = '{}_{}_w{}_e{}'.format(
             self._metadata['subtype'],
-            datetime.now().strftime('%Y%m%d_%H%M'),
+            # datetime.now().strftime('%Y%m%d_%H%M'),
             self._metadata['dataset'],
             self._window_size,
-            self._epochs,
-            self._metadata['accuracy'][-1])
+            self._epochs)
+            # self._metadata['accuracy'][-1])
         base_filepath = join(self._models_dir, self._filename)
         output_filepath = base_filepath
         idx = 1
         while Path(output_filepath).is_file() is True:
-            output_filepath = '{}_{:d}'.format(base_filepath + idx)
+            output_filepath = '{}_{:d}'.format(base_filepath, idx)
             idx += 1
         return output_filepath
 
@@ -205,25 +207,4 @@ class Csnn(Params):
             json_file.write(model_json)
         # serialize weights to HDF5
         self._model.save_weights('{}.h5'.format(modelname))
-        self.log.info("Saved model and weights to disk")
-
-    # TODO: Take this function out to the CSPlot class.
-    def plot_history(self):
-        if self._history is None:
-            raise ValidationException('Trying to plot without training')
-        """ summarize history for accuracy and loss """
-        plt.plot(self._history.history['acc'])
-        plt.plot(self._history.history['val_acc'])
-        plt.title('model accuracy')
-        plt.ylabel('accuracy')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-        plt.show()
-
-        plt.plot(self._history.history['loss'])
-        plt.plot(self._history.history['val_loss'])
-        plt.title('model loss')
-        plt.ylabel('loss')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-        plt.show()
+        self.log.info("Saved model and weights ({})".format(modelname))

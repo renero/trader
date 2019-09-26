@@ -33,6 +33,13 @@ class Params(Arguments):
             if not hasattr(self, attribute_name):
                 setattr(self, attribute_name, self.params[param_name])
 
+        #
+        # Extensions to the base YAML dictionary of parameters
+        #
+
+        # Set a parameter with the number of models read from YAML file.
+        setattr(self, 'num_models', len(self._model_names.keys()))
+
         # Overwrite attributes specified by argument.
         if self.arg_window_size is not None:
             self._window_size = self.arg_window_size

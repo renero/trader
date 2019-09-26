@@ -116,7 +116,7 @@ class OHEncoder(Params):
             raise ValidationError('1D or 2D array expected.', -1)
 
         info_msg = 'Onehot encoded input {} -> {}'
-        self.log.info(info_msg.format(input_vector.shape, transformed.shape))
+        self.log.debug(info_msg.format(input_vector.shape, transformed.shape))
 
         return pd.DataFrame(transformed.reshape(len(input_vector), -1))
 

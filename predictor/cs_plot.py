@@ -4,6 +4,7 @@ from mpl_finance import candlestick_ohlc
 
 
 class CSPlot(object):
+
     _default_ohlc_names = ['Open', 'High', 'Low', 'Close']
     _open = _default_ohlc_names[0]
     _high = _default_ohlc_names[1]
@@ -22,9 +23,10 @@ class CSPlot(object):
     @classmethod
     def candlesticks(cls, data, title=None, ohlc_names=_default_ohlc_names):
         """
-        Plot a candlestick diagram from a Dataframe. The colum names that contains
-        the OHLC values can be specified as an array of strings to the arguments of
-        the plot function, in case your columns are called any other way.
+        Plot a candlestick diagram from a Dataframe. The colum names that
+        contains the OHLC values can be specified as an array of strings
+        to the arguments of the plot function, in case your columns are
+        called any other way.
         Arguments:
         - data: A dataframe with the open, high, low and close values in
                 columns
@@ -93,4 +95,23 @@ def plot_move_prediction(y, Y_pred, pred_move_cs, num_predictions,
     ax.xaxis.label.set_size(2)
     for vl in [i * pred_length for i in range(num_predictions + 1)]:
         plt.axvline(x=vl, linestyle=':', color='red')
+    plt.show()
+
+
+def plot_history(history):
+    # summarize history for accuracy
+    plt.plot(history.history['acc'])
+    plt.plot(history.history['val_acc'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
+    # summarize history for loss
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
     plt.show()
