@@ -6,7 +6,7 @@ import sys
 import numpy as np
 import tensorflow as tf
 
-from cs_api import save_predictions
+from cs_api import save_predictions, reorder_predictions, display_predictions
 from cs_core import CSCore
 from cs_logger import CSLogger
 from params import Params
@@ -31,8 +31,9 @@ else:
     else:
         predictions = cs_model.predict_newdata(data, nn, encoder, ticks)
 
+    predictions = reorder_predictions(predictions, params)
     save_predictions(predictions, params, log)
-
+    display_predictions(predictions)
 #
 # EOF
 #

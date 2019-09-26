@@ -37,9 +37,16 @@ class CSCore(Params):
         # TODO: I'm loading the first encoder, but I do need to use
         #       all of them, in case I'm loading more than one network
         cse = encoder[next(iter(self._model_names))].ticks2cse(data)
-        # TODO: I'm producing only 50 predictions here, to speed up testing.
-        # for from_idx in range(0, ticks.shape[0] - params._window_size + 1):
-        for from_idx in range(0, 50 - self._window_size + 1):
+
+        # TODO: I'm producing only 25 predictions here, to speed up testing.
+        num_ticks = data.shape[0]
+        self.log.info('num ticks: {}'.format(num_ticks))
+        # train_range = range(0, ticks.shape[0] - params._window_size + 1)
+        train_range = range(num_ticks - 25, num_ticks - self._window_size)
+        self.log.info('range: {}'.format(train_range))
+
+        for from_idx in train_range:
+            self.log.info('processing [{}:{}]'.format(from_idx, from_idx+self._window_size))
             tick_group = data.iloc[from_idx:from_idx + self._window_size]
             prediction = single_prediction(tick_group, nn, encoder, self)
             prediction = add_supervised_info(
@@ -58,7 +65,6 @@ class CSCore(Params):
         # the last as the actual value
         tick_group = data.tail(self._window_size + 1).iloc[
                      -self._window_size - 1:-1]
-        # Perform a single prediction
         prediction = single_prediction(tick_group, nn, encoder, self)
         # Take the last element as the supervised information.
         prediction = add_supervised_info(prediction, data.iloc[-1]['c'],

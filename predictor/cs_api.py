@@ -259,6 +259,7 @@ def reorder_predictions(predictions, params):
     :return: the predictions reordered.
     """
     if params.num_models == 1:
+        predictions = predictions.iloc[:, [1, 0]]
         return predictions
 
     if params._predict_training is False:
@@ -278,17 +279,20 @@ def reorder_predictions(predictions, params):
 
 
 def save_predictions(predictions, params, log):
-    predictions = reorder_predictions(predictions, params)
-    if params._save_predictions is True:
-        # Find a valid filename and save everything
-        filename = valid_output_name(
-            filename='pred_{}_{}'.format(
-                splitext(basename(params._ticks_file))[0],
-                '_'.join(params.model_names)),
-            path=params._predictions_path,
-            extension='csv')
-        predictions.to_csv(filename, index=False)
-        log.info('predictions saved to: {}'.format(filename))
-    else:
-        print(tabulate(predictions, headers='keys', tablefmt='psql',
-                       showindex=False, floatfmt=['.1f']))
+    if params._save_predictions is not True:
+        log.info('not saving predictions.')
+        return
+    # Find a valid filename and save everything
+    filename = valid_output_name(
+        filename='pred_{}_{}'.format(
+            splitext(basename(params._ticks_file))[0],
+            '_'.join(params.model_names)),
+        path=params._predictions_path,
+        extension='csv')
+    predictions.to_csv(filename, index=False)
+    log.info('predictions saved to: {}'.format(filename))
+
+
+def display_predictions(predictions):
+    print(tabulate(predictions, headers='keys', tablefmt='psql',
+                   showindex=False, floatfmt=['.1f']))
