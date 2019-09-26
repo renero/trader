@@ -21,11 +21,13 @@ class Ticks(Params):
         return (x * (self.max_value - self.min_value)) + self.min_value
 
     def scale_back(self, df):
-        if len(list(self.params['model_names'].keys())) == 1:
+        num_models = len(list(self.params['model_names'].keys()))
+        if num_models == 1:
             return df.applymap(np.vectorize(self.denormalize))
         else:
-            return df.loc[:, df.columns != 'winner'].applymap(
-                    np.vectorize(self.denormalize))
+            scaled = df.loc[:, df.columns != 'winner'].applymap(
+                np.vectorize(self.denormalize))
+            return pd.concat([scaled, df['winner']], axis=1)
 
     def read_ohlc(self,
                   filepath=None,

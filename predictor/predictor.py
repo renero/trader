@@ -6,7 +6,6 @@ import sys
 import numpy as np
 import tensorflow as tf
 
-from cs_api import save_predictions, reorder_predictions, display_predictions
 from cs_core import CSCore
 from cs_logger import CSLogger
 from params import Params
@@ -20,20 +19,20 @@ params = Params(args=sys.argv)
 log = CSLogger(params._log_level)
 ticks = Ticks()
 data = ticks.read_ohlc()
-cs_model = CSCore()
+predictor = CSCore()
 
 if params.do_train is True:
-    cs_model.train(data)
+    predictor.train(data)
 else:
-    nn, encoder = cs_model.prepare_predict()
+    nn, encoder = predictor.prepare_predict()
     if params._predict_training:
-        predictions = cs_model.predict_training(data, nn, encoder, ticks)
+        predictions = predictor.predict_training(data, nn, encoder, ticks)
     else:
-        predictions = cs_model.predict_newdata(data, nn, encoder, ticks)
+        predictions = predictor.predict_newdata(data, nn, encoder, ticks)
 
-    predictions = reorder_predictions(predictions, params)
-    save_predictions(predictions, params, log)
-    display_predictions(predictions)
+    predictions = predictor.reorder_predictions(predictions, params)
+    predictor.save_predictions(predictions, params, log)
+    predictor.display_predictions(predictions)
 
 #
 # EOF
