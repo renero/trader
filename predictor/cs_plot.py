@@ -2,8 +2,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 from mpl_finance import candlestick_ohlc
 
+from params import Params
 
-class CSPlot(object):
+
+class CSPlot(Params):
 
     _default_ohlc_names = ['Open', 'High', 'Low', 'Close']
     _open = _default_ohlc_names[0]
@@ -18,7 +20,7 @@ class CSPlot(object):
     _default_color_down = '#db3f3f'
 
     def __init__(self):
-        pass
+        super(CSPlot, self).__init__()
 
     @classmethod
     def candlesticks(cls, data, title=None, ohlc_names=_default_ohlc_names):
