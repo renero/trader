@@ -23,7 +23,7 @@ data = ticks.read_ohlc()
 cs_model = CSCore()
 
 if params.do_train is True:
-    cs_model.train()
+    cs_model.train(data)
 else:
     nn, encoder = cs_model.prepare_predict()
     if params._predict_training:
@@ -34,6 +34,7 @@ else:
     predictions = reorder_predictions(predictions, params)
     save_predictions(predictions, params, log)
     display_predictions(predictions)
+
 #
 # EOF
 #

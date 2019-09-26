@@ -94,3 +94,22 @@ def plot_move_prediction(y, Y_pred, pred_move_cs, num_predictions,
     for vl in [i * pred_length for i in range(num_predictions + 1)]:
         plt.axvline(x=vl, linestyle=':', color='red')
     plt.show()
+
+
+def plot_history(history):
+    # summarize history for accuracy
+    plt.plot(history.history['acc'])
+    plt.plot(history.history['val_acc'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
+    # summarize history for loss
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()

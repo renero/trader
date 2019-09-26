@@ -8,6 +8,7 @@ from keras.layers import LSTM, Dense, Dropout
 from keras.models import Sequential, model_from_json
 from keras.regularizers import l2
 
+from cs_plot import plot_history
 from utils.file_io import file_exists
 from params import Params
 
@@ -17,15 +18,15 @@ class ValidationException(Exception):
 
 
 class Csnn(Params):
-    _num_categories = 0
-    _window_size = 3
-    _num_predictions = 1
-    _test_size = 0.1
-    _dropout = 0.1
-    _history = None
-    _enc_data = None
-    _raw_data = None
-    _input_file = ''
+    # _num_categories = 0
+    # _window_size = 3
+    # _num_predictions = 1
+    # _test_size = 0.1
+    # _dropout = 0.1
+    # _history = None
+    # _enc_data = None
+    # _raw_data = None
+    # _input_file = ''
 
     # metadata
     _metadata = {'period': 'unk', 'epochs': 'unk', 'accuracy': 'unk'}
@@ -34,21 +35,21 @@ class Csnn(Params):
     _output_dir = ''
 
     # Model design
-    _l1units = 256
-    _l2units = 256
-    _activation = 'sigmoid'
-    _model = None
+    # _l1units = 256
+    # _l2units = 256
+    # _activation = 'sigmoid'
+    # _model = None
 
     # Training
-    _epochs = 100
-    _batch_size = 10
-    _validation_split = 0.1
-    _verbose = 1
+    # _epochs = 100
+    # _batch_size = 10
+    # _validation_split = 0.1
+    # _verbose = 1
 
     # Compilation
-    _loss = 'mean_squared_error'
-    _optimizer = 'adam'
-    _metrics = ['accuracy']
+    # _loss = 'mean_squared_error'
+    # _optimizer = 'adam'
+    # _metrics = ['accuracy']
 
     # Results
     _history = None
@@ -118,6 +119,7 @@ class Csnn(Params):
             verbose=self._verbose,
             validation_split=self._validation_split)
         self._metadata[self._metrics[0]] = self._history.history['acc']
+        plot_history(self._history)
         return self
 
     def predict(self, test_set):
