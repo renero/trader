@@ -3,8 +3,8 @@ import os
 from keras.layers import Dense, InputLayer
 from keras.models import Sequential, model_from_json
 
-from utils.dictionary import Dictionary
 from common import Common
+from utils.dictionary import Dictionary
 
 
 class NN(Common):
@@ -21,11 +21,12 @@ class NN(Common):
         model = Sequential()
         model.add(
             InputLayer(batch_input_shape=(1, self.configuration.num_states)))
-        model.add(
-            Dense(
+        model.add(Dense(
                 num_cells,
                 input_shape=(self.configuration.num_states,),
-                activation='sigmoid'))
+                activation='relu'))
+        model.add(Dense(32, activation='relu'))
+        model.add(Dense(8, activation='relu'))
         model.add(
             Dense(
                 self.configuration.num_actions,

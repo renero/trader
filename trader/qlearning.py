@@ -2,13 +2,14 @@ import time
 
 import numpy as np
 
+from common import Common
 from environment import Environment
 from nn import NN
-from common import Common
 
 
 class QLearning(Common):
     configuration = None
+    memory = []
 
     def __init__(self, configuration):
         self.configuration = configuration
@@ -16,28 +17,40 @@ class QLearning(Common):
         self.nn = NN(self.configuration)
         self.model = None
 
-    def onehot(self, state: int) -> np.ndarray:
-        return np.identity(self.configuration.num_states)[state:state + 1]
-
-    def predict(self, state) -> int:
-        return int(
-            np.argmax(
-                self.model.predict(
-                    self.onehot(state))))
-
-    def predict_value(self, state):
-        return np.max(self.model.predict(self.onehot(state)))
-
-    def get_strategy(self):
+    def q_learn(self,
+                env: Environment,
+                display_strategy: bool = False,
+                do_plot: bool = False) -> list:
         """
-        Get the defined strategy from the weights of the model.
-        :return: strategy matrix
+        Learns or Load an strategy to follow over a given environment,
+        using RL.
+        :type env: Environment
+        :param display_strategy:
+        :type do_plot: bool
         """
-        strategy = [
-            np.argmax(
-                self.model.predict(self.onehot(i))[0])
-            for i in range(self.configuration.num_states)
-        ]
+        start = time.time()
+        # create the Keras model and learn, or load it from disk.
+        if self.configuration.load_model is True:
+            self.model = self.nn.load_model(self.configuration.model_file,
+                                            self.configuration.weights_file)
+        else:
+            self.model = self.nn.create_model()
+            avg_rewards, avg_loss, avg_mae = self.learn(env)
+            # display anything?
+            if do_plot is True and self.configuration.load_model is False:
+                self.display.plot_metrics(avg_loss, avg_mae, avg_rewards)
+
+        # Extract the strategy matrix from the model.
+        strategy = self.get_strategy()
+        if display_strategy:
+            self.display.strategy(self,
+                                  env,
+                                  self.model,
+                                  self.configuration.num_states,
+                                  strategy)
+
+        self.log('\nTime elapsed: {}'.format(
+            self.configuration.display.timer(time.time() - start)))
         return strategy
 
     def learn(self, env: Environment):
@@ -114,38 +127,26 @@ class QLearning(Common):
         return history.history['loss'][0], \
                history.history['mean_absolute_error'][0]
 
-    def q_learn(self,
-                env: Environment,
-                display_strategy: bool = False,
-                do_plot: bool = False) -> list:
-        """
-        Learns or Load an strategy to follow over a given environment,
-        using RL.
-        :type env: Environment
-        :param display_strategy:
-        :type do_plot: bool
-        """
-        start = time.time()
-        # create the Keras model and learn, or load it from disk.
-        if self.configuration.load_model is True:
-            self.model = self.nn.load_model(self.configuration.model_file,
-                                            self.configuration.weights_file)
-        else:
-            self.model = self.nn.create_model()
-            avg_rewards, avg_loss, avg_mae = self.learn(env)
-            # display anything?
-            if do_plot is True and self.configuration.load_model is False:
-                self.display.plot_metrics(avg_loss, avg_mae, avg_rewards)
+    def onehot(self, state: int) -> np.ndarray:
+        return np.identity(self.configuration.num_states)[state:state + 1]
 
-        # Extract the strategy matrix from the model.
-        strategy = self.get_strategy()
-        if display_strategy:
-            self.display.strategy(self,
-                                  env,
-                                  self.model,
-                                  self.configuration.num_states,
-                                  strategy)
+    def predict(self, state) -> int:
+        return int(
+            np.argmax(
+                self.model.predict(
+                    self.onehot(state))))
 
-        self.log('\nTime elapsed: {}'.format(
-            self.configuration.display.timer(time.time() - start)))
+    def predict_value(self, state):
+        return np.max(self.model.predict(self.onehot(state)))
+
+    def get_strategy(self):
+        """
+        Get the defined strategy from the weights of the model.
+        :return: strategy matrix
+        """
+        strategy = [
+            np.argmax(
+                self.model.predict(self.onehot(i))[0])
+            for i in range(self.configuration.num_states)
+        ]
         return strategy

@@ -22,11 +22,11 @@ def main():
     # Init
     configuration = RLDictionary()
     environment = Environment(configuration)
-    learner = QLearning(configuration)
+    agent = QLearning(configuration)
 
     # Learn
     configuration.debug = True
-    strategy = learner.q_learn(environment, do_plot=True)
+    strategy = agent.q_learn(environment, do_plot=True)
     configuration.debug = False
 
     # Test
@@ -36,14 +36,16 @@ def main():
     state = environment.reset()
     while not done:
         action = environment.decide_next_action(state, strategy)
-        state, reward, done, _ = environment.step(action)
+        next_state, reward, done, _ = environment.step(action)
+        agent.memory.append((state, action, reward, next_state, done))
         total_reward += reward
+        state = next_state
 
     configuration.display.results(environment.portfolio_, do_plot=True)
 
     # Save the model?
     if configuration.save_model is True:
-        learner.nn.save_model(learner.model)
+        agent.nn.save_model(agent.model)
 
 
 main()
