@@ -127,6 +127,30 @@ class QLearning(Common):
         return history.history['loss'][0], \
                history.history['mean_absolute_error'][0]
 
+    def experience_replay(self, batch_size):
+        """
+        Primarily from: https://github.com/edwardhdlu/q-trader
+        :param batch_size:
+        :return:
+        """
+        mem_size = len(self.memory)
+        mini_batch = self.memory[mem_size - batch_size:mem_size]
+
+        for state, action, reward, next_state, done in mini_batch:
+            target = reward
+            if not done:
+                target = reward + self.configuration.y * self.predict_value(
+                    next_state)
+            target_vec = self.model.predict(self.onehot(state))[0]
+            target_vec[action] = target
+            self.model.fit(
+                self.onehot(state),
+                target_vec.reshape(-1, self.configuration.num_actions),
+                epochs=1, verbose=0)
+
+        if self.configuration.eps > self.configuration.eps_min:
+            self.configuration.eps *= self.configuration.decay_factor
+
     def onehot(self, state: int) -> np.ndarray:
         return np.identity(self.configuration.num_states)[state:state + 1]
 
