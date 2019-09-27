@@ -1,4 +1,5 @@
 import time
+from collections import deque
 
 import numpy as np
 
@@ -9,7 +10,7 @@ from nn import NN
 
 class QLearning(Common):
     configuration = None
-    memory = []
+    memory = deque(maxlen=1000)
 
     def __init__(self, configuration):
         self.configuration = configuration
@@ -35,7 +36,7 @@ class QLearning(Common):
                                             self.configuration.weights_file)
         else:
             self.model = self.nn.create_model()
-            avg_rewards, avg_loss, avg_mae = self.learn(env)
+            avg_rewards, avg_loss, avg_mae = self.reinforce_learn(env)
             # display anything?
             if do_plot is True and self.configuration.load_model is False:
                 self.display.plot_metrics(avg_loss, avg_mae, avg_rewards)
@@ -49,11 +50,11 @@ class QLearning(Common):
                                   self.configuration.num_states,
                                   strategy)
 
-        self.log('\nTime elapsed: {}'.format(
+        log(self.configuration, '\nTime elapsed: {}'.format(
             self.configuration.display.timer(time.time() - start)))
         return strategy
 
-    def learn(self, env: Environment):
+    def reinforce_learn(self, env: Environment):
         """
         Implements the learning loop over the states, actions and strategies
         to learn what is the sequence of actions that maximize reward.
@@ -70,7 +71,7 @@ class QLearning(Common):
         # Loop over 'num_episodes'
         for i in range(self.configuration.num_episodes):
             state = env.reset()
-            self.configuration.eps *= self.configuration.decay_factor
+            self.configuration.epsilon *= self.configuration.decay_factor
             if (i % self.configuration.num_episodes_update == 0) or \
                     (i == (self.configuration.num_episodes - 1)):
                 end = time.time()
@@ -86,7 +87,7 @@ class QLearning(Common):
             while not done:
                 # Decide whether generating random action or predict most
                 # likely from the give state.
-                if np.random.random() < self.configuration.eps:
+                if np.random.random() < self.configuration.epsilon:
                     action = np.random.randint(
                         0, self.configuration.num_actions)
                 else:
@@ -96,6 +97,9 @@ class QLearning(Common):
                 # reward and information on whether we've finish.
                 new_state, reward, done, _ = env.step(action)
                 loss, mae = self.learn_step(action, new_state, reward, state)
+                self.memory.append((state, action, reward, new_state, done))
+
+                # Update states and metrics
                 state = new_state
                 sum_rewards += reward
                 sum_loss += loss
@@ -104,6 +108,10 @@ class QLearning(Common):
             avg_rewards.append(sum_rewards / self.configuration.num_episodes)
             avg_loss.append(sum_loss / self.configuration.num_episodes)
             avg_mae.append(sum_mae / self.configuration.num_episodes)
+
+            if len(self.memory) > self.configuration.exp_batch_size:
+                self.experience_replay()
+
         return avg_rewards, avg_loss, avg_mae
 
     def learn_step(self, action, new_state, reward, state):
@@ -116,7 +124,7 @@ class QLearning(Common):
         :param state:
         :return: the loss and the metric resulting from the training.
         """
-        target = reward + self.configuration.y * self.predict_value(
+        target = reward + self.configuration.gamma * self.predict_value(
             new_state)
         target_vec = self.model.predict(self.onehot(state))[0]
         target_vec[action] = target
@@ -127,19 +135,21 @@ class QLearning(Common):
         return history.history['loss'][0], \
                history.history['mean_absolute_error'][0]
 
-    def experience_replay(self, batch_size):
+    def experience_replay(self):
         """
         Primarily from: https://github.com/edwardhdlu/q-trader
-        :param batch_size:
-        :return:
+        :return: None
         """
+        mini_batch = []
         mem_size = len(self.memory)
-        mini_batch = self.memory[mem_size - batch_size:mem_size]
+        for i in range(mem_size - self.configuration.exp_batch_size + 1,
+                       mem_size):
+            mini_batch.append(self.memory[i])
 
         for state, action, reward, next_state, done in mini_batch:
             target = reward
             if not done:
-                target = reward + self.configuration.y * self.predict_value(
+                target = reward + self.configuration.gamma * self.predict_value(
                     next_state)
             target_vec = self.model.predict(self.onehot(state))[0]
             target_vec[action] = target
@@ -148,8 +158,8 @@ class QLearning(Common):
                 target_vec.reshape(-1, self.configuration.num_actions),
                 epochs=1, verbose=0)
 
-        if self.configuration.eps > self.configuration.eps_min:
-            self.configuration.eps *= self.configuration.decay_factor
+        if self.configuration.exp_epsilon > self.configuration.exp_epsilon_min:
+            self.configuration.exp_epsilon *= self.configuration.exp_decay
 
     def onehot(self, state: int) -> np.ndarray:
         return np.identity(self.configuration.num_states)[state:state + 1]

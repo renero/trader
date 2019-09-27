@@ -1,11 +1,12 @@
 from pandas import DataFrame
 
+from common import Common
 from utils.dictionary import Dictionary
 from display import Display
 from utils.my_dict import MyDict
 
 
-class RLDictionary(Dictionary):
+class RLDictionary(Dictionary, Common):
 
     def __init__(self, default_params_filename='params.yaml', **kwargs):
 

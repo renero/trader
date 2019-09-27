@@ -67,16 +67,18 @@ class Display(Common):
         else:
             total = portfolio.budget
         percentage = 100. * ((total / portfolio.initial_budget) - 1.0)
-        self.log('Final....: € {:.2f} [{} %]'.format(
+        self.log(self.configuration, 'Final....: € {:.2f} [{} %]'.format(
             total, self.color(percentage)))
-        self.log('Budget...: € {:.1f} [{} %]'.format(
+        self.log(self.configuration, 'Budget...: € {:.1f} [{} %]'.format(
             portfolio.budget,
             self.color((portfolio.budget / portfolio.initial_budget) * 100.)))
-        self.log('Cash Flow: {}'.format(
+        self.log(self.configuration, 'Cash Flow: {}'.format(
             self.color(portfolio.investment * -1.)))
-        self.log('Shares...: {:d}'.format(int(portfolio.shares)))
-        self.log('Sh.Value.: {:.1f}'.format(portfolio.portfolio_value))
-        self.log('P/L......: € {}'.format(
+        self.log(self.configuration,
+                 'Shares...: {:d}'.format(int(portfolio.shares)))
+        self.log(self.configuration,
+                 'Sh.Value.: {:.1f}'.format(portfolio.portfolio_value))
+        self.log(self.configuration, 'P/L......: € {}'.format(
             self.color(portfolio.portfolio_value - portfolio.investment)))
 
     def report_action(self, action_name):
@@ -111,18 +113,19 @@ class Display(Common):
         :return:
         """
         percentage = (i / num_episodes) * 100.0
-        self.log(
-            "Epoch {:>5}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
-                i,
-                num_episodes,
-                percentage,
-                last_avg), end='')
+        self.log(self.configuration,
+                 "Epoch {:>5}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
+                     i,
+                     num_episodes,
+                     percentage,
+                     last_avg), end='')
         if percentage == 0.0:
-            self.log(' Est.time: UNKNOWN')
+            self.log(self.configuration, ' Est.time: UNKNOWN')
             return
         elapsed = end - start
         remaining = ((100. - percentage) * elapsed) / percentage
-        self.log(' Est.time: {}'.format(self.timer(remaining)))
+        self.log(self.configuration,
+                 ' Est.time: {}'.format(self.timer(remaining)))
 
     @staticmethod
     def timer(elapsed):
@@ -146,7 +149,7 @@ class Display(Common):
         file.
         :return: None
         """
-        self.log('List of states: [{}]'.format(
+        self.log(self.configuration, 'List of states: [{}]'.format(
             ' | '.join([(lambda x: x[1:])(s) for s in
                         states.keys()])))
         return

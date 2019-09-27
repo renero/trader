@@ -13,10 +13,11 @@ class NN(Common):
         self.configuration = configuration
 
     def create_model(self) -> Sequential:
-        num_cells = int(
-            self.configuration.num_states * \
-            self.configuration.num_actions * \
-            self.configuration.cells_reduction_factor)
+        # num_cells = int(
+        #     self.configuration.num_states * \
+        #     self.configuration.num_actions * \
+        #     self.configuration.cells_reduction_factor)
+        num_cells = 64
 
         model = Sequential()
         model.add(
@@ -36,13 +37,13 @@ class NN(Common):
         model.compile(loss='mse', optimizer='adam', metrics=['mae'])
 
         if self.configuration.debug is True:
-            self.log('Model Summary')
+            log(self.configuration, 'Model Summary')
             model.summary()
 
         return model
 
     def save_model(self, model):
-        self.log('\nSaving model, weights and results.')
+        log(self.configuration, '\nSaving model, weights and results.')
         # Check if file exists to abort saving operation
         solved = False
         char_to_append = ''
@@ -61,7 +62,7 @@ class NN(Common):
         model_json = model.to_json()
         with open(fname, 'w') as json_file:
             json_file.write(model_json)
-        self.log('  Model: {}'.format(fname))
+        log(self.configuration, '  Model: {}'.format(fname))
 
         # Serialize weights to HDF5
         basename = 'model' + char_to_append + '.h5'

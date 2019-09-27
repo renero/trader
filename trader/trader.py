@@ -37,7 +37,6 @@ def main():
     while not done:
         action = environment.decide_next_action(state, strategy)
         next_state, reward, done, _ = environment.step(action)
-        agent.memory.append((state, action, reward, next_state, done))
         total_reward += reward
         state = next_state
 

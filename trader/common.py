@@ -3,7 +3,6 @@ I will place here common functions used across all modules.
 """
 from termcolor import colored
 
-import pandas as pd
 from pandas import DataFrame
 
 
@@ -14,8 +13,8 @@ class Common:
     White = '\033[37m'
     Red = '\033[31m'
 
-    def log(self, *args, **kwargs):
-        if self.configuration.debug is True:
+    def log(self, configuration, *args, **kwargs):
+        if configuration['debug'] is True:
             print(*args, **kwargs)
 
     def green(self, string):

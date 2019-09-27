@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from cs_predict import CSPredict
+from display import log
 
 
 def predict_dataset(dataset, encoder, nn, subtypes=None, split='test'):
@@ -52,7 +53,7 @@ def predict_close(ticks, encoder, nn, params):
     # the window_size attribute within the 'encoder'.
     if ticks.shape[0] != encoder.window_size():
         info_msg = 'Tickgroup resizing: {} -> {}'
-        params.log.info(info_msg.format(ticks.shape[0], encoder.window_size()))
+        log.info(info_msg.format(ticks.shape[0], encoder.window_size()))
         ticks = ticks.iloc[-encoder.window_size():, :]
         ticks.reset_index()
 
@@ -88,7 +89,7 @@ def predict_close(ticks, encoder, nn, params):
     prediction_cs = np.concatenate((pred_body_cs, pred_move_cs), axis=0)
     this_prediction = dict(zip(params._cse_tags, prediction_cs))
     prediction_df = prediction_df.append(this_prediction, ignore_index=True)
-    params.log.info('Net {} ID {} -> {}:{}|{}|{}|{}'.format(
+    log.info('Net {} ID {} -> {}:{}|{}|{}|{}'.format(
         nn['body'].name,
         hex(id(nn)),
         prediction_df[params._cse_tags[0]].values[0],
@@ -135,7 +136,7 @@ def single_prediction(tick_group, nn, encoder, params):
 
     # When using ensemble, compute what the ensemble predicts, and add it.
     if params._ensemble:
-        params.log.info('Refining prediction with ensemble.')
+        log.info('Refining prediction with ensemble.')
         with open(params._ensemble_path, 'rb') as file:
             ensemble_model = pickle.load(file)
         input_df = df[
