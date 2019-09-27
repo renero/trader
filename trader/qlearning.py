@@ -50,7 +50,7 @@ class QLearning(Common):
                                   self.configuration.num_states,
                                   strategy)
 
-        log(self.configuration, '\nTime elapsed: {}'.format(
+        self.log(self.configuration, '\nTime elapsed: {}'.format(
             self.configuration.display.timer(time.time() - start)))
         return strategy
 
