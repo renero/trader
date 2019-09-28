@@ -12,7 +12,7 @@ import tensorflow as tf
 
 from environment import Environment
 from rl_dictionary import RLDictionary
-from qlearning import QLearning
+from agent import Agent
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -22,7 +22,7 @@ def main():
     # Init
     configuration = RLDictionary()
     environment = Environment(configuration)
-    agent = QLearning(configuration)
+    agent = Agent(configuration)
 
     # Learn
     configuration.debug = True

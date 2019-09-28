@@ -1,15 +1,18 @@
+import random
 import time
 from collections import deque
 
 import numpy as np
+from keras.callbacks import TensorBoard
 
 from common import Common
 from environment import Environment
 from nn import NN
 
 
-class QLearning(Common):
+class Agent(Common):
     configuration = None
+    tensorboard = None
     memory = deque(maxlen=1000)
 
     def __init__(self, configuration):
@@ -17,6 +20,10 @@ class QLearning(Common):
         self.display = self.configuration.display
         self.nn = NN(self.configuration)
         self.model = None
+        if self.configuration.tensorboard is True:
+            self.tensorboard = TensorBoard(
+                log_dir=self.configuration.tbdir,
+                histogram_freq=0, write_graph=True, write_images=False)
 
     def q_learn(self,
                 env: Environment,
@@ -50,7 +57,7 @@ class QLearning(Common):
                                   self.configuration.num_states,
                                   strategy)
 
-        self.log(self.configuration, '\nTime elapsed: {}'.format(
+        self.log('\nTime elapsed: {}'.format(
             self.configuration.display.timer(time.time() - start)))
         return strategy
 
@@ -67,11 +74,11 @@ class QLearning(Common):
         avg_mae = []
         last_avg: float = 0.0
         start = time.time()
+        epsilon = self.configuration.epsilon
 
         # Loop over 'num_episodes'
         for i in range(self.configuration.num_episodes):
             state = env.reset()
-            self.configuration.epsilon *= self.configuration.decay_factor
             if (i % self.configuration.num_episodes_update == 0) or \
                     (i == (self.configuration.num_episodes - 1)):
                 end = time.time()
@@ -87,7 +94,7 @@ class QLearning(Common):
             while not done:
                 # Decide whether generating random action or predict most
                 # likely from the give state.
-                if np.random.random() < self.configuration.epsilon:
+                if np.random.random() < epsilon:
                     action = np.random.randint(
                         0, self.configuration.num_actions)
                 else:
@@ -109,8 +116,14 @@ class QLearning(Common):
             avg_loss.append(sum_loss / self.configuration.num_episodes)
             avg_mae.append(sum_mae / self.configuration.num_episodes)
 
-            if len(self.memory) > self.configuration.exp_batch_size:
-                self.experience_replay()
+            # Batch Replay
+            if self.configuration.experience_replay is True:
+                if len(self.memory) > self.configuration.exp_batch_size:
+                    self.experience_replay()
+
+            # Epsilon decays here
+            if epsilon >= self.configuration.epsilon_min:
+                epsilon *= self.configuration.decay_factor
 
         return avg_rewards, avg_loss, avg_mae
 
@@ -128,10 +141,17 @@ class QLearning(Common):
             new_state)
         target_vec = self.model.predict(self.onehot(state))[0]
         target_vec[action] = target
+
+        # Define an extra argument only if tensorboard parameter is set True.
+        callback_args = {}
+        if self.configuration.tensorboard is True:
+            callback_args = {'callbacks': self.tensorboard}
+
         history = self.model.fit(
             self.onehot(state),
             target_vec.reshape(-1, self.configuration.num_actions),
-            epochs=1, verbose=0)
+            epochs=1, verbose=0, **callback_args
+        )
         return history.history['loss'][0], \
                history.history['mean_absolute_error'][0]
 
@@ -140,11 +160,13 @@ class QLearning(Common):
         Primarily from: https://github.com/edwardhdlu/q-trader
         :return: None
         """
-        mini_batch = []
-        mem_size = len(self.memory)
-        for i in range(mem_size - self.configuration.exp_batch_size + 1,
-                       mem_size):
-            mini_batch.append(self.memory[i])
+        # mini_batch = []
+        # mem_size = len(self.memory)
+        mini_batch = random.sample(self.memory,
+                                   self.configuration.exp_batch_size)
+        # for i in range(mem_size - self.configuration.exp_batch_size + 1,
+        #                mem_size):
+        #     mini_batch.append(self.memory[i])
 
         for state, action, reward, next_state, done in mini_batch:
             target = reward
@@ -156,10 +178,9 @@ class QLearning(Common):
             self.model.fit(
                 self.onehot(state),
                 target_vec.reshape(-1, self.configuration.num_actions),
-                epochs=1, verbose=0)
-
-        if self.configuration.exp_epsilon > self.configuration.exp_epsilon_min:
-            self.configuration.exp_epsilon *= self.configuration.exp_decay
+                epochs=1, verbose=0,
+                callbacks=[self.tensorboard]
+            )
 
     def onehot(self, state: int) -> np.ndarray:
         return np.identity(self.configuration.num_states)[state:state + 1]

@@ -13,8 +13,8 @@ class Common:
     White = '\033[37m'
     Red = '\033[31m'
 
-    def log(self, configuration, *args, **kwargs):
-        if configuration['debug'] is True:
+    def log(self, *args, **kwargs):
+        if self.configuration.debug is True:
             print(*args, **kwargs)
 
     def green(self, string):

@@ -6,7 +6,7 @@ from display import Display
 from utils.my_dict import MyDict
 
 
-class RLDictionary(Dictionary, Common):
+class RLDictionary(Dictionary):
 
     def __init__(self, default_params_filename='params.yaml', **kwargs):
 

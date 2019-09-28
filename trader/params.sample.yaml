@@ -17,13 +17,19 @@ weights_file: ../output/model2.h5
 
 # Parameters for the Q-Learning function
 gamma: 0.95
-epsilon: 0.5
-decay_factor: 0.999
+epsilon: 1.0
+epsilon_min: 0.02
+decay_factor: 0.995
 
 # Experience Replay batch size
-exp_rep_batch: 16
+experience_replay: True
+exp_batch_size: 16
 
- Reduction factor is the amount by which the number of cells in the network
+# TensorBoard?
+tensorboard: True
+
+
+# Reduction factor is the amount by which the number of cells in the network
 # is to be reduced. If 1.0, then the num of cells will be the number of
 # possible states times the number of actions.
 cells_reduction_factor: 0.25
