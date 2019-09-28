@@ -6,7 +6,7 @@ import pandas as pd
 
 from common import Common
 from portfolio import Portfolio
-from scombiner import StatesCombiner
+from states_combiner import StatesCombiner
 
 
 class Environment(Common):
