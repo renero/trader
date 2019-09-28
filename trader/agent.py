@@ -20,10 +20,12 @@ class Agent(Common):
         self.display = self.configuration.display
         self.nn = NN(self.configuration)
         self.model = None
+        self.callback_args = {}
         if self.configuration.tensorboard is True:
             self.tensorboard = TensorBoard(
                 log_dir=self.configuration.tbdir,
                 histogram_freq=0, write_graph=True, write_images=False)
+            self.callback_args = {'callbacks': self.tensorboard}
 
     def q_learn(self,
                 env: Environment,
@@ -142,15 +144,10 @@ class Agent(Common):
         target_vec = self.model.predict(self.onehot(state))[0]
         target_vec[action] = target
 
-        # Define an extra argument only if tensorboard parameter is set True.
-        callback_args = {}
-        if self.configuration.tensorboard is True:
-            callback_args = {'callbacks': self.tensorboard}
-
         history = self.model.fit(
             self.onehot(state),
             target_vec.reshape(-1, self.configuration.num_actions),
-            epochs=1, verbose=0, **callback_args
+            epochs=1, verbose=0, **self.callback_args
         )
         return history.history['loss'][0], \
                history.history['mean_absolute_error'][0]
@@ -179,8 +176,7 @@ class Agent(Common):
                 self.onehot(state),
                 target_vec.reshape(-1, self.configuration.num_actions),
                 epochs=1, verbose=0,
-                callbacks=[self.tensorboard]
-            )
+                **self.callback_args)
 
     def onehot(self, state: int) -> np.ndarray:
         return np.identity(self.configuration.num_states)[state:state + 1]

@@ -40,7 +40,7 @@ def main():
         total_reward += reward
         state = next_state
 
-    configuration.display.results(environment.portfolio_, do_plot=True)
+    configuration.display.results(environment.portfolio, do_plot=True)
 
     # Save the model?
     if configuration.save_model is True:

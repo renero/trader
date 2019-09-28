@@ -15,7 +15,7 @@ class Environment(Common):
     data_ = None
     current_state_ = 0
     t = 0
-    portfolio_ = None
+    portfolio = None
     price_ = 0.
     forecast_ = 0.
     max_actions_ = 0
@@ -41,11 +41,11 @@ class Environment(Common):
         :return: The initial state.
         """
         self.update_market_price()
-        self.portfolio_ = Portfolio(self.configuration,
-                                    self.price_,
-                                    self.forecast_)
+        self.portfolio = Portfolio(self.configuration,
+                                   self.price_,
+                                   self.forecast_)
         if creation_time is not True:
-            self.display.report(self.portfolio_, t=0, disp_header=True)
+            self.display.report(self.portfolio, t=0, disp_header=True)
         return self.update_state()
 
     def reset(self):
@@ -55,7 +55,7 @@ class Environment(Common):
         """
         self.done_ = False
         self.t = 0
-        del self.portfolio_
+        del self.portfolio
         self.configuration.results.drop(self.configuration.results.index,
                                         inplace=True)
         return self.init_environment(creation_time=False)
@@ -95,9 +95,9 @@ class Environment(Common):
             # start with the 'state_' string.
             # The '[1:]' serves to remove the leading underscore.
             module_name = 'state_' + module_param_name
-            module = importlib.import_module(module_name)
+            module = importlib.import_module('state_classes')# module_name)
             state_class = getattr(module, module_name)
-            new_substate = state_class.update_state(self.portfolio_)
+            new_substate = state_class.update_state(self.portfolio)
             new_substates.append(new_substate)
 
         # Get the ID resulting from the combination of the sub-states
@@ -116,7 +116,7 @@ class Environment(Common):
 
         # Call to the proper portfolio method, based on the action number
         # passed to this argument.
-        self.reward_ = getattr(self.portfolio_,
+        self.reward_ = getattr(self.portfolio,
                                self.configuration.action_name[action])()
 
         # If I'm in stop loss situation, rewards gets a different value
@@ -127,15 +127,15 @@ class Environment(Common):
         self.t += 1
         if self.t >= self.max_states_:
             self.done_ = True
-            self.display.report(self.portfolio_, self.t - 1, disp_footer=True)
-            self.portfolio_.reset_history()
+            self.display.report(self.portfolio, self.t - 1, disp_footer=True)
+            self.portfolio.reset_history()
             return self.new_state_, self.reward_, self.done_, self.t
 
         self.update_market_price()
-        self.portfolio_.update(self.price_, self.forecast_)
+        self.portfolio.update(self.price_, self.forecast_)
         self.new_state_ = self.update_state()
-        self.display.report(self.portfolio_, self.t)
-        self.portfolio_.append_to_history(self)
+        self.display.report(self.portfolio, self.t)
+        self.portfolio.append_to_history(self)
 
         return self.new_state_, self.reward_, self.done_, self.t
 
@@ -150,10 +150,10 @@ class Environment(Common):
         # Fix the reward if I try to buy and it is not a failed attempt cause
         # I've no money to buy.
         if action_name == 'buy' and \
-                self.portfolio_.latest_price > self.portfolio_.budget:
+                self.portfolio.latest_price > self.portfolio.budget:
             return self.configuration.environment.reward_stoploss_buy
         # Fix the reward if I'm trying to sell and I DO have shares to sell
-        elif action_name == 'sell' and self.portfolio_.shares > 0.:
+        elif action_name == 'sell' and self.portfolio.shares > 0.:
             return self.configuration.environment.reward_stoploss_sell
         else:
             return self.configuration.environment.reward_stoploss_donothing
@@ -166,16 +166,20 @@ class Environment(Common):
         The parameter can be expressed as a percentage or actual value.
         :return: True or False
         """
-        net_value = self.portfolio_.portfolio_value - self.portfolio_.investment
-        stop_loss = self.portfolio_.configuration.environment.stop_loss
+        # Quick jump-off in case I don't want to consider stop loss cases.
+        if self.configuration.environment.consider_stop_loss is False:
+            return False
+
+        net_value = self.portfolio.portfolio_value - self.portfolio.investment
+        stop_loss = self.portfolio.configuration.environment.stop_loss
 
         if net_value == 0.:
             return False
 
         if stop_loss < 1.0:  # percentage of initial budget
-            if (net_value / self.portfolio_.initial_budget) < 0.0 and \
+            if (net_value / self.portfolio.initial_budget) < 0.0 and \
                     fabs(
-                        net_value / self.portfolio_.initial_budget) >= stop_loss:
+                        net_value / self.portfolio.initial_budget) >= stop_loss:
                 value = True
             else:
                 value = False
