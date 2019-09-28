@@ -6,7 +6,7 @@ import pandas as pd
 
 from common import Common
 from portfolio import Portfolio
-from scombiner import SCombiner
+from scombiner import StatesCombiner
 
 
 class Environment(Common):
@@ -29,7 +29,7 @@ class Environment(Common):
         self.configuration = configuration
         self.display = self.configuration.display
 
-        self.states = SCombiner(self.configuration.states_list)
+        self.states = StatesCombiner(self.configuration.states_list)
         self.read_market_data(self.configuration.data_path)
         self.init_environment(creation_time=True)
 
