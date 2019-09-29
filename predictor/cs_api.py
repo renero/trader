@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 
 from cs_predict import CSPredict
-from display import log
 
 
 def predict_dataset(dataset, encoder, nn, subtypes=None, split='test'):
