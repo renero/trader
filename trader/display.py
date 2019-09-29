@@ -74,8 +74,10 @@ class Display(Common):
             self.color((portfolio.budget / portfolio.initial_budget) * 100.)))
         self.log('Cash Flow: {}'.format(
             self.color(portfolio.investment * -1.)))
-        self.log('Shares...: {:d}'.format(int(portfolio.shares)))
-        self.log('Sh.Value.: {:.1f}'.format(portfolio.portfolio_value))
+        self.log(
+                 'Shares...: {:d}'.format(int(portfolio.shares)))
+        self.log(
+                 'Sh.Value.: {:.1f}'.format(portfolio.portfolio_value))
         self.log('P/L......: € {}'.format(
             self.color(portfolio.portfolio_value - portfolio.investment)))
 
@@ -112,17 +114,18 @@ class Display(Common):
         """
         percentage = (i / num_episodes) * 100.0
         self.log(
-            "Epoch {:>5}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
-                i,
-                num_episodes,
-                percentage,
-                last_avg), end='')
+                 "Epoch {:>5}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
+                     i,
+                     num_episodes,
+                     percentage,
+                     last_avg), end='')
         if percentage == 0.0:
             self.log(' Est.time: UNKNOWN')
             return
         elapsed = end - start
         remaining = ((100. - percentage) * elapsed) / percentage
-        self.log(' Est.time: {}'.format(self.timer(remaining)))
+        self.log(
+                 ' Est.time: {}'.format(self.timer(remaining)))
 
     @staticmethod
     def timer(elapsed):

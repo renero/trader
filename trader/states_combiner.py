@@ -14,7 +14,7 @@ generating a cartesian product of sub_states. For example:
 from itertools import product
 
 
-class SCombiner:
+class StatesCombiner:
     state_list = []
     state = {}
     ivd = {}

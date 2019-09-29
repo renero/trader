@@ -38,14 +38,15 @@ class Ticks(Params):
         _columns = self._columns if columns is None else columns
         _ohlc_tags = self._ohlc_tags if ohlc_tags is None else ohlc_tags
 
-        cols_mapper = dict(zip(_columns, _ohlc_tags))
         filepath = file_exists(_filepath, dirname(realpath(__file__)))
         df = pd.read_csv(filepath, delimiter=self._delimiter)
-        df = df[list(cols_mapper.keys())].rename(
-            index=str, columns=cols_mapper)
+        # Reorder and rename
+        df = df[[self._csv_dict['o'], self._csv_dict['h'], self._csv_dict['l'],
+                 self._csv_dict['c']]]
+        df.columns = ['o', 'h', 'l', 'c']
+
         self.max_value = df.values.max()
         self.min_value = df.values.min()
-
         if do_normalize is True:
             df = df.applymap(np.vectorize(self.normalize))
 

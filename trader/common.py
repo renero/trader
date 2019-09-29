@@ -3,7 +3,6 @@ I will place here common functions used across all modules.
 """
 from termcolor import colored
 
-import pandas as pd
 from pandas import DataFrame
 
 
