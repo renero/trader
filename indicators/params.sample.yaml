@@ -1,3 +1,12 @@
 # Input data
 input_data: ../data/repsol.csv
 separator: ';'
+date_format: 'YYYY-mm-dd'
+csv_dict:
+  date: 'Date'
+  open: 'Open'
+  high: 'High'
+  low: 'Low'
+  close: 'Price'
+  volume: 'Volume'
+

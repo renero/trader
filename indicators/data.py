@@ -30,17 +30,22 @@ def read_ohlc(conf):
              conf.csv_dict['volume']]]
     df.columns = ['date', 'open', 'high', 'low', 'close', 'volume']
 
+    # Set index to date field
+    df.date = pd.to_datetime(df.date)
+    df = df.set_index(df.iloc[:, 0].name)
+
     info_msg = 'Read file: {}, output DF dim{}'
     print(info_msg.format(filepath, df.shape))
+
     return df
 
 
-def save_indicator(indicator, scale=True):
+def save_indicator(name, df, file_prefix, scale=False):
     """
     Save the index columns passed as argument.
     :param indicator:
     :param scale:
     :return:
     """
-    scaler = MinMaxScaler(feature_range=(-1., 1.)).fit(indicator)
-    print(indicator.head())
+    scaler = MinMaxScaler(feature_range=(-1., 1.)).fit(df)
+    print(df.head())

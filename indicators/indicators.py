@@ -1,3 +1,5 @@
+from os.path import basename
+
 from data import read_data, save_indicator, read_ohlc
 from dictionary import Dictionary
 from konkorde import Konkorde
@@ -9,8 +11,12 @@ if __name__ == "__main__":
     konkorde = Konkorde(conf)
 
     result = konkorde.compute(input_data)
-    result = konkorde.cleanup(result, start_pos=20)
-    save_indicator(result.loc[:, ['Date', 'verde', 'azul']], scale=True)
+    result = konkorde.cleanup(result)
+    save_indicator(
+        'konkorde',
+        result.loc[:, ['date', 'verde', 'azul']],
+        file_prefix=basename(conf.input_data),
+        scale=True)
 
     # debug trail
     print(result.iloc[:, [0, 1, -3, -2, -1]].head(20))

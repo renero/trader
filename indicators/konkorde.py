@@ -46,7 +46,6 @@ class Konkorde(object):
 
     @staticmethod
     def compute(input_data: DataFrame) -> DataFrame:
-
         data = input_data.copy(deep=True)
 
         data['close_m'] = data.close.rolling(10).mean()
@@ -69,14 +68,14 @@ class Konkorde(object):
         data['azul'] = (data['nvi'] - data['nvim']) * 100. / (
                 data['nvi'].max() - data['nvi'].min())
 
-        data.date = pd.to_datetime(data.date)
-        data.set_index(data.date)
+        # data.date = pd.to_datetime(data.date)
+        # data.set_index(data.iloc[:, 0].name)
 
         return data
 
-
     @staticmethod
-    def cleanup(data, start_pos=25):
-        cols = ['date', 'close', 'marron', 'verde', 'azul']
-        r = data.loc[start_pos:, cols].reset_index().drop('index', axis=1)
+    def cleanup(data):
+        cols = ['close', 'marron', 'verde', 'azul']
+        shift = data.apply(pd.Series.first_valid_index)
+        r = data[cols]
         return r
