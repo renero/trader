@@ -1,16 +1,17 @@
-from data import read_data
+from data import read_data, save_indicator, read_ohlc
 from dictionary import Dictionary
 from konkorde import Konkorde
 from preview import plot_result
 
 if __name__ == "__main__":
     conf = Dictionary()
-    input_data = read_data(conf.input_data, conf.separator)
+    input_data = read_ohlc(conf)
     konkorde = Konkorde(conf)
 
-    result = konkorde.compute(input_data, date=conf.date,
-                              close=conf.close, high=conf.high, low=conf.low)
-    result = konkorde.cleanup(result, close=conf.close, start_pos=20)
+    result = konkorde.compute(input_data)
+    result = konkorde.cleanup(result, start_pos=20)
+    save_indicator(result.loc[:, ['Date', 'verde', 'azul']], scale=True)
 
+    # debug trail
     print(result.iloc[:, [0, 1, -3, -2, -1]].head(20))
-    plot_result(result, close=conf.close)
+    plot_result(result)

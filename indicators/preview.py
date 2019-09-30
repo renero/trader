@@ -42,7 +42,7 @@ def trend_lines(ax1, trend, **kwargs):
         ax1.axvline(x, color='blue', linestyle='-.', alpha=0.2, **kwargs)
 
 
-def plot_result(data, close='Price'):
+def plot_result(data):
     k_size = data['verde'].shape[0]
 
     def trends(data: Series) -> Series:
@@ -58,7 +58,7 @@ def plot_result(data, close='Price'):
     # plot stock price
     plt.figure(figsize=(12, 8))
     ax1 = plt.subplot(211)
-    ax1.plot(data[close], 'k', linewidth=0.8)
+    ax1.plot(data.close, 'k', linewidth=0.8)
     plt.setp(ax1.get_xticklabels(), visible=False)
     trend_lines(ax1, trend)
 
