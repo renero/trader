@@ -393,12 +393,6 @@ class CSEncoder(Params):
         time series, returns the reconstructed tick (OHLC).
         """
         mm = prev_cse.hl_interval_width
-        # mvmt_sign = [
-        #     +1 if this_cse[column+1][0] == 'p' else -1
-        #     for column in range(len(self._ohlc_tags))
-        # ]
-        # self.log.debug('Sign of movement: {}|{}|{}|{}'.format(
-        #     mvmt_sign[0], mvmt_sign[1], mvmt_sign[2], mvmt_sign[3]))
         amount_shift = [(self.decode_movement_code(this_cse[column]) * mm)
                         for column in self._ohlc_tags]
         self.log.debug(
@@ -495,9 +489,11 @@ class CSEncoder(Params):
         Saves the CS Encoder object into a pickle dump.
         :return: The objects itself
         """
-        with open(self.valid_output_name(), 'wb') as f:
+        encoder_filename = self.valid_output_name()
+        with open(encoder_filename, 'wb') as f:
             # Pickle the object dictionary using the highest protocol available
             pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
+            self.log.info('Saved encoder to: {}'.format(encoder_filename))
         return self
 
     def load(self, pickle_file_path=None):
@@ -591,10 +587,10 @@ class CSEncoder(Params):
         Returns The filename if the name is valid and file does not exists,
                 None otherwise.
         """
-        self._filename = 'encoder_{}_w{}'.format(
+        filename = 'encoder_{}_w{}'.format(
             self._dataset,
             self._window_size)
-        base_filepath = join(self._models_dir, self._filename)
+        base_filepath = join(self._models_dir, filename)
         output_filepath = base_filepath
         idx = 1
         while Path(output_filepath).is_file() is True:

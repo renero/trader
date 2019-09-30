@@ -35,8 +35,8 @@ class Ticks(Params):
                   ohlc_tags=None,
                   do_normalize=True):
         _filepath = self._ticks_file if filepath is None else filepath
-        _columns = self._columns if columns is None else columns
-        _ohlc_tags = self._ohlc_tags if ohlc_tags is None else ohlc_tags
+        # _columns = self._columns if columns is None else columns
+        # _ohlc_tags = self._ohlc_tags if ohlc_tags is None else ohlc_tags
 
         filepath = file_exists(_filepath, dirname(realpath(__file__)))
         df = pd.read_csv(filepath, delimiter=self._delimiter)

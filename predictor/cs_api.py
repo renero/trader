@@ -3,8 +3,10 @@ import pickle
 import numpy as np
 import pandas as pd
 
+from cs_logger import CSLogger
 from cs_predict import CSPredict
 
+log = CSLogger(3)
 
 def predict_dataset(dataset, encoder, nn, subtypes=None, split='test'):
     """
