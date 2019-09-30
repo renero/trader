@@ -99,7 +99,7 @@ def ewma(data, alpha, offset=None, dtype=None) -> Series:
         # add offsets
         out += offset * scaling_factors[1:]
 
-    series_out = pd.Series(out)
+    series_out = pd.Series(data=out, dtype='float64', name='pvim')
     return series_out
 
 

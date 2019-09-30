@@ -50,9 +50,9 @@ class Konkorde(object):
 
         data['close_m'] = data.close.rolling(10).mean()
         data['pvi'] = positive_volume_index(data.close, data.volume)
-        data['pvim'] = ewma(data['pvi'], alpha=0.1)
+        data['pvim'] = data['pvi'].ewm(alpha=0.1).mean()
         data['nvi'] = negative_volume_index(data.close, data.volume)
-        data['nvim'] = ewma(data['nvi'], alpha=0.1)
+        data['nvim'] = data['nvi'].ewm(alpha=0.1).mean()
         data['oscp'] = oscp(data['pvi'], data['pvim'])
         data['mfi'] = money_flow_index(data.high, data.low,
                                        data.close, data.volume)
@@ -77,5 +77,5 @@ class Konkorde(object):
     def cleanup(data):
         cols = ['close', 'marron', 'verde', 'azul']
         shift = data.apply(pd.Series.first_valid_index)
-        r = data[cols]
+        r = data.loc[data.index >= shift.loc['verde'], cols]
         return r
