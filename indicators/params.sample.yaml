@@ -1,12 +1,18 @@
 # Input data
-input_data: ../data/repsol.csv
-separator: ';'
-date_format: 'YYYY-mm-dd'
+input_data: ../data/acciona_2018.csv
+separator: ','
+
+# Dictionary to understand CSV columns
 csv_dict:
   date: 'Date'
   open: 'Open'
   high: 'High'
   low: 'Low'
-  close: 'Price'
+  close: 'Close'
   volume: 'Volume'
 
+# Where to save the indicator(s)
+output_path: ../output
+
+# Log level
+log_level: 3

@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 
 from cs_core import CSCore
-from cs_logger import CSLogger
+from logger import Logger
 from params import Params
 from ticks import Ticks
 
@@ -16,7 +16,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 np.random.seed(1)
 
 params = Params(args=sys.argv)
-log = CSLogger(params._log_level)
+log = Logger(params._log_level)
 ticks = Ticks()
 data = ticks.read_ohlc()
 predictor = CSCore()

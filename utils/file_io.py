@@ -64,7 +64,7 @@ def save_dataframe(name: str,
     :param df:
     :param output_path:
     :param cols_to_scale: array with the names of the columns to scale
-    :return:
+    :return: the full path of the file saved
     """
     data = df.copy()
     file_name = valid_output_name(name, output_path, 'csv')
@@ -72,6 +72,8 @@ def save_dataframe(name: str,
         scaler = MinMaxScaler(feature_range=(-1., 1.))
         data[cols_to_scale] = scaler.fit_transform(data[cols_to_scale])
     data.to_csv(file_name)
+
+    return file_name
 
 
 def read_ohlc(filename: str, separator: str, csv_dict: dict) -> DataFrame:
