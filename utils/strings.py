@@ -1,6 +1,3 @@
-from random import randint
-
-
 def letter_in_string(string, letter):
     """Given a string, determine if that string contains the letter.
     Parameters:
@@ -36,16 +33,3 @@ def which_string(strings, letter, group_index=0):
         return (group_index, pos)
     else:
         return which_string(strings[1:], letter, group_index + 1)
-
-
-def random_tick_group(ticks, max_len):
-    """
-    Return a series of ticks of length 'max_len', starting on a random position.
-    :param ticks: the dataframe of ticks to extract the random series from
-    :param max_len: the maximum length of the series to be taken away
-    :return: the dataframe of length max_len extracted
-    """
-    # seed(1971)
-    start = randint(0, ticks.shape[0] - max_len - 1)
-    end = start + max_len
-    return ticks.iloc[start:end]

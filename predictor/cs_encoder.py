@@ -6,7 +6,7 @@ from os.path import basename, join, splitext, dirname, realpath
 
 from utils.file_io import file_exists
 from oh_encoder import OHEncoder
-from cs_utils import which_string
+from utils.strings import which_string
 from params import Params
 
 
