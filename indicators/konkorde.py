@@ -45,7 +45,7 @@ class Konkorde(object):
         self.configuration = configuration
 
     @staticmethod
-    def compute(input_data: DataFrame) -> DataFrame:
+    def compute(input_data: DataFrame, fill_na: bool = True) -> DataFrame:
         data = input_data.copy(deep=True)
 
         data['close_m'] = data.close.rolling(10).mean()
@@ -68,8 +68,8 @@ class Konkorde(object):
         data['azul'] = (data['nvi'] - data['nvim']) * 100. / (
                 data['nvi'].max() - data['nvi'].min())
 
-        # data.date = pd.to_datetime(data.date)
-        # data.set_index(data.iloc[:, 0].name)
+        if fill_na is True:
+            data = data.replace(np.nan, 0.)
 
         return data
 
