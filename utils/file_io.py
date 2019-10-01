@@ -9,7 +9,7 @@ from pandas import DataFrame
 from sklearn.preprocessing import MinMaxScaler
 
 
-def file_exists(given_filepath, my_dir):
+def file_exists(given_filepath: str, my_dir: str) -> str:
     """
     Check if the file exists as specified in argument, or try to find
     it using the local path of the script
@@ -28,7 +28,7 @@ def file_exists(given_filepath, my_dir):
     return filepath
 
 
-def valid_output_name(filename, path, extension=None):
+def valid_output_name(filename: str, path: str, extension=None) -> str:
     """
     Builds a valid name.
     Returns The filename if the name is valid and file does not exists,
@@ -56,7 +56,7 @@ def valid_output_name(filename, path, extension=None):
 def save_dataframe(name: str,
                    df: DataFrame,
                    output_path: str,
-                   cols_to_scale: list = None) -> None:
+                   cols_to_scale: list = None):
     """
     Save the data frame passed, with a valid output name in the output path
     scaling the columns specified, if applicable.
@@ -74,7 +74,7 @@ def save_dataframe(name: str,
     data.to_csv(file_name)
 
 
-def read_ohlc(filename, separator, csv_dict):
+def read_ohlc(filename: str, separator: str, csv_dict: dict) -> DataFrame:
     """
     Reads a filename passed as CSV, renaming columns according to the
     dictionary passed.
