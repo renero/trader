@@ -6,7 +6,7 @@ from os.path import basename, join, splitext, dirname, realpath
 
 from utils.file_io import file_exists
 from oh_encoder import OHEncoder
-from cs_utils import which_string
+from utils.strings import which_string
 from params import Params
 
 
@@ -462,7 +462,7 @@ class CSEncoder(Params):
         """
         Encodes a dataframe of Ticks, returning an array of CSE objects.
         """
-        self.log.info('Converting ticks dim{} to CSE.'.format(ticks.shape))
+        self.log.debug('Converting ticks dim{} to CSE.'.format(ticks.shape))
         cse = []
         for index in range(0, ticks.shape[0]):
             cse.append(

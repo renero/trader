@@ -3,7 +3,7 @@ import sys
 import yaml
 
 from arguments import Arguments
-from cs_logger import CSLogger
+from logger import Logger
 from utils.file_io import file_exists
 from os.path import dirname, realpath
 
@@ -47,7 +47,7 @@ class Params(Arguments):
             self._ticks_file = self.arg_ticks_file
 
         # Start the logger
-        self.log = CSLogger(self._log_level)
+        self.log = Logger(self._log_level)
 
     @property
     def do_train(self):
