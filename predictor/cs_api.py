@@ -97,7 +97,7 @@ def single_prediction(data: DataFrame, w_pos: int, nn, encoder, params):
         if w_pos == -1:
             tick_group = data.tail(w_size + 1).iloc[-w_size - 1:-1]
         else:
-            tick_group = data.iloc[w_pos:w_pos + w_size]
+            tick_group = data.iloc[w_pos-w_size:w_pos]
         next_close = predict_close(tick_group, encoder[name], nn[name], params)
         predictions = np.append(predictions, [next_close])
 
