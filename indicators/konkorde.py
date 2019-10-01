@@ -45,15 +45,14 @@ class Konkorde(object):
         self.configuration = configuration
 
     @staticmethod
-    def compute(input_data: DataFrame) -> DataFrame:
-
+    def compute(input_data: DataFrame, fill_na: bool = True) -> DataFrame:
         data = input_data.copy(deep=True)
 
         data['close_m'] = data.close.rolling(10).mean()
         data['pvi'] = positive_volume_index(data.close, data.volume)
-        data['pvim'] = ewma(data['pvi'], alpha=0.1)
+        data['pvim'] = data['pvi'].ewm(alpha=0.1).mean()
         data['nvi'] = negative_volume_index(data.close, data.volume)
-        data['nvim'] = ewma(data['nvi'], alpha=0.1)
+        data['nvim'] = data['nvi'].ewm(alpha=0.1).mean()
         data['oscp'] = oscp(data['pvi'], data['pvim'])
         data['mfi'] = money_flow_index(data.high, data.low,
                                        data.close, data.volume)
@@ -69,14 +68,14 @@ class Konkorde(object):
         data['azul'] = (data['nvi'] - data['nvim']) * 100. / (
                 data['nvi'].max() - data['nvi'].min())
 
-        data.date = pd.to_datetime(data.date)
-        data.set_index(data.date)
+        if fill_na is True:
+            data = data.replace(np.nan, 0.)
 
         return data
 
-
     @staticmethod
-    def cleanup(data, start_pos=25):
-        cols = ['date', 'close', 'marron', 'verde', 'azul']
-        r = data.loc[start_pos:, cols].reset_index().drop('index', axis=1)
+    def cleanup(data):
+        cols = ['close', 'marron', 'verde', 'azul']
+        shift = data.apply(pd.Series.first_valid_index)
+        r = data.loc[data.index >= shift.loc['verde'], cols]
         return r

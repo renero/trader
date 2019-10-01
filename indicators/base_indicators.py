@@ -43,7 +43,7 @@ def negative_volume_index(close: Series, volume: Series, start_pos: int = 1):
     return nvi
 
 
-def ewma(data, alpha, offset=None, dtype=None, order='C', out=None):
+def ewma(data, alpha, offset=None, dtype=None) -> Series:
     """
     Calculates the exponential moving average over a vector.
     Will fail for large inputs.
@@ -55,12 +55,6 @@ def ewma(data, alpha, offset=None, dtype=None, order='C', out=None):
     :param dtype: optional
         Data type used for calculations. Defaults to float64 unless
         data.dtype is float32, then it will use float32.
-    :param order: {'C', 'F', 'A'}, optional
-        Order to use when flattening the data. Defaults to 'C'.
-    :param out: ndarray, or None, optional
-        A location into which the result is stored. If provided, it must have
-        the same shape as the input. If not provided or `None`,
-        a freshly-allocated array is returned.
     """
     data = np.array(data, copy=False)
 
@@ -76,11 +70,7 @@ def ewma(data, alpha, offset=None, dtype=None, order='C', out=None):
         # flatten input
         data = data.reshape(-1, order)
 
-    if out is None:
-        out = np.empty_like(data, dtype=dtype)
-    else:
-        assert out.shape == data.shape
-        assert out.dtype == dtype
+    out = np.empty_like(data, dtype=dtype)
 
     if data.size < 1:
         # empty input, return empty array
@@ -109,7 +99,8 @@ def ewma(data, alpha, offset=None, dtype=None, order='C', out=None):
         # add offsets
         out += offset * scaling_factors[1:]
 
-    return pd.Series(out)
+    series_out = pd.Series(data=out, dtype='float64', name='pvim')
+    return series_out
 
 
 def oscp(pvi: Series, pvim: Series) -> Series:

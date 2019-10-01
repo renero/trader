@@ -42,7 +42,9 @@ def trend_lines(ax1, trend, **kwargs):
         ax1.axvline(x, color='blue', linestyle='-.', alpha=0.2, **kwargs)
 
 
-def plot_result(data):
+def plot_result(data_series):
+    data = data_series.copy(deep=True)
+    data = data.reset_index(drop=True)
     k_size = data['verde'].shape[0]
 
     def trends(data: Series) -> Series:
