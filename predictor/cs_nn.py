@@ -1,14 +1,12 @@
-from datetime import datetime
 from os.path import join, basename, splitext, dirname, realpath
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 from keras.layers import LSTM, Dense, Dropout
 from keras.models import Sequential, model_from_json
 from keras.regularizers import l2
 
-from cs_plot import plot_history
+from utils.plots import plot_history
 from utils.file_io import file_exists
 from params import Params
 
@@ -164,7 +162,7 @@ class Csnn(Params):
             self._metadata['dataset'],
             self._window_size,
             self._epochs)
-            # self._metadata['accuracy'][-1])
+        # self._metadata['accuracy'][-1])
         base_filepath = join(self._models_dir, self._filename)
         output_filepath = base_filepath
         idx = 1
