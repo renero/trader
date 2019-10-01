@@ -462,7 +462,7 @@ class CSEncoder(Params):
         """
         Encodes a dataframe of Ticks, returning an array of CSE objects.
         """
-        self.log.info('Converting ticks dim{} to CSE.'.format(ticks.shape))
+        self.log.debug('Converting ticks dim{} to CSE.'.format(ticks.shape))
         cse = []
         for index in range(0, ticks.shape[0]):
             cse.append(
