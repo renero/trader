@@ -104,3 +104,24 @@ class Dataset(Params):
             raw.shape[0], new_df.shape[0]))
 
         return new_df
+
+    def split(self, encoder, cse, subtypes):
+        """
+        Prepare the training and test datasets from an list of existing CSE, for
+        each of the model names considered (body and move).
+
+        :param encoder: The encoder used to build the CSE list.
+        :param cse: The list of CSE objects
+        :param subtypes: The parameters read from file
+        :return: The datasets for each of the models that need to be built. The
+            names of the models specify the 'body' part and the 'move' part.
+        """
+        cse_data = {}
+        oh_data = {}
+        dataset = {}
+        for subtype in subtypes:
+            call_select = getattr(encoder, '{}'.format(subtype))
+            cse_data[subtype] = self.adjust(call_select(cse))
+            oh_data[subtype] = encoder.onehot[subtype].encode(cse_data[subtype])
+            dataset[subtype] = self.train_test_split(oh_data[subtype])
+        return dataset

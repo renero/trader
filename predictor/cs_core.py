@@ -24,71 +24,11 @@ class CSCore(Params):
         """
         encoder = CSEncoder().fit(data)
         cse = encoder.ticks2cse(data)
-        dataset = self.split_datasets(encoder, cse, self.subtypes)
+        dataset = Dataset().split(encoder, cse, self.subtypes)
         nn = self.train_nn(dataset, self.subtypes)
         encoder.save()
 
         return nn, encoder
-
-    def prepare_predict(self):
-        nn = self.load_nn(self._model_names, self.subtypes)
-        encoder = self.load_encoders(self._model_names)
-
-        return nn, encoder
-
-    def predict_training(self, data, nn, encoder, ticks):
-        predictions = pd.DataFrame([])
-
-        # TODO: I'm loading the first encoder, but I do need to use
-        #       all of them, in case I'm loading more than one network
-        cse = encoder[next(iter(self._model_names))].ticks2cse(data)
-
-        num_ticks = data.shape[0]
-        train_range = range(0, num_ticks - self._window_size)
-        for from_idx in train_range:
-            tick_group = data.iloc[from_idx:from_idx + self._window_size]
-            prediction = single_prediction(tick_group, nn, encoder, self)
-            prediction = self.add_supervised_info(
-                prediction,
-                data.iloc[from_idx + self._window_size]['c'], self)
-            predictions = predictions.append(prediction)
-        predictions = ticks.scale_back(predictions)
-
-        return predictions
-
-    def predict_newdata(self, data, nn, encoder, ticks):
-        predictions = pd.DataFrame([])
-
-        # Take only the last window_size+1 elements, leaving
-        # the last as the actual value
-        tick_group = data.tail(self._window_size + 1).iloc[
-                     -self._window_size - 1:-1]
-        prediction = single_prediction(tick_group, nn, encoder, self)
-        predictions = ticks.scale_back(predictions.append(prediction))
-
-        return predictions
-
-    @staticmethod
-    def split_datasets(encoder, cse, subtypes):
-        """
-        Prepare the training and test datasets from an list of existing CSE, for
-        each of the model names considered (body and move).
-
-        :param encoder: The encoder used to build the CSE list.
-        :param cse: The list of CSE objects
-        :param subtypes: The parameters read from file
-        :return: The datasets for each of the models that need to be built. The
-            names of the models specify the 'body' part and the 'move' part.
-        """
-        cse_data = {}
-        oh_data = {}
-        dataset = {}
-        for subtype in subtypes:
-            call_select = getattr(encoder, '{}'.format(subtype))
-            cse_data[subtype] = Dataset().adjust(call_select(cse))
-            oh_data[subtype] = encoder.onehot[subtype].encode(cse_data[subtype])
-            dataset[subtype] = Dataset().train_test_split(oh_data[subtype])
-        return dataset
 
     @staticmethod
     def train_nn(dataset, subtypes):
@@ -126,6 +66,46 @@ class CSCore(Params):
         for name in model_names:
             encoder[name] = CSEncoder().load(model_names[name]['encoder'])
         return encoder
+
+    def prepare_predict(self):
+        nn = self.load_nn(self._model_names, self.subtypes)
+        encoder = self.load_encoders(self._model_names)
+
+        return nn, encoder
+
+    def predict_training(self, data, nn, encoder, ticks):
+        predictions = pd.DataFrame([])
+
+        num_ticks = data.shape[0]
+        max_wsize = max(
+            [encoder[name]._window_size for name in self.model_names])
+        train_range = range(0, num_ticks - max_wsize)
+
+        self.log.info('Predicting over {} training ticks'.format(num_ticks))
+        self.log.info('Looping {} groups of {} ticks'.format(
+            len(train_range), max_wsize))
+
+        for from_idx in train_range:
+            prediction = single_prediction(data, from_idx, nn, encoder, self)
+            prediction = self.add_supervised_info(
+                prediction,
+                data.iloc[from_idx + self._window_size]['c'], self)
+            predictions = predictions.append(prediction)
+        predictions = ticks.scale_back(predictions)
+
+        return predictions
+
+    def predict_newdata(self, data, nn, encoder, ticks):
+        predictions = pd.DataFrame([])
+
+        # Take only the last window_size+1 elements, leaving
+        # the last as the actual value
+        # tick_group = data.tail(self._window_size + 1).iloc[
+        #              -self._window_size - 1:-1]
+        prediction = single_prediction(data, -1, nn, encoder, self)
+        predictions = ticks.scale_back(predictions.append(prediction))
+
+        return predictions
 
     @staticmethod
     def add_supervised_info(prediction, real_value, params):
@@ -191,7 +171,7 @@ class CSCore(Params):
             num_cols = len(predictions.columns)
             columns = [actual_position] + \
                       [i for i in range(actual_position)] + \
-                      [j for j in range(actual_position+1, num_cols)]
+                      [j for j in range(actual_position + 1, num_cols)]
             predictions = predictions.iloc[:, columns]
 
         return predictions
