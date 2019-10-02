@@ -27,9 +27,9 @@ def which_string(strings, letter, group_index=0):
         the string. In case the letter is not found, both values are -1.
     """
     if len(strings) == 0:
-        return (-1, -1)
+        return -1, -1
     pos = letter_in_string(strings[0], letter)
     if pos != -1:
-        return (group_index, pos)
+        return group_index, pos
     else:
         return which_string(strings[1:], letter, group_index + 1)

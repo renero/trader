@@ -37,8 +37,8 @@ class Ticks(Params):
         filepath = file_exists(_filepath, dirname(realpath(__file__)))
         df = pd.read_csv(filepath, delimiter=self._delimiter)
         # Reorder and rename
-        df = df[[self._csv_dict['o'], self._csv_dict['h'], self._csv_dict['l'],
-                 self._csv_dict['c']]]
+        df = df[[self._csv_dict['o'], self._csv_dict['h'],
+                 self._csv_dict['l'], self._csv_dict['c']]]
         df.columns = ['o', 'h', 'l', 'c']
 
         self.max_value = df.values.max()
