@@ -7,14 +7,15 @@
 debug: true
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../data/forecast.csv
+data_path: ../output/forecast_acciona_2000_2018.csv
+delimiter: ','
 
 # Wanna save the model after training?
-save_model: false
+save_model: true
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
-load_model: true
+load_model: false
 model_file: ../output/rl_model3.json
 weights_file: ../output/rl_model3.h5
 

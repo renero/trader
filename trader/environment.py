@@ -66,7 +66,11 @@ class Environment(Common):
         :param path:
         :return:
         """
-        self.data_ = pd.read_csv(path)
+        if 'delimiter' not in self.configuration:
+            delimiter = ','
+        else:
+            delimiter = self.configuration.delimiter
+        self.data_ = pd.read_csv(path, delimiter)
         self.max_states_ = self.data_.shape[0]
 
     def update_market_price(self):
@@ -93,9 +97,8 @@ class Environment(Common):
         for module_param_name in self.configuration.state.keys():
             # The extended classes are defined in the params file and must
             # start with the 'state_' string.
-            # The '[1:]' serves to remove the leading underscore.
             module_name = 'state_' + module_param_name
-            module = importlib.import_module('state_classes')# module_name)
+            module = importlib.import_module('state_classes')  # module_name)
             state_class = getattr(module, module_name)
             new_substate = state_class.update_state(self.portfolio)
             new_substates.append(new_substate)

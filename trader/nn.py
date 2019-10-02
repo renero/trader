@@ -1,4 +1,5 @@
 import os
+from os.path import splitext, basename
 
 from keras.layers import Dense, InputLayer
 from keras.models import Sequential, model_from_json
@@ -24,9 +25,9 @@ class NN(Common):
         model.add(
             InputLayer(batch_input_shape=(1, self.configuration.num_states)))
         model.add(Dense(
-                num_cells,
-                input_shape=(self.configuration.num_states,),
-                activation='relu'))
+            num_cells,
+            input_shape=(self.configuration.num_states,),
+            activation='relu'))
         model.add(Dense(32, activation='relu'))
         model.add(Dense(8, activation='relu'))
         model.add(
@@ -48,9 +49,10 @@ class NN(Common):
         # Check if file exists to abort saving operation
         solved = False
         char_to_append = ''
+        fname = 'rl_model_' + splitext(basename(self.configuration.data_path))
         while not solved:
-            basename = 'model' + char_to_append + '.json'
-            fname = os.path.join(self.configuration.models_dir, basename)
+            base_filename = fname + char_to_append + '.json'
+            fname = os.path.join(self.configuration.models_dir, base_filename)
             if os.path.isfile(fname) is not True:
                 solved = True
             else:
@@ -66,14 +68,14 @@ class NN(Common):
         self.log('  Model: {}'.format(fname))
 
         # Serialize weights to HDF5
-        basename = 'model' + char_to_append + '.h5'
-        fname = os.path.join(self.configuration.models_dir, basename)
+        base_filename = fname + char_to_append + '.h5'
+        fname = os.path.join(self.configuration.models_dir, base_filename)
         model.save_weights(fname)
         print('  Weights: {}'.format(fname))
 
         # Save also the results table
-        basename = 'model' + char_to_append + '.csv'
-        fname = os.path.join(self.configuration.models_dir, basename)
+        base_filename = fname + char_to_append + '.csv'
+        fname = os.path.join(self.configuration.models_dir, base_filename)
         self.configuration.results.to_csv(fname,
                                           sep=',',
                                           header=True,
