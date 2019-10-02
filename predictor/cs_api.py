@@ -2,39 +2,12 @@ import pickle
 
 import numpy as np
 import pandas as pd
+from pandas import DataFrame
 
 from logger import Logger
 from cs_predict import CSPredict
 
 log = Logger(3)
-
-def predict_dataset(dataset, encoder, nn, subtypes=None, split='test'):
-    """
-    Run prediction for body and move over the testsets in the dataset object
-    :param dataset: the dataset
-    :param encoder: the encoder to be used
-    :param nn: the network to be used to make the prediction
-    :param subtypes: normally 'body' and 'move'
-    :param split: whether to perform the prediction over the 'test' or 'train'
-        splits
-    :return:
-    """
-    if subtypes is None:
-        subtypes = ['body', 'move']
-    prediction = {}
-    for name in subtypes:
-        if split == 'test':
-            prediction[name] = CSPredict(dataset[name].X_test,
-                                         dataset[name].y_test,
-                                         encoder.onehot[name])
-        else:
-            prediction[name] = CSPredict(dataset[name].X_train,
-                                         dataset[name].y_train,
-                                         encoder.onehot[name])
-        call_predict = getattr(prediction[name],
-                               'predict_{}_batch'.format(name))
-        call_predict(nn[name])
-    return prediction
 
 
 def predict_close(ticks, encoder, nn, params):
@@ -105,20 +78,32 @@ def predict_close(ticks, encoder, nn, params):
     return pred['c'].values[-1]
 
 
-def single_prediction(tick_group, nn, encoder, params):
+def single_prediction(data: DataFrame, w_pos: int, nn, encoder, params):
     """
     Make a single prediction over a list of ticks. It uses all the
     networks loaded to produce all their predictions and their average in
     a dataframe
+    :param data: data in OHLC
+    :param w_pos: end position of window in data.
+    :param nn: the nets to be used to perform the prediction
+    :param encoder: the encoders of the nets
+    :param params: the parameters of the config file.
     """
+    model_names = list(params.model_names.keys())
     predictions = np.array([], dtype=np.float64)
-    for name in params.model_names:
+    for name in model_names:
+        w_size = encoder[name]._window_size
+        # Select a window of data starting from 'w_pos', but if it is -1
+        # that means that the window is the last w_size elements in data.
+        if w_pos == -1:
+            tick_group = data.tail(w_size + 1).iloc[-w_size - 1:-1]
+        else:
+            tick_group = data.iloc[w_pos-w_size:w_pos]
         next_close = predict_close(tick_group, encoder[name], nn[name], params)
         predictions = np.append(predictions, [next_close])
 
     # If the number of models is greater than 1, I also add statistics about
     # their result.
-    model_names = list(params.model_names.keys())
     if len(model_names) > 1:
         new_cols = ['actual', 'avg', 'avg_diff', 'median', 'med_diff', 'winner']
         # If I decide to use ensembles, I must add two new columns
@@ -144,4 +129,5 @@ def single_prediction(tick_group, nn, encoder, params):
             [u'10yw7', u'1yw7', u'1yw3', u'1yw10', u'median',
              u'5yw10', u'10yw3', u'5yw3', u'avg', u'5yw7']]
         df['ensemble'] = ensemble_model.predict(input_df)[0]
+
     return df
