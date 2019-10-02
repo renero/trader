@@ -1,0 +1,111 @@
+#
+# Parameters to start a simulation with a trader
+# @renero
+#
+
+# Debug flag
+debug: true
+
+# Data Path. Where is the data from which l#earning how to invest?
+data_path: ../data/forecast.csv
+
+# Wanna save the model after training?
+save_model: false
+models_dir: ../output/
+
+# Specify here if you want to load a pre-trained model
+load_model: true
+model_file: ../output/rl_model3.json
+weights_file: ../output/rl_model3.h5
+
+# Parameters for the Q-Learning function
+gamma: 0.95
+epsilon: 1.0
+epsilon_min: 0.02
+decay_factor: 0.995
+
+# Experience Replay batch size
+experience_replay: True
+exp_batch_size: 16
+
+# TensorBoard?
+tensorboard: False
+tbdir: ./graphs/
+
+ Reduction factor is the amount by which the number of cells in the network
+# is to be reduced. If 1.0, then the num of cells will be the number of
+# possible states times the number of actions.
+cells_reduction_factor: 0.25
+
+# Num. of episodes to run simulate and learn
+# Every how many episodes display the update in q-learning?
+num_episodes: 500
+num_episodes_update: 10
+
+# How many previous states of the environment to store?
+stack_size: 3
+
+# Different states in which the environment might be.
+state:
+  portfolio_value:
+    names:
+      - EVEN
+      - WINN
+      - LOSE
+  forecast:
+    names:
+      - STAL
+      - GOUP
+      - DOWN
+  got_shares:
+    names:
+      - YESHAVE
+      - NOTHAVE
+  last_prediction:
+    names:
+      - PUNKNW
+      - PVALID
+      - PWRONG
+  prevlast_pred:
+    names:
+      - PPUNKNW
+      - PPVALID
+      - PPWRONG
+  pplast_pred:
+    names:
+      - PPPUNKNW
+      - PPPVALID
+      - PPPWRONG
+
+# Actions to be accomplished by the agent (Portfolio class)
+action:
+  - wait
+  - buy
+  - sell
+
+# Environment variables
+environment:
+  initial_budget: 2200.
+  consider_stop_loss: false
+  stop_loss: .05
+  proportional_reward: true
+  reward_do_nothing: -1
+  reward_success_buy: 0
+  reward_positive_sell: +10
+  reward_negative_sell: -5
+  reward_failed_buy: -1
+  reward_failed_sell: -3
+
+# Log headers
+table_headers:
+  - t
+  - price
+  - forecast
+  - budget
+  - cashflow
+  - value
+  - netValue
+  - shares
+  - action
+  - reward
+  - state

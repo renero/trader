@@ -1,0 +1,64 @@
+# What do I do?
+train: True
+predict: False
+ensemble: False
+
+# data dependencies
+ticks_file: ../data/acciona_2000_2018.csv
+delimiter: ','
+# Dictionary to understand CSV columns
+csv_dict:
+  o: 'Open'
+  h: 'High'
+  l: 'Low'
+  c: 'Close'
+
+ohlc_tags: ['o', 'h', 'l', 'c']
+cse_tags: ['b', 'o', 'h', 'l', 'c']
+
+# Saving predictions
+save_predictions: false
+predictions_path: ../output
+
+# When in "predict", do I run "n" random predictions or do I run predictions
+# over an entire dataset
+predict_training: false
+table_format: simple
+
+# Files, Networks, Names...
+models_dir: ../output
+subtypes: ['body', 'move']
+model_names:
+  18yw20:
+    body: body_acciona_2000_2018_w20_e100
+    move: move_acciona_2000_2018_w20_e100
+    encoder: encoder_acciona_2000_2018_w20
+  18yw10:
+    body: body_acciona_2000_2018_w10_e100
+    move: move_acciona_2000_2018_w10_e100
+    encoder: encoder_acciona_2000_2018_w10
+
+
+# Log level: 0: Silent, 1: Errors only, 2: Warnings too, 3: info, 4: debug
+log_level: 3
+
+# training parameters
+loss: mean_squared_error
+optimizer: adam
+metrics: ['accuracy']
+epochs: 100
+batch_size: 10
+window_size: 5
+validation_split: 0.1
+test_size: 0.1
+verbose: 3
+num_predictions: 1
+
+# model parameters
+l1units: 128
+l2units: 128
+activation: tanh
+dropout: 0.1
+
+# Do I use the ensemble part?
+ensemble_path: ../output/ridge_l2_model.pkl

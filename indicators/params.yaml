@@ -1,0 +1,14 @@
+# Input data
+input_data: ../data/acciona_2018.csv
+separator: ','
+
+# Names of the relevant columns in the data file
+csv_dict:
+  date: Date
+  open: Open
+  high: High
+  low: Low
+  close: Close
+  volume: Volume
+
+output_path: ../output
