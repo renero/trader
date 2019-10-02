@@ -116,7 +116,7 @@ class CSEncoder(Params):
 
     def fit(self, ticks):
         self.log.info('Fitting CS encoder to ticks read.')
-        col_names = self._ohlc_tags
+        col_names = list(self._csv_dict.keys())
         self._cse_zero_open = ticks.loc[ticks.index[0], col_names[0]]
         self._cse_zero_high = ticks.loc[ticks.index[0], col_names[1]]
         self._cse_zero_low = ticks.loc[ticks.index[0], col_names[2]]
@@ -394,7 +394,7 @@ class CSEncoder(Params):
         """
         mm = prev_cse.hl_interval_width
         amount_shift = [(self.decode_movement_code(this_cse[column]) * mm)
-                        for column in self._ohlc_tags]
+                        for column in list(self._csv_dict.keys())]
         self.log.debug(
             'Amount of movement: {:.04f}|{:.04f}|{:.04f}|{:.04f}'.format(
                 amount_shift[0], amount_shift[1], amount_shift[2],
@@ -433,7 +433,7 @@ class CSEncoder(Params):
         """
         assert self._fitted, "The encoder has not been fit with data yet!"
         if col_names is None:
-            col_names = self._ohlc_tags
+            col_names = list(self._csv_dict.keys())
         cse_decoded = [first_cse]
         self.log.debug('Zero CS created: {:.2f}|{:.2f}|{:.2f}|{:.2f}'.format(
             self._cse_zero_open, self._cse_zero_high, self._cse_zero_low,

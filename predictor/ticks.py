@@ -31,8 +31,6 @@ class Ticks(Params):
 
     def read_ohlc(self,
                   filepath=None,
-                  columns=None,
-                  ohlc_tags=None,
                   do_normalize=True):
         _filepath = self._ticks_file if filepath is None else filepath
 

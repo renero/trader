@@ -5,7 +5,6 @@ import pandas as pd
 from pandas import DataFrame
 
 from logger import Logger
-from cs_predict import CSPredict
 
 log = Logger(3)
 
@@ -98,7 +97,7 @@ def single_prediction(data: DataFrame, w_pos: int, nn, encoder, params):
         if w_pos == -1:
             tick_group = data.tail(w_size + 1).iloc[-w_size - 1:-1]
         else:
-            tick_group = data.iloc[w_pos-w_size:w_pos]
+            tick_group = data.iloc[w_pos - w_size:w_pos]
         next_close = predict_close(tick_group, encoder[name], nn[name], params)
         predictions = np.append(predictions, [next_close])
 

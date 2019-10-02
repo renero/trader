@@ -75,6 +75,7 @@ class CSCore(Params):
         return nn, encoder
 
     def predict_training(self, data, nn, encoder, ticks) -> DataFrame:
+        self.log.info('Performing prediction over TRAINING set')
         predictions = pd.DataFrame([])
 
         num_ticks = data.shape[0]
@@ -97,6 +98,7 @@ class CSCore(Params):
         return predictions
 
     def predict_newdata(self, data, nn, encoder, ticks) -> DataFrame:
+        self.log.info('Performing prediction over NEW UNKNOWN data')
         predictions = pd.DataFrame([])
 
         # Take only the last window_size+1 elements, leaving

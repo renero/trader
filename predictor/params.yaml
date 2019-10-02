@@ -13,16 +13,15 @@ csv_dict:
   l: 'Low'
   c: 'Close'
 
-ohlc_tags: ['o', 'h', 'l', 'c']
 cse_tags: ['b', 'o', 'h', 'l', 'c']
 
 # Saving predictions
-save_predictions: false
+save_predictions: true
 predictions_path: ../output
 
 # When in "predict", do I run "n" random predictions or do I run predictions
 # over an entire dataset
-predict_training: false
+predict_training: true
 table_format: simple
 
 # Files, Networks, Names...
@@ -37,7 +36,10 @@ model_names:
     body: body_acciona_2000_2018_w10_e100
     move: move_acciona_2000_2018_w10_e100
     encoder: encoder_acciona_2000_2018_w10
-
+  18yw05:
+    body: body_acciona_2000_2018_w5_e100
+    move: move_acciona_2000_2018_w5_e100
+    encoder: encoder_acciona_2000_2018_w5
 
 # Log level: 0: Silent, 1: Errors only, 2: Warnings too, 3: info, 4: debug
 log_level: 3
