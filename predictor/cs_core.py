@@ -1,6 +1,7 @@
 from os.path import splitext, basename
 
 import pandas as pd
+from pandas import DataFrame
 from tabulate import tabulate
 
 from cs_api import single_prediction
@@ -73,13 +74,13 @@ class CSCore(Params):
 
         return nn, encoder
 
-    def predict_training(self, data, nn, encoder, ticks):
+    def predict_training(self, data, nn, encoder, ticks) -> DataFrame:
         predictions = pd.DataFrame([])
 
         num_ticks = data.shape[0]
         max_wsize = max(
             [encoder[name]._window_size for name in self.model_names])
-        train_range = range(0+max_wsize, num_ticks - max_wsize)
+        train_range = range(0+max_wsize, num_ticks - 1)
 
         self.log.info('Predicting over {} training ticks'.format(num_ticks))
         self.log.info('Looping {} groups of {} ticks'.format(
@@ -89,19 +90,17 @@ class CSCore(Params):
             prediction = single_prediction(data, from_idx, nn, encoder, self)
             prediction = self.add_supervised_info(
                 prediction,
-                data.iloc[from_idx + 1]['c'], self)
+                data.iloc[from_idx]['c'], self)
             predictions = predictions.append(prediction)
         predictions = ticks.scale_back(predictions)
 
         return predictions
 
-    def predict_newdata(self, data, nn, encoder, ticks):
+    def predict_newdata(self, data, nn, encoder, ticks) -> DataFrame:
         predictions = pd.DataFrame([])
 
         # Take only the last window_size+1 elements, leaving
         # the last as the actual value
-        # tick_group = data.tail(self._window_size + 1).iloc[
-        #              -self._window_size - 1:-1]
         prediction = single_prediction(data, -1, nn, encoder, self)
         predictions = ticks.scale_back(predictions.append(prediction))
 

@@ -83,14 +83,15 @@ def single_prediction(data: DataFrame, w_pos: int, nn, encoder, params):
     Make a single prediction over a list of ticks. It uses all the
     networks loaded to produce all their predictions and their average in
     a dataframe
-    :param data:
-    :param w_pos:
-    :param nn:
-    :param encoder:
-    :param params:
+    :param data: data in OHLC
+    :param w_pos: end position of window in data.
+    :param nn: the nets to be used to perform the prediction
+    :param encoder: the encoders of the nets
+    :param params: the parameters of the config file.
     """
+    model_names = list(params.model_names.keys())
     predictions = np.array([], dtype=np.float64)
-    for name in params.model_names:
+    for name in model_names:
         w_size = encoder[name]._window_size
         # Select a window of data starting from 'w_pos', but if it is -1
         # that means that the window is the last w_size elements in data.
@@ -103,7 +104,6 @@ def single_prediction(data: DataFrame, w_pos: int, nn, encoder, params):
 
     # If the number of models is greater than 1, I also add statistics about
     # their result.
-    model_names = list(params.model_names.keys())
     if len(model_names) > 1:
         new_cols = ['actual', 'avg', 'avg_diff', 'median', 'med_diff', 'winner']
         # If I decide to use ensembles, I must add two new columns
@@ -129,4 +129,5 @@ def single_prediction(data: DataFrame, w_pos: int, nn, encoder, params):
             [u'10yw7', u'1yw7', u'1yw3', u'1yw10', u'median',
              u'5yw10', u'10yw3', u'5yw3', u'avg', u'5yw7']]
         df['ensemble'] = ensemble_model.predict(input_df)[0]
+
     return df
