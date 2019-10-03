@@ -16,12 +16,12 @@ csv_dict:
 cse_tags: ['b', 'o', 'h', 'l', 'c']
 
 # Saving predictions
-save_predictions: true
+save_predictions: false
 predictions_path: ../output
 
 # When in "predict", do I run "n" random predictions or do I run predictions
 # over an entire dataset
-predict_training: true
+predict_training: false
 table_format: simple
 
 # Files, Networks, Names...

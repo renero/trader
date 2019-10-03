@@ -6,19 +6,11 @@
 #   https://github.com/sonaam1234/DeepLearningInFinance
 #
 
-import os
-
-import tensorflow as tf
-
 from environment import Environment
 from rl_dictionary import RLDictionary
 from agent import Agent
 
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
-
-def main():
+if __name__ == "__main__":
     # Init
     configuration = RLDictionary()
     environment = Environment(configuration)
@@ -45,6 +37,3 @@ def main():
     # Save the model?
     if configuration.save_model is True:
         agent.nn.save_model(agent.model)
-
-
-main()
