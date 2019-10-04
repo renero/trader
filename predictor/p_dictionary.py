@@ -17,7 +17,7 @@ class PDictionary(Dictionary):
         if arguments.args.ticks is not None:
             setattr(self, 'ticks_file', arguments.args.ticks)
         if arguments.args.window is not None:
-            setattr(self, 'window_size', arguments.args.window)
+            setattr(self, 'window_size', arguments.args.window[0])
 
         #
         # Extensions to the base YAML dictionary of parameters
