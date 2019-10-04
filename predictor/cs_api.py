@@ -45,7 +45,7 @@ def predict_close(ticks, encoder, nn, params):
 
     # Repeat everything with the move:
     # get a prediction from the proper network, for the MOVE part
-    pred_length = len(encoder.onehot['move']._states)
+    pred_length = len(encoder.onehot['move'].states)
     num_predictions = int(input_move.shape[2] / pred_length)
     y = nn['move'].predict(input_move)[0]
     Y_pred = [
@@ -58,18 +58,18 @@ def predict_close(ticks, encoder, nn, params):
     ]
 
     # Decode the prediction into a normal tick (I'm here!!!)
-    prediction_df = pd.DataFrame([], columns=params._cse_tags)
+    prediction_df = pd.DataFrame([], columns=params.cse_tags)
     prediction_cs = np.concatenate((pred_body_cs, pred_move_cs), axis=0)
-    this_prediction = dict(zip(params._cse_tags, prediction_cs))
+    this_prediction = dict(zip(params.cse_tags, prediction_cs))
     prediction_df = prediction_df.append(this_prediction, ignore_index=True)
     log.info('Net {} ID {} -> {}:{}|{}|{}|{}'.format(
         nn['body'].name,
         hex(id(nn)),
-        prediction_df[params._cse_tags[0]].values[0],
-        prediction_df[params._cse_tags[1]].values[0],
-        prediction_df[params._cse_tags[2]].values[0],
-        prediction_df[params._cse_tags[3]].values[0],
-        prediction_df[params._cse_tags[4]].values[0],
+        prediction_df[params.cse_tags[0]].values[0],
+        prediction_df[params.cse_tags[1]].values[0],
+        prediction_df[params.cse_tags[2]].values[0],
+        prediction_df[params.cse_tags[3]].values[0],
+        prediction_df[params.cse_tags[4]].values[0],
     ))
 
     # Convert the prediction to a real tick
@@ -91,7 +91,7 @@ def single_prediction(data: DataFrame, w_pos: int, nn, encoder, params):
     model_names = list(params.model_names.keys())
     predictions = np.array([], dtype=np.float64)
     for name in model_names:
-        w_size = encoder[name]._window_size
+        w_size = encoder[name].window_size
         # Select a window of data starting from 'w_pos', but if it is -1
         # that means that the window is the last w_size elements in data.
         if w_pos == -1:
@@ -106,7 +106,7 @@ def single_prediction(data: DataFrame, w_pos: int, nn, encoder, params):
     if len(model_names) > 1:
         new_cols = ['actual', 'avg', 'avg_diff', 'median', 'med_diff', 'winner']
         # If I decide to use ensembles, I must add two new columns
-        if params._ensemble is True:
+        if params.ensemble is True:
             new_cols = new_cols + ['ensemble', 'ens_diff']
     else:
         new_cols = []
@@ -120,9 +120,9 @@ def single_prediction(data: DataFrame, w_pos: int, nn, encoder, params):
         df['median'] = df.median(axis=1)
 
     # When using ensemble, compute what the ensemble predicts, and add it.
-    if params._ensemble:
+    if params.ensemble:
         log.info('Refining prediction with ensemble.')
-        with open(params._ensemble_path, 'rb') as file:
+        with open(params.ensemble_path, 'rb') as file:
             ensemble_model = pickle.load(file)
         input_df = df[
             [u'10yw7', u'1yw7', u'1yw3', u'1yw10', u'median',

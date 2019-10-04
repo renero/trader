@@ -3,16 +3,17 @@ from os.path import dirname, realpath
 import numpy as np
 import pandas as pd
 
-from params import Params
 from utils.file_io import file_exists
 
 
-class Ticks(Params):
+class Ticks(object):
     min_value = 0.
     max_value = 0.
 
-    def __init__(self):
+    def __init__(self, params):
         super(Ticks, self).__init__()
+        self.params = params
+        self.log = params.log
 
     def normalize(self, x):
         return (x - self.min_value) / (self.max_value - self.min_value)
@@ -32,13 +33,13 @@ class Ticks(Params):
     def read_ohlc(self,
                   filepath=None,
                   do_normalize=True):
-        _filepath = self._ticks_file if filepath is None else filepath
+        _filepath = self.params.ticks_file if filepath is None else filepath
 
         filepath = file_exists(_filepath, dirname(realpath(__file__)))
-        df = pd.read_csv(filepath, delimiter=self._delimiter)
+        df = pd.read_csv(filepath, delimiter=self.params.delimiter)
         # Reorder and rename
-        df = df[[self._csv_dict['o'], self._csv_dict['h'],
-                 self._csv_dict['l'], self._csv_dict['c']]]
+        df = df[[self.params.csv_dict['o'], self.params.csv_dict['h'],
+                 self.params.csv_dict['l'], self.params.csv_dict['c']]]
         df.columns = ['o', 'h', 'l', 'c']
 
         self.max_value = df.values.max()
@@ -46,11 +47,11 @@ class Ticks(Params):
         if do_normalize is True:
             df = df.applymap(np.vectorize(self.normalize))
 
-        info_msg = 'Read ticksfile: {}, output DF dim{}'
-        self.log.info(info_msg.format(self._ticks_file, df.shape))
+        info_msg = 'Read ticks file: {}, output DF dim{}'
+        self.log.info(info_msg.format(self.params.ticks_file, df.shape))
         return df
 
     @staticmethod
-    def new_ohlc(values):  # , columns):
-        df = pd.Series([values])  # , columns=columns)
+    def new_ohlc(values):
+        df = pd.Series([values])
         return df

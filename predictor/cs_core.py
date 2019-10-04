@@ -6,16 +6,17 @@ from tabulate import tabulate
 
 from cs_api import single_prediction
 from cs_encoder import CSEncoder
-from cs_nn import Csnn
+from cs_nn import CS_NN
 from dataset import Dataset
 from file_io import valid_output_name
-from params import Params
 
 
-class CSCore(Params):
+class CSCore(object):
 
-    def __init__(self):
+    def __init__(self, params):
         super(CSCore, self).__init__()
+        self.params = params
+        self.log = params.log
 
     def train(self, data):
         """
@@ -23,22 +24,21 @@ class CSCore(Params):
         :param data: Data in OHLC format from the ticks module.
         :return: the NN trained, and the encoder used
         """
-        encoder = CSEncoder().fit(data)
+        encoder = CSEncoder(self.params).fit(data)
         cse = encoder.ticks2cse(data)
-        dataset = self.prepare_input(encoder, cse, self.subtypes)
-        nn = self.train_nn(dataset, self.subtypes)
+        dataset = self.prepare_input(encoder, cse, self.params.subtypes)
+        nn = self.train_nn(dataset, self.params.subtypes)
         encoder.save()
 
         return nn, encoder
 
-    @staticmethod
-    def train_nn(dataset, subtypes):
+    def train_nn(self, dataset, subtypes):
         """
         Train a model.
         """
         nn = {}
         for subtype in subtypes:
-            nn[subtype] = Csnn(None, subtype)
+            nn[subtype] = CS_NN(self.params, None, subtype)
 
             window_size = dataset[subtype].X_train.shape[1]
             num_categories = dataset[subtype].X_train.shape[2]
@@ -48,29 +48,28 @@ class CSCore(Params):
 
         return nn
 
-    @staticmethod
-    def load_nn(model_names, subtypes):
+    def load_nn(self, model_names, subtypes):
         """
         """
         nn = {}
         for name in model_names.keys():
             nn[name] = {}
             for subtype in subtypes:
-                nn[name][subtype] = Csnn(name, subtype)
+                nn[name][subtype] = CS_NN(self.params, name, subtype)
                 nn[name][subtype].load(model_names[name][subtype])
         return nn
 
-    @staticmethod
-    def load_encoders(model_names):
+    def load_encoders(self, model_names):
         """Load a encoder for each network"""
         encoder = {}
         for name in model_names:
-            encoder[name] = CSEncoder().load(model_names[name]['encoder'])
+            encoder[name] = CSEncoder(self.params).load(
+                model_names[name]['encoder'])
         return encoder
 
     def prepare_predict(self):
-        nn = self.load_nn(self._model_names, self.subtypes)
-        encoder = self.load_encoders(self._model_names)
+        nn = self.load_nn(self.params.model_names, self.params.subtypes)
+        encoder = self.load_encoders(self.params.model_names)
 
         return nn, encoder
 
@@ -80,8 +79,8 @@ class CSCore(Params):
 
         num_ticks = data.shape[0]
         max_wsize = max(
-            [encoder[name]._window_size for name in self.model_names])
-        train_range = range(0+max_wsize, num_ticks - 1)
+            [encoder[name].window_size for name in self.params.model_names])
+        train_range = range(0 + max_wsize, num_ticks - 1)
 
         self.log.info('Predicting over {} training ticks'.format(num_ticks))
         self.log.info('Looping {} groups of {} ticks'.format(
@@ -91,7 +90,7 @@ class CSCore(Params):
             prediction = single_prediction(data, from_idx, nn, encoder, self)
             prediction = self.add_supervised_info(
                 prediction,
-                data.iloc[from_idx]['c'], self)
+                data.iloc[from_idx]['c'], self.params)
             predictions = predictions.append(prediction)
         predictions = ticks.scale_back(predictions)
 
@@ -134,7 +133,7 @@ class CSCore(Params):
         if len(model_names) > 1:
             prediction['avg_diff'] = diff_with('avg')
             prediction['med_diff'] = diff_with('median')
-            if params._ensemble is True:
+            if params.ensemble is True:
                 prediction['ens_diff'] = diff_with('ensemble')
             max_diff = 10000000.0
             winner = ''
@@ -158,10 +157,10 @@ class CSCore(Params):
         :param params: the parameters file.
         :return: the predictions reordered.
         """
-        if params.num_models == 1 and params._predict_training is False:
+        if params.num_models == 1 and params.predict_training is False:
             return predictions
 
-        if params._predict_training is False:
+        if params.predict_training is False:
             cols_to_drop = ['actual', 'avg', 'avg_diff', 'med_diff', 'median']
             if 'winner' in predictions.columns:
                 cols_to_drop += ['winner']
@@ -179,27 +178,26 @@ class CSCore(Params):
 
     @staticmethod
     def save_predictions(predictions, params, log):
-        if params._save_predictions is not True:
+        if params.save_predictions is not True:
             log.info('not saving predictions.')
             return
         # Find a valid filename and save everything
         filename = valid_output_name(
             filename='pred_{}_{}'.format(
-                splitext(basename(params._ticks_file))[0],
+                splitext(basename(params.ticks_file))[0],
                 '_'.join(params.model_names)),
-            path=params._predictions_path,
+            path=params.predictions_path,
             extension='csv')
         predictions.to_csv(filename, index=False)
         log.info('predictions saved to: {}'.format(filename))
 
     def display_predictions(self, predictions):
         print(tabulate(predictions, headers='keys',
-                       tablefmt=self._table_format,
+                       tablefmt=self.params.table_format,
                        showindex=False,
                        floatfmt=['.1f']))
 
-    @staticmethod
-    def prepare_input(encoder, cse, subtypes):
+    def prepare_input(self, encoder, cse, subtypes):
         """
         Prepare the training and test datasets from an list of existing CSE, for
         each of the model names considered (body and move).
@@ -215,8 +213,9 @@ class CSCore(Params):
         dataset = {}
         for subtype in subtypes:
             call_select = getattr(encoder, '{}'.format(subtype))
-            cse_data[subtype] = Dataset().adjust(call_select(cse))
+            cse_data[subtype] = Dataset(self.params).adjust(call_select(cse))
             oh_data[subtype] = encoder.onehot[subtype].encode(cse_data[subtype])
-            dataset[subtype] = Dataset().train_test_split(oh_data[subtype])
+            dataset[subtype] = Dataset(self.params).train_test_split(
+                oh_data[subtype])
 
         return dataset

@@ -7,9 +7,12 @@ class MyDict(dict):
         super().__init__(**kwargs)
 
     def __getattr__(self, key):
+        """
+        Check out https://stackoverflow.com/a/42272450
+        """
         if key in self:
             return self.get(key)
-        raise KeyError('Key <{}> not present in dictionary'.format(key))
+        raise AttributeError('Key <{}> not present in dictionary'.format(key))
 
     def __setattr__(self, key, value):
         self[key] = value

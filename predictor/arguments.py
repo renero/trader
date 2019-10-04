@@ -16,10 +16,10 @@ class Arguments(object):
                             help='Window size for the LSTM')
 
         self.args = parser.parse_args()
-        action_name = '_{}'.format(self.args.action)
+        action_name = 'arg_{}'.format(self.args.action)
         setattr(self, action_name, True)
         for action in set(self.possible_actions) - {action_name[1:]}:
-            setattr(self, '_{}'.format(action), False)
+            setattr(self, 'arg_{}'.format(action), False)
 
     @property
     def arg_ticks_file(self):
