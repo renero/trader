@@ -33,3 +33,14 @@ def which_string(strings, letter, group_index=0):
         return group_index, pos
     else:
         return which_string(strings[1:], letter, group_index + 1)
+
+
+def previous(objects_array: object, pos: int):
+    """
+    Return the object at pos - 1 position, only if pos != 0, otherwise
+    returns None
+    """
+    if pos == 0:
+        return None
+    else:
+        return objects_array[pos - 1]

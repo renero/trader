@@ -1,12 +1,13 @@
+import pickle
+from os.path import basename, join, splitext, dirname, realpath
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-import pickle
-from pathlib import Path
-from os.path import basename, join, splitext, dirname, realpath
 
-from utils.file_io import file_exists
 from oh_encoder import OHEncoder
-from utils.strings import which_string
+from utils.file_io import file_exists, valid_output_name
+from utils.strings import which_string, previous
 
 
 class CSEncoder:
@@ -50,7 +51,6 @@ class CSEncoder:
         to the O, H, L, C values, in the order specified by the second argument
         string `encoding` (for instance: 'ohlc').
         """
-        # super(CSEncoder, self).__init__()
         self.params = params
         self.log = params.log
 
@@ -459,6 +459,18 @@ class CSEncoder:
         result.columns = col_names
         return result
 
+    def encode_tick(self, tick, prev_cse):
+        cse = CSEncoder(self.params, np.array(tick))
+        self.log.debug(
+            'Tick encoding: [{:.2f}|{:.2f}|{:.2f}|{:.2f}]'.format(
+                cse.open, cse.high, cse.low, cse.close))
+        cse.encode_body()
+        if prev_cse is None:
+            cse.encode_movement(cse)
+        else:
+            cse.encode_movement(prev_cse)
+        return cse
+
     def ticks2cse(self, ticks):
         """
         Encodes a dataframe of Ticks, returning an array of CSE objects.
@@ -467,14 +479,7 @@ class CSEncoder:
         cse = []
         for index in range(0, ticks.shape[0]):
             cse.append(
-                CSEncoder(self.params,
-                          np.array(ticks.iloc[index])))
-            self.log.debug(
-                'Tick encoding: [{:.2f}|{:.2f}|{:.2f}|{:.2f}]'.format(
-                    cse[index].open, cse[index].high, cse[index].low,
-                    cse[index].close))
-            cse[index].encode_body()
-            cse[index].encode_movement(cse[index - 1])
+                self.encode_tick(ticks.iloc[index], previous(cse, index)))
         return cse
 
     def read_cse(self, filename=None, col_names=None):
@@ -490,10 +495,14 @@ class CSEncoder:
         Saves the CS Encoder object into a pickle dump.
         :return: The objects itself
         """
-        encoder_filename = self.valid_output_name()
+        encoder_filename = valid_output_name(
+            'encoder_{}_w{}'.format(self.dataset, self.params.window_size),
+            path=self.params.predictions_path,
+            extension='pickle'
+        )
         with open(encoder_filename, 'wb') as f:
             # Pickle the object dictionary using the highest protocol available
-            pickle.dump(self, f)#, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
             self.log.info('Saved encoder to: {}'.format(encoder_filename))
         return self
 
@@ -555,14 +564,7 @@ class CSEncoder:
                           columns=self.params.cse_tags)
         for index in range(0, ticks.shape[0]):
             cse.append(
-                CSEncoder(self.params,
-                          np.array(ticks.iloc[index])))
-            self.log.debug(
-                'Tick encoding: [{:.2f}|{:.2f}|{:.2f}|{:.2f}]'.format(
-                    cse[index].open, cse[index].high, cse[index].low,
-                    cse[index].close))
-            cse[index].encode_body()
-            cse[index].encode_movement(cse[index - 1])
+                self.encode_tick(ticks.iloc[index], previous(cse, index)))
             df.loc[index] = pd.Series({
                 self.params.cse_tags[0]: cse[index].encoded_body,
                 self.params.cse_tags[1]: cse[index].encoded_delta_open,
@@ -582,23 +584,6 @@ class CSEncoder:
     def values(self):
         print('O({:.3f}), H({:.3f}), L({:.3f}), C({:.3f})'.format(
             self.open, self.high, self.low, self.close))
-
-    def valid_output_name(self):
-        """
-        Builds a valid name with the encoder metadata the date.
-        Returns The filename if the name is valid and file does not exists,
-                None otherwise.
-        """
-        filename = 'encoder_{}_w{}'.format(
-            self.dataset,
-            self.params.window_size)
-        base_filepath = join(self.params.models_dir, filename)
-        output_filepath = base_filepath
-        idx = 1
-        while Path(output_filepath).is_file() is True:
-            output_filepath = '{}_{:d}'.format(base_filepath, idx)
-            idx += 1
-        return output_filepath
 
     def window_size(self):
         return self.window_size

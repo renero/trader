@@ -1,8 +1,6 @@
 from matplotlib import pyplot as plt
 from mpl_finance import candlestick_ohlc
 
-from p_dictionary import Params
-
 
 class CSPlot(object):
 

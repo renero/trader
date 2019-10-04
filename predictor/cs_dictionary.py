@@ -1,10 +1,9 @@
 from arguments import Arguments
 from dictionary import Dictionary
 from logger import Logger
-from my_dict import MyDict
 
 
-class PDictionary(Dictionary):
+class CSDictionary(Dictionary):
 
     def __init__(self, default_params_filename='params.yaml', *args, **kwargs):
         super().__init__(default_params_filename, **kwargs)

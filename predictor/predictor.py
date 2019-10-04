@@ -6,12 +6,12 @@ import numpy as np
 
 from cs_core import CSCore
 from logger import Logger
-from p_dictionary import PDictionary
+from cs_dictionary import CSDictionary
 from ticks import Ticks
 
 if __name__ == "__main__":
     np.random.seed(1)
-    params = PDictionary(args=sys.argv)
+    params = CSDictionary(args=sys.argv)
     log = Logger(params.log_level)
     ticks = Ticks(params)
     data = ticks.read_ohlc()
