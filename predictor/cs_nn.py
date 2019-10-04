@@ -141,7 +141,6 @@ class CS_NN(object):
             self.metadata['dataset'],
             self.window_size,
             self.params.epochs)
-        # self.metadata['accuracy'][-1])
         base_filepath = join(self.params.models_dir, self.filename)
         output_filepath = base_filepath
         idx = 1

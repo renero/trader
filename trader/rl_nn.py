@@ -49,11 +49,14 @@ class RL_NN(Common):
         # Check if file exists to abort saving operation
         solved = False
         char_to_append = ''
-        fname = 'rl_model_' + splitext(basename(self.configuration.data_path))[0]
+        fname = 'rl_model_' + splitext(
+            basename(self.configuration.data_path))[0]
+        model_name = os.path.join(self.configuration.models_dir,
+                                  '{}{}.json'.format(fname, char_to_append))
         while not solved:
-            base_filename = fname + char_to_append + '.json'
-            fname = os.path.join(self.configuration.models_dir, base_filename)
-            if os.path.isfile(fname) is not True:
+            model_name = os.path.join(self.configuration.models_dir,
+                                      '{}{}.json'.format(fname, char_to_append))
+            if os.path.isfile(model_name) is not True:
                 solved = True
             else:
                 if char_to_append == '':
@@ -63,24 +66,24 @@ class RL_NN(Common):
 
         # serialize model to JSON
         model_json = model.to_json()
-        with open(fname, 'w') as json_file:
+        with open(model_name, 'w') as json_file:
             json_file.write(model_json)
-        self.log('  Model: {}'.format(fname))
+        self.log('  Model: {}'.format(model_name))
 
         # Serialize weights to HDF5
-        base_filename = fname + char_to_append + '.h5'
-        fname = os.path.join(self.configuration.models_dir, base_filename)
-        model.save_weights(fname)
-        print('  Weights: {}'.format(fname))
+        weights_name = os.path.join(self.configuration.models_dir,
+                                    '{}{}.h5'.format(fname, char_to_append))
+        model.save_weights(weights_name)
+        print('  Weights: {}'.format(weights_name))
 
         # Save also the results table
-        base_filename = fname + char_to_append + '.csv'
-        fname = os.path.join(self.configuration.models_dir, base_filename)
-        self.configuration.results.to_csv(fname,
+        results_name = os.path.join(self.configuration.models_dir,
+                                    '{}{}.csv'.format(fname, char_to_append))
+        self.configuration.results.to_csv(results_name,
                                           sep=',',
                                           header=True,
                                           float_format='%.2f')
-        print('  Results: {}'.format(fname))
+        print('  Results: {}'.format(results_name))
 
     def load_model(self, model, weights):
         # load json and create model
