@@ -1,6 +1,5 @@
 from pandas import DataFrame
 
-from common import Common
 from utils.dictionary import Dictionary
 from display import Display
 from utils.my_dict import MyDict
@@ -55,7 +54,3 @@ class RLDictionary(Dictionary):
         # table_headers.
         setattr(self, 'results', DataFrame)
         self.results = DataFrame(columns=self.table_headers)
-
-    # @property
-    # def states_list(self):
-    #     return self.states_list

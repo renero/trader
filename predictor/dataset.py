@@ -2,28 +2,38 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 
-from params import Params
 
-
-class Dataset(Params):
+class Dataset(object):
 
     X_train = None
     y_train = None
     X_test = None
     y_test = None
 
+    num_testcases = None
+    num_samples = None
+    num_features = None
+    num_frames = None
+    data = None
+    num_categories = None
+
+    def __init__(self, params):
+        super(Dataset, self).__init__()
+        self.params = params
+        self.log = params.log
+
     def train_test_split(self, data):
         self.data = data.copy()
-        self._num_categories = data.shape[1]
+        self.num_categories = data.shape[1]
         series = data.copy()
         series_s = series.copy()
 
-        for i in range(self._window_size):
+        for i in range(self.params.window_size):
             series = pd.concat([series, series_s.shift(-(i + 1))], axis=1)
 
         series.dropna(axis=0, inplace=True)
         train, test = train_test_split(
-            series, test_size=self._test_size, shuffle=False)
+            series, test_size=self.params.test_size, shuffle=False)
         self.X_train, self.y_train = self.reshape(np.array(train))
         self.X_test, self.y_test = self.reshape(np.array(test))
 
@@ -34,10 +44,10 @@ class Dataset(Params):
 
     def reshape(self, data):
         num_entries = data.shape[0] * data.shape[1]
-        timesteps = self._window_size + 1
-        num_samples = int((num_entries / self._num_categories) / timesteps)
-        train = data.reshape((num_samples, timesteps, self._num_categories))
-        X_train = train[:, 0:self._window_size, :]
+        timesteps = self.params.window_size + 1
+        num_samples = int((num_entries / self.num_categories) / timesteps)
+        train = data.reshape((num_samples, timesteps, self.num_categories))
+        X_train = train[:, 0:self.params.window_size, :]
         y_train = train[:, -1, :]
         return X_train, y_train
 
@@ -49,8 +59,8 @@ class Dataset(Params):
         """
         if all is True:
             return x
-        return (x - self._num_testcases - self._window_size -
-                self._num_predictions)
+        return (x - self.num_testcases - self.params.window_size -
+                self.params.num_predictions)
 
     def find_largest_divisor(self, x, all=False):
         """
@@ -62,7 +72,7 @@ class Dataset(Params):
         """
         found = False
         while x > 0 and found is False:
-            if self.valid_samples(x, all) % self._batch_size is 0:
+            if self.valid_samples(x, all) % self.params.batch_size is 0:
                 found = True
             else:
                 x -= 1
@@ -76,15 +86,15 @@ class Dataset(Params):
         Returns the raw sequence of samples adjusted, by removing the first
         elements from the array until shape fulfills TensorFlow conditions.
         """
-        self._num_samples = raw.shape[0]
-        self._num_testcases = int(self._num_samples * self._test_size)
+        self.num_samples = raw.shape[0]
+        self.num_testcases = int(self.num_samples * self.params.test_size)
         new_testshape = self.find_largest_divisor(
-            self._num_testcases, all=True)
+            self.num_testcases, all=True)
 
         self.log.debug('Reshaping TEST from [{}] to [{}]'.format(
-            self._num_testcases, new_testshape))
+            self.num_testcases, new_testshape))
 
-        self._num_testcases = new_testshape
+        self.num_testcases = new_testshape
 
         new_shape = self.find_largest_divisor(raw.shape[0], all=False)
 
@@ -96,10 +106,10 @@ class Dataset(Params):
         self.params['adj_numcols'] = new_df.shape[1]
 
         # Setup the windowing of the dataset.
-        self._num_samples = raw.shape[0]
-        self._num_features = raw.shape[1] if len(raw.shape) > 1 else 1
-        self._num_frames = self._num_samples - (
-                self._window_size + self._num_predictions) + 1
+        self.num_samples = raw.shape[0]
+        self.num_features = raw.shape[1] if len(raw.shape) > 1 else 1
+        self.num_frames = self.num_samples - (
+                self.params.window_size + self.params.num_predictions) + 1
         self.log.info('Adjusted dataset size from {} -> {}'.format(
             raw.shape[0], new_df.shape[0]))
 

@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from params import Params
 from keras.utils import to_categorical
 
 
@@ -13,22 +12,24 @@ class ValidationError(Exception):
         self.errors = errors
 
 
-class OHEncoder(Params):
-    _signed = False
-    _states = set()
-    _dict = dict()
-    _inv_dict = dict()
-    _sign_dict = {'p': +1, 'n': -1}
-    _inv_sign = {1: 'p', -1: 'n'}
+class OHEncoder(object):
+    signed = False
+    states = set()
+    dictionary = dict()
+    inv_dict = dict()
+    sign_dict = {'p': +1, 'n': -1}
+    inv_sign = {1: 'p', -1: 'n'}
 
-    def __init__(self, signed=True):
+    def __init__(self, params, signed=True):
         super(OHEncoder, self).__init__()
-        self._signed = signed
+        self.signed = signed
+        self.params = params
+        self.log = params.log
 
     def reset(self):
-        self._states = set()
-        self._dict = dict()
-        self._inv_dict = dict()
+        self.states = set()
+        self.dictionary = dict()
+        self.inv_dict = dict()
         return self
 
     def fit(self, data):
@@ -49,37 +50,37 @@ class OHEncoder(Params):
         # Check if the array is 1D or 2D, and first element has more than 1 ch
         self.reset()
         if len(data.shape) == 2:
-            if self._signed is True and len(data[0]) > 1:
+            if self.signed is True and len(data[0]) > 1:
                 self.log.debug('case 1')
-                [self._states.update([char[1:] for char in l]) for l in data]
+                [self.states.update([char[1:] for char in l]) for l in data]
             else:
                 self.log.debug('case 2')
-                [self._states.update(l) for l in data]
+                [self.states.update(l) for l in data]
         elif len(data.shape) == 1:
-            if self._signed is True and len(data[0]) > 1:
+            if self.signed is True and len(data[0]) > 1:
                 self.log.debug('case 3')
-                self._states.update([char[1:] for char in data])
+                self.states.update([char[1:] for char in data])
             else:
                 self.log.debug('case 4')
-                self._states.update(data)
+                self.states.update(data)
         else:
             raise ValidationError('1D or 2D array expected.', -1)
         # Build the dict.
         self.log.debug('Onehot encoding with {} elements'.format(
-            len(self._states)))
-        self._dict = {k: v for v, k in enumerate(sorted(list(self._states)))}
-        self._inv_dict = {v: k for k, v in self._dict.items()}
+            len(self.states)))
+        self.dictionary = {k: v for v, k in enumerate(sorted(list(self.states)))}
+        self.inv_dict = {v: k for k, v in self.dictionary.items()}
         return self
 
     def fit_from_dict(self, data):
         """ DEPRECATED
         """
         if len(data.shape) == 1:
-            self._states.update(data)
+            self.states.update(data)
         else:
             raise ValidationError('1D array expected as dictionary.', -1)
-        self._dict = {k: v for v, k in enumerate(sorted(list(self._states)))}
-        self._inv_dict = {v: k for k, v in self._dict.items()}
+        self.dictionary = {k: v for v, k in enumerate(sorted(list(self.states)))}
+        self.inv_dict = {v: k for k, v in self.dictionary.items()}
         return self
 
     def encode(self, input_vector):
@@ -95,22 +96,22 @@ class OHEncoder(Params):
             num_arrays = data.shape[0] if len(data.shape) == 2 else 1
             num_strings = data.shape[1] if len(
                 data.shape) == 2 else data.shape[0]
-            num_states = len(self._states)
+            num_states = len(self.states)
             data = data.reshape([num_arrays, num_strings])
-            if self._signed is True:
+            if self.signed is True:
                 transformed = np.empty([num_arrays, num_strings, num_states])
                 for i in range(num_arrays):
                     for j in range(num_strings):
                         code = to_categorical(
-                            self._dict[data[i][j][1:]],
-                            num_classes=len(self._states))
-                        sign = self._sign_dict[data[i][j][0].lower()]
+                            self.dictionary[data[i][j][1:]],
+                            num_classes=len(self.states))
+                        sign = self.sign_dict[data[i][j][0].lower()]
                         transformed[i][j] = np.dot(code, sign)
             else:
                 transformed = np.array([
                     to_categorical(
-                        [self._dict[x] for x in y],
-                        num_classes=len(self._states)) for y in data
+                        [self.dictionary[x] for x in y],
+                        num_classes=len(self.states)) for y in data
                 ])
         else:
             raise ValidationError('1D or 2D array expected.', -1)
@@ -126,14 +127,14 @@ class OHEncoder(Params):
             num_strings = data.shape[1] if len(
                 data.shape) == 2 else data.shape[0]
             data = data.reshape([num_arrays, num_strings])
-            # decode_len = 2 if self._signed else 1
+            # decode_len = 2 if self.signed else 1
             decoded = []
             for i in range(num_arrays):
                 flags = np.isin(data[i], [1, -1])
                 flag_index = np.where(flags)[0][0]
-                invcode = self._inv_dict[flag_index]
-                sign = self._inv_sign[data[i][flag_index]]
-                if self._signed:
+                invcode = self.inv_dict[flag_index]
+                sign = self.inv_sign[data[i][flag_index]]
+                if self.signed:
                     decoded.append('{}{}'.format(sign, invcode))
                 else:
                     decoded.append(invcode)

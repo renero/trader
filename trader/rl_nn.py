@@ -8,7 +8,7 @@ from common import Common
 from utils.dictionary import Dictionary
 
 
-class NN(Common):
+class RL_NN(Common):
 
     def __init__(self, configuration: Dictionary):
         self.configuration = configuration
@@ -49,7 +49,7 @@ class NN(Common):
         # Check if file exists to abort saving operation
         solved = False
         char_to_append = ''
-        fname = 'rl_model_' + splitext(basename(self.configuration.data_path))
+        fname = 'rl_model_' + splitext(basename(self.configuration.data_path))[0]
         while not solved:
             base_filename = fname + char_to_append + '.json'
             fname = os.path.join(self.configuration.models_dir, base_filename)

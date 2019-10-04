@@ -7,7 +7,7 @@ from keras.callbacks import TensorBoard
 
 from common import Common
 from environment import Environment
-from nn import NN
+from rl_nn import RL_NN
 
 
 class Agent(Common):
@@ -18,7 +18,7 @@ class Agent(Common):
     def __init__(self, configuration):
         self.configuration = configuration
         self.display = self.configuration.display
-        self.nn = NN(self.configuration)
+        self.nn = RL_NN(self.configuration)
         self.model = None
         self.callback_args = {}
         if self.configuration.tensorboard is True:
