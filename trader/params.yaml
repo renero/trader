@@ -7,7 +7,7 @@
 debug: true
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../output/forecast_acciona_2000_2018.csv
+data_path: ../output/forecast_acciona_2010_2018.csv
 delimiter: ','
 
 # Wanna save the model after training?

@@ -24,10 +24,10 @@ def predict_close(ticks, encoder, nn, params):
     # Check that the input group of ticks match the size of the window of
     # the network that is going to make the predict. That parameter is in
     # the window_size attribute within the 'encoder'.
-    if ticks.shape[0] != encoder.window_size():
+    if ticks.shape[0] != encoder.params.window_size:
         info_msg = 'Tickgroup resizing: {} -> {}'
-        log.info(info_msg.format(ticks.shape[0], encoder.window_size()))
-        ticks = ticks.iloc[-encoder.window_size():, :]
+        log.info(info_msg.format(ticks.shape[0], encoder.params.window_size))
+        ticks = ticks.iloc[-encoder.params.window_size():, :]
         ticks.reset_index()
 
     # encode the tick in CSE and OH. Reshape it to the expected LSTM format.
@@ -91,7 +91,7 @@ def single_prediction(data: DataFrame, w_pos: int, nn, encoder, params):
     model_names = list(params.model_names.keys())
     predictions = np.array([], dtype=np.float64)
     for name in model_names:
-        w_size = encoder[name].window_size
+        w_size = encoder[name].params.window_size
         # Select a window of data starting from 'w_pos', but if it is -1
         # that means that the window is the last w_size elements in data.
         if w_pos == -1:

@@ -1,5 +1,12 @@
+#
+# Parameters for the indicators calculator.
+#
+
+# Log level
+log_level: 3
+
 # Input data
-input_data: ../data/acciona_2018.csv
+input_data: ../data/acciona_2010_2018.csv
 separator: ','
 
 # Names of the relevant columns in the data file

@@ -37,9 +37,9 @@ model_names:
     move: move_acciona_2010_2018_w10_e100
     encoder: encoder_acciona_2010_2018_w10
   8yw05:
-    body: body_acciona_2010_2018_w10_e100
-    move: move_acciona_2010_2018_w10_e100
-    encoder: encoder_acciona_2010_2018_w10
+    body: body_acciona_2010_2018_w5_e100
+    move: move_acciona_2010_2018_w5_e100
+    encoder: encoder_acciona_2010_2018_w5
 
 # Log level: 0: Silent, 1: Errors only, 2: Warnings too, 3: info, 4: debug
 log_level: 3
@@ -66,4 +66,5 @@ activation: tanh
 dropout: 0.1
 
 # Do I use the ensemble part?
+ensemble: false
 ensemble_path: ../output/ridge_l2_model.pkl

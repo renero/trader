@@ -79,7 +79,8 @@ class CSCore(object):
 
         num_ticks = data.shape[0]
         max_wsize = max(
-            [encoder[name].window_size for name in self.params.model_names])
+            [encoder[name].params.window_size for name in
+             self.params.model_names])
         train_range = range(0 + max_wsize, num_ticks - 1)
 
         self.log.info('Predicting over {} training ticks'.format(num_ticks))
@@ -87,7 +88,7 @@ class CSCore(object):
             len(train_range), max_wsize))
 
         for from_idx in train_range:
-            prediction = single_prediction(data, from_idx, nn, encoder, self)
+            prediction = single_prediction(data, from_idx, nn, encoder, self.params)
             prediction = self.add_supervised_info(
                 prediction,
                 data.iloc[from_idx]['c'], self.params)

@@ -112,8 +112,8 @@ class CSEncoder:
         return np.array(self.def_prcntg_mvmt_encodings)
 
     @classmethod
-    def build_new(cls, values):
-        return cls(values)
+    def build_new(cls, params, values):
+        return cls(params, values)
 
     def fit(self, ticks):
         self.log.info('Fitting CS encoder to ticks read.')
@@ -448,7 +448,7 @@ class CSEncoder:
                 this_cse['b'], this_cse['o'], this_cse['h'], this_cse['l'],
                 this_cse['c']))
             this_tick = self.decode_cse(this_cse, cse_decoded[-1])
-            cse_decoded.append(self.build_new(this_tick))
+            cse_decoded.append(self.build_new(self.params, this_tick))
             this_tick = self.adjust_body(this_cse['b'][1], this_tick)
             self.log.debug(
                 'Adjusted CS body: {:.2f}|{:.2f}|{:.2f}|{:.2f}'.format(
@@ -516,7 +516,7 @@ class CSEncoder:
             path = self.params.pickle_filename
         else:
             path = pickle_file_path
-        pickle_file = join(self.params.models_dir, '{}'.format(path))
+        pickle_file = join(self.params.models_dir, '{}.pickle'.format(path))
         pickle_file = file_exists(pickle_file, dirname(realpath(__file__)))
         with open(pickle_file, 'rb') as f:
             self.__dict__.update(pickle.load(f).__dict__)
@@ -585,8 +585,8 @@ class CSEncoder:
         print('O({:.3f}), H({:.3f}), L({:.3f}), C({:.3f})'.format(
             self.open, self.high, self.low, self.close))
 
-    def window_size(self):
-        return self.window_size
+    # def window_size(self):
+    #     return self.window_size
 
     @classmethod
     def body(self, cse):
