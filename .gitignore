@@ -1,5 +1,7 @@
 # Project specific folders
 resources/DeepLearningInFinance/
+resources/Hands-On-Reinforcement-Learning-with-Python/
+resources/Hands-On-Reinforcement-Learning-with-Python/*
 resources/LSTM-Neural-Network-for-Time-Series-Prediction/
 output/
 data/

@@ -164,10 +164,13 @@ class Agent(Common):
         """
         MiniBatch Learning routine.
         :param batch_size:
-        :return:
+        :return: loss and mae
         """
-        mini_batch = np.empty(shape=(0, 5), dtype=np.int32)
         mem_size = len(self.memory)
+        if mem_size < batch_size:
+            return 0.0, 0.0
+
+        mini_batch = np.empty(shape=(0, 5), dtype=np.int32)
         for i in range(mem_size - batch_size - 1, mem_size - 1):
             mini_batch = np.append(
                 mini_batch,
@@ -187,15 +190,14 @@ class Agent(Common):
             y = labeled_output.reshape(-1, self.configuration.num_actions)
             nn_output = np.append(nn_output, y, axis=0)
 
-        print('Fitting with {} samples, shaped {}'.format(nn_input.shape[0],
-                                                          nn_input.shape))
-        h = self.model.train_on_batch(
-            nn_input, nn_output)#,
-            #epochs=1, verbose=0, batch_size=batch_size,
-            #**self.callback_args)
-
-        #return h.history['loss'][0], h.history['mean_absolute_error'][0]
-        return h[0], h[1]
+        # h = self.model.train_on_batch(
+        #     nn_input, nn_output)
+        # return h[0], h[1]
+        h = self.model.fit(
+            nn_input, nn_output,
+            epochs=1, verbose=0, batch_size=batch_size,
+            **self.callback_args)
+        return h.history['loss'][0], h.history['mean_absolute_error'][0]
 
     def experience_replay(self):
         """
