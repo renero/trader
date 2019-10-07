@@ -23,7 +23,7 @@ class RL_NN(Common):
 
         model = Sequential()
         model.add(
-            InputLayer(batch_input_shape=(1, self.configuration.num_states)))
+            InputLayer(batch_input_shape=(None, self.configuration.num_states)))
         model.add(Dense(
             num_cells,
             input_shape=(self.configuration.num_states,),

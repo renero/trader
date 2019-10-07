@@ -46,9 +46,10 @@ class Agent(Common):
         else:
             self.model = self.nn.create_model()
             avg_rewards, avg_loss, avg_mae = self.reinforce_learn(env)
-            # display anything?
-            if do_plot is True and self.configuration.load_model is False:
-                self.display.plot_metrics(avg_loss, avg_mae, avg_rewards)
+
+        # display anything?
+        if do_plot is True and self.configuration.load_model is False:
+            self.display.plot_metrics(avg_loss, avg_mae, avg_rewards)
 
         # Extract the strategy matrix from the model.
         strategy = self.get_strategy()
@@ -81,18 +82,14 @@ class Agent(Common):
         # Loop over 'num_episodes'
         for i in range(self.configuration.num_episodes):
             state = env.reset()
-            if (i % self.configuration.num_episodes_update == 0) or \
-                    (i == (self.configuration.num_episodes - 1)):
-                end = time.time()
-                if avg_rewards:
-                    last_avg = avg_rewards[-1]
-                self.display.progress(i, self.configuration.num_episodes,
-                                      last_avg, start, end)
+            self.display.periodic_rl_train_report(i, avg_rewards, last_avg,
+                                                  start)
 
             done = False
             sum_rewards = 0
             sum_loss = 0
             sum_mae = 0
+            j = 0
             while not done:
                 # Decide whether generating random action or predict most
                 # likely from the give state.
@@ -105,14 +102,16 @@ class Agent(Common):
                 # Send the action to the environment and get new state,
                 # reward and information on whether we've finish.
                 new_state, reward, done, _ = env.step(action)
-                loss, mae = self.learn_step(action, new_state, reward, state)
                 self.memory.append((state, action, reward, new_state, done))
-
-                # Update states and metrics
-                state = new_state
-                sum_rewards += reward
-                sum_loss += loss
-                sum_mae += mae
+                # loss, mae = self.step_learn(state, action, reward, new_state)
+                if (j > 0) and ((j % 64) == 0):
+                    loss, mae = self.minibatch_learn(batch_size=64)
+                    # Update states and metrics
+                    state = new_state
+                    sum_rewards += reward
+                    sum_loss += loss
+                    sum_mae += mae
+                j += 1
 
             avg_rewards.append(sum_rewards / self.configuration.num_episodes)
             avg_loss.append(sum_loss / self.configuration.num_episodes)
@@ -129,14 +128,14 @@ class Agent(Common):
 
         return avg_rewards, avg_loss, avg_mae
 
-    def learn_step(self, action, new_state, reward, state):
+    def step_learn(self, state, action, reward, new_state):
         """
         Fit the NN model to predict the action, given the action and
         current state.
-        :param action:
-        :param new_state:
-        :param reward:
         :param state:
+        :param action:
+        :param reward:
+        :param new_state:
         :return: the loss and the metric resulting from the training.
         """
         target = reward + self.configuration.gamma * self.predict_value(
@@ -151,6 +150,34 @@ class Agent(Common):
         )
         return history.history['loss'][0], \
                history.history['mean_absolute_error'][0]
+
+    def minibatch_learn(self, batch_size):
+        mini_batch = []
+        mem_size = len(self.memory)
+        for i in range(mem_size - batch_size - 1, mem_size - 1):
+            mini_batch.append(self.memory[i])
+
+        nn_input = []
+        nn_output = []
+        for state, action, reward, next_state, done in mini_batch:
+            target = reward
+            if not done:
+                target = reward + self.configuration.gamma * self.predict_value(
+                    next_state)
+            x = self.onehot(state)
+            nn_input.append(x)
+            labeled_output = self.model.predict(self.onehot(state))[0]
+            labeled_output[action] = target
+            y = labeled_output.reshape(-1, self.configuration.num_actions)
+            nn_output.append(y)
+
+        print('Fitting with {} samples, shaped {}'.format(len(nn_input),
+                                                          nn_input.shape))
+        h = self.model.fit(nn_input, nn_output,
+                           epochs=1, verbose=0, batch_size=batch_size,
+                           **self.callback_args)
+
+        return h.history['loss'][0], h.history['mean_absolute_error'][0]
 
     def experience_replay(self):
         """

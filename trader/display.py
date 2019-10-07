@@ -1,3 +1,4 @@
+import time
 from math import log10, pow
 
 import matplotlib.pyplot as plt
@@ -75,9 +76,9 @@ class Display(Common):
         self.log('Cash Flow: {}'.format(
             self.color(portfolio.investment * -1.)))
         self.log(
-                 'Shares...: {:d}'.format(int(portfolio.shares)))
+            'Shares...: {:d}'.format(int(portfolio.shares)))
         self.log(
-                 'Sh.Value.: {:.1f}'.format(portfolio.portfolio_value))
+            'Sh.Value.: {:.1f}'.format(portfolio.portfolio_value))
         self.log('P/L......: € {}'.format(
             self.color(portfolio.portfolio_value - portfolio.investment)))
 
@@ -114,18 +115,18 @@ class Display(Common):
         """
         percentage = (i / num_episodes) * 100.0
         self.log(
-                 "Epoch {:>5}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
-                     i,
-                     num_episodes,
-                     percentage,
-                     last_avg), end='')
+            "Epoch {:>5}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
+                i,
+                num_episodes,
+                percentage,
+                last_avg), end='')
         if percentage == 0.0:
             self.log(' Est.time: UNKNOWN')
             return
         elapsed = end - start
         remaining = ((100. - percentage) * elapsed) / percentage
         self.log(
-                 ' Est.time: {}'.format(self.timer(remaining)))
+            ' Est.time: {}'.format(self.timer(remaining)))
 
     @staticmethod
     def timer(elapsed):
@@ -222,3 +223,20 @@ class Display(Common):
                    ma=True)
         self.chart(avg_loss, 'Avg loss', 'line', ma=True)
         self.chart(avg_mae, 'Avg MAE', 'line', ma=True)
+
+    def periodic_rl_train_report(self, index, avg_rewards, last_avg, start):
+        """
+        Displays report periodically
+        :param index:
+        :param avg_rewards:
+        :param last_avg:
+        :param start:
+        :return:
+        """
+        if (index % self.configuration.num_episodes_update == 0) or \
+                (index == (self.configuration.num_episodes - 1)):
+            end = time.time()
+            if avg_rewards:
+                last_avg = avg_rewards[-1]
+            self.progress(index, self.configuration.num_episodes,
+                          last_avg, start, end)
