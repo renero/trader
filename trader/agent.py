@@ -80,15 +80,15 @@ class Agent(Common):
         epsilon = self.configuration.epsilon
 
         # Loop over 'num_episodes'
-        for i in range(self.configuration.num_episodes):
+        for step_num in range(self.configuration.num_episodes):
             state = env.reset()
-            self.display.rl_train_report(i, avg_rewards, last_avg, start)
+            self.display.rl_train_report(step_num, avg_rewards, last_avg, start)
 
             done = False
             sum_rewards = 0
             sum_loss = 0
             sum_mae = 0
-            j = 0
+            episode_step = 0
             while not done:
                 # Decide whether generating random action or predict most
                 # likely from the give state.
@@ -99,14 +99,16 @@ class Agent(Common):
                 new_state, reward, done, _ = env.step(action)
                 self.memory.append((state, action, reward, new_state, done))
                 # loss, mae = self.step_learn(state, action, reward, new_state)
-                if (j > 0) and ((j % 64) == 0):
-                    loss, mae = self.minibatch_learn(batch_size=64)
+                if episode_step % self.configuration.train_steps and \
+                        episode_step > self.configuration.start_steps:
+                    loss, mae = self.minibatch_learn(
+                        self.configuration.batch_size)
                     # Update states and metrics
                     state = new_state
                     sum_rewards += reward
                     sum_loss += loss
                     sum_mae += mae
-                j += 1
+                episode_step += 1
 
             avg_rewards.append(sum_rewards / self.configuration.num_episodes)
             avg_loss.append(sum_loss / self.configuration.num_episodes)

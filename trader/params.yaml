@@ -29,6 +29,9 @@ decay_factor: 0.995
 train_steps: 4
 start_steps: 100
 
+# Batch size for training the model
+batch_size: 32
+
 # Experience Replay batch size
 experience_replay: True
 exp_batch_size: 16
