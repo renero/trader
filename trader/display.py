@@ -224,7 +224,7 @@ class Display(Common):
         self.chart(avg_loss, 'Avg loss', 'line', ma=True)
         self.chart(avg_mae, 'Avg MAE', 'line', ma=True)
 
-    def periodic_rl_train_report(self, index, avg_rewards, last_avg, start):
+    def rl_train_report(self, index, avg_rewards, last_avg, start):
         """
         Displays report periodically
         :param index:

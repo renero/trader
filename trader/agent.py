@@ -13,7 +13,7 @@ from rl_nn import RL_NN
 class Agent(Common):
     configuration = None
     tensorboard = None
-    memory = deque(maxlen=1000)
+    memory = deque(maxlen=20000)
 
     def __init__(self, configuration):
         self.configuration = configuration
@@ -82,8 +82,7 @@ class Agent(Common):
         # Loop over 'num_episodes'
         for i in range(self.configuration.num_episodes):
             state = env.reset()
-            self.display.periodic_rl_train_report(i, avg_rewards, last_avg,
-                                                  start)
+            self.display.rl_train_report(i, avg_rewards, last_avg, start)
 
             done = False
             sum_rewards = 0
@@ -93,11 +92,7 @@ class Agent(Common):
             while not done:
                 # Decide whether generating random action or predict most
                 # likely from the give state.
-                if np.random.random() < epsilon:
-                    action = np.random.randint(
-                        0, self.configuration.num_actions)
-                else:
-                    action = self.predict(state)
+                action = self.epsilon_greedy(epsilon, state)
 
                 # Send the action to the environment and get new state,
                 # reward and information on whether we've finish.
@@ -128,6 +123,20 @@ class Agent(Common):
 
         return avg_rewards, avg_loss, avg_mae
 
+    def epsilon_greedy(self, epsilon, state):
+        """
+        Epsilon greedy routine
+        :param epsilon: current value of epsilon after applying decaying f.
+        :param state: current state
+        :return: action predicted by the network
+        """
+        if np.random.random() < epsilon:
+            action = np.random.randint(
+                0, self.configuration.num_actions)
+        else:
+            action = self.predict(state)
+        return action
+
     def step_learn(self, state, action, reward, new_state):
         """
         Fit the NN model to predict the action, given the action and
@@ -152,46 +161,49 @@ class Agent(Common):
                history.history['mean_absolute_error'][0]
 
     def minibatch_learn(self, batch_size):
-        mini_batch = []
+        """
+        MiniBatch Learning routine.
+        :param batch_size:
+        :return:
+        """
+        mini_batch = np.empty(shape=(0, 5), dtype=np.int32)
         mem_size = len(self.memory)
         for i in range(mem_size - batch_size - 1, mem_size - 1):
-            mini_batch.append(self.memory[i])
+            mini_batch = np.append(
+                mini_batch,
+                np.asarray(self.memory[i]).astype(int).reshape(1, -1),
+                axis=0)
 
-        nn_input = []
-        nn_output = []
+        nn_input = np.empty((0, self.configuration.num_states), dtype=np.int32)
+        nn_output = np.empty((0, self.configuration.num_actions))
         for state, action, reward, next_state, done in mini_batch:
             target = reward
             if not done:
                 target = reward + self.configuration.gamma * self.predict_value(
                     next_state)
-            x = self.onehot(state)
-            nn_input.append(x)
+            nn_input = np.append(nn_input, self.onehot(state), axis=0)
             labeled_output = self.model.predict(self.onehot(state))[0]
             labeled_output[action] = target
             y = labeled_output.reshape(-1, self.configuration.num_actions)
-            nn_output.append(y)
+            nn_output = np.append(nn_output, y, axis=0)
 
-        print('Fitting with {} samples, shaped {}'.format(len(nn_input),
+        print('Fitting with {} samples, shaped {}'.format(nn_input.shape[0],
                                                           nn_input.shape))
-        h = self.model.fit(nn_input, nn_output,
-                           epochs=1, verbose=0, batch_size=batch_size,
-                           **self.callback_args)
+        h = self.model.train_on_batch(
+            nn_input, nn_output)#,
+            #epochs=1, verbose=0, batch_size=batch_size,
+            #**self.callback_args)
 
-        return h.history['loss'][0], h.history['mean_absolute_error'][0]
+        #return h.history['loss'][0], h.history['mean_absolute_error'][0]
+        return h[0], h[1]
 
     def experience_replay(self):
         """
         Primarily from: https://github.com/edwardhdlu/q-trader
         :return: None
         """
-        # mini_batch = []
-        # mem_size = len(self.memory)
         mini_batch = random.sample(self.memory,
                                    self.configuration.exp_batch_size)
-        # for i in range(mem_size - self.configuration.exp_batch_size + 1,
-        #                mem_size):
-        #     mini_batch.append(self.memory[i])
-
         for state, action, reward, next_state, done in mini_batch:
             target = reward
             if not done:
