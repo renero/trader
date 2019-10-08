@@ -16,14 +16,14 @@ class Agent(Common):
     memory = deque(maxlen=20000)
 
     def __init__(self, configuration):
-        self.configuration = configuration
-        self.display = self.configuration.display
-        self.nn = RL_NN(self.configuration)
+        self.params = configuration
+        self.display = self.params.display
+        self.nn = RL_NN(self.params)
         self.model = None
         self.callback_args = {}
-        if self.configuration.tensorboard is True:
+        if self.params.tensorboard is True:
             self.tensorboard = TensorBoard(
-                log_dir=self.configuration.tbdir,
+                log_dir=self.params.tbdir,
                 histogram_freq=0, write_graph=True, write_images=False)
             self.callback_args = {'callbacks': self.tensorboard}
 
@@ -40,15 +40,15 @@ class Agent(Common):
         """
         start = time.time()
         # create the Keras model and learn, or load it from disk.
-        if self.configuration.load_model is True:
-            self.model = self.nn.load_model(self.configuration.model_file,
-                                            self.configuration.weights_file)
+        if self.params.load_model is True:
+            self.model = self.nn.load_model(self.params.model_file,
+                                            self.params.weights_file)
         else:
             self.model = self.nn.create_model()
             avg_rewards, avg_loss, avg_mae = self.reinforce_learn(env)
 
         # display anything?
-        if do_plot is True and self.configuration.load_model is False:
+        if do_plot is True and self.params.load_model is False:
             self.display.plot_metrics(avg_loss, avg_mae, avg_rewards)
 
         # Extract the strategy matrix from the model.
@@ -57,11 +57,11 @@ class Agent(Common):
             self.display.strategy(self,
                                   env,
                                   self.model,
-                                  self.configuration.num_states,
+                                  self.params.num_states,
                                   strategy)
 
         self.log('\nTime elapsed: {}'.format(
-            self.configuration.display.timer(time.time() - start)))
+            self.params.display.timer(time.time() - start)))
         return strategy
 
     def reinforce_learn(self, env: Environment):
@@ -77,13 +77,12 @@ class Agent(Common):
         avg_mae = []
         last_avg: float = 0.0
         start = time.time()
-        epsilon = self.configuration.epsilon
+        epsilon = self.params.epsilon
 
         # Loop over 'num_episodes'
-        for step_num in range(self.configuration.num_episodes):
+        for step_num in range(self.params.num_episodes):
             state = env.reset()
             self.display.rl_train_report(step_num, avg_rewards, last_avg, start)
-
             done = False
             sum_rewards = 0
             sum_loss = 0
@@ -98,30 +97,32 @@ class Agent(Common):
                 # reward and information on whether we've finish.
                 new_state, reward, done, _ = env.step(action)
                 self.memory.append((state, action, reward, new_state, done))
+
                 # loss, mae = self.step_learn(state, action, reward, new_state)
-                if episode_step % self.configuration.train_steps and \
-                        episode_step > self.configuration.start_steps:
-                    loss, mae = self.minibatch_learn(
-                        self.configuration.batch_size)
+                if episode_step % self.params.train_steps and \
+                        episode_step > self.params.start_steps:
+                    loss, mae = self.minibatch_learn(self.params.batch_size)
+
                     # Update states and metrics
                     state = new_state
                     sum_rewards += reward
                     sum_loss += loss
                     sum_mae += mae
+
                 episode_step += 1
 
-            avg_rewards.append(sum_rewards / self.configuration.num_episodes)
-            avg_loss.append(sum_loss / self.configuration.num_episodes)
-            avg_mae.append(sum_mae / self.configuration.num_episodes)
+            avg_rewards.append(sum_rewards / self.params.num_episodes)
+            avg_loss.append(sum_loss / self.params.num_episodes)
+            avg_mae.append(sum_mae / self.params.num_episodes)
 
             # Batch Replay
-            if self.configuration.experience_replay is True:
-                if len(self.memory) > self.configuration.exp_batch_size:
+            if self.params.experience_replay is True:
+                if len(self.memory) > self.params.exp_batch_size:
                     self.experience_replay()
 
             # Epsilon decays here
-            if epsilon >= self.configuration.epsilon_min:
-                epsilon *= self.configuration.decay_factor
+            if epsilon >= self.params.epsilon_min:
+                epsilon *= self.params.decay_factor
 
         return avg_rewards, avg_loss, avg_mae
 
@@ -134,7 +135,7 @@ class Agent(Common):
         """
         if np.random.random() < epsilon:
             action = np.random.randint(
-                0, self.configuration.num_actions)
+                0, self.params.num_actions)
         else:
             action = self.predict(state)
         return action
@@ -149,14 +150,14 @@ class Agent(Common):
         :param new_state:
         :return: the loss and the metric resulting from the training.
         """
-        target = reward + self.configuration.gamma * self.predict_value(
+        target = reward + self.params.gamma * self.predict_value(
             new_state)
         target_vec = self.model.predict(self.onehot(state))[0]
         target_vec[action] = target
 
         history = self.model.fit(
             self.onehot(state),
-            target_vec.reshape(-1, self.configuration.num_actions),
+            target_vec.reshape(-1, self.params.num_actions),
             epochs=1, verbose=0, **self.callback_args
         )
         return history.history['loss'][0], \
@@ -179,17 +180,17 @@ class Agent(Common):
                 np.asarray(self.memory[i]).astype(int).reshape(1, -1),
                 axis=0)
 
-        nn_input = np.empty((0, self.configuration.num_states), dtype=np.int32)
-        nn_output = np.empty((0, self.configuration.num_actions))
+        nn_input = np.empty((0, self.params.num_states), dtype=np.int32)
+        nn_output = np.empty((0, self.params.num_actions))
         for state, action, reward, next_state, done in mini_batch:
             target = reward
             if not done:
-                target = reward + self.configuration.gamma * self.predict_value(
+                target = reward + self.params.gamma * self.predict_value(
                     next_state)
             nn_input = np.append(nn_input, self.onehot(state), axis=0)
             labeled_output = self.model.predict(self.onehot(state))[0]
             labeled_output[action] = target
-            y = labeled_output.reshape(-1, self.configuration.num_actions)
+            y = labeled_output.reshape(-1, self.params.num_actions)
             nn_output = np.append(nn_output, y, axis=0)
 
         # h = self.model.train_on_batch(
@@ -207,22 +208,22 @@ class Agent(Common):
         :return: None
         """
         mini_batch = random.sample(self.memory,
-                                   self.configuration.exp_batch_size)
+                                   self.params.exp_batch_size)
         for state, action, reward, next_state, done in mini_batch:
             target = reward
             if not done:
-                target = reward + self.configuration.gamma * self.predict_value(
+                target = reward + self.params.gamma * self.predict_value(
                     next_state)
             target_vec = self.model.predict(self.onehot(state))[0]
             target_vec[action] = target
             self.model.fit(
                 self.onehot(state),
-                target_vec.reshape(-1, self.configuration.num_actions),
+                target_vec.reshape(-1, self.params.num_actions),
                 epochs=1, verbose=0,
                 **self.callback_args)
 
     def onehot(self, state: int) -> np.ndarray:
-        return np.identity(self.configuration.num_states)[state:state + 1]
+        return np.identity(self.params.num_states)[state:state + 1]
 
     def predict(self, state) -> int:
         return int(
@@ -241,6 +242,6 @@ class Agent(Common):
         strategy = [
             np.argmax(
                 self.model.predict(self.onehot(i))[0])
-            for i in range(self.configuration.num_states)
+            for i in range(self.params.num_states)
         ]
         return strategy

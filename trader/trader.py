@@ -12,19 +12,19 @@ from agent import Agent
 
 if __name__ == "__main__":
     # Init
-    configuration = RLDictionary()
-    environment = Environment(configuration)
-    agent = Agent(configuration)
+    params = RLDictionary()
+    environment = Environment(params)
+    agent = Agent(params)
 
     # Learn
-    configuration.debug = True
+    params.debug = True
     strategy = agent.q_learn(environment, do_plot=True)
-    configuration.debug = False
+    params.debug = False
 
     # Test
     done = False
     total_reward = 0.
-    configuration.debug = True
+    params.debug = True
     state = environment.reset()
     while not done:
         action = environment.decide_next_action(state, strategy)
@@ -32,8 +32,8 @@ if __name__ == "__main__":
         total_reward += reward
         state = next_state
 
-    configuration.display.results(environment.portfolio, do_plot=True)
+    params.display.results(environment.portfolio, do_plot=True)
 
     # Save the model?
-    if configuration.save_model is True:
+    if params.save_model is True:
         agent.nn.save_model(agent.model)

@@ -12,7 +12,7 @@ from common import Common
 class Display(Common):
 
     def __init__(self, configuration):
-        self.configuration = configuration
+        self.params = configuration
 
     @staticmethod
     def strategy(trader, env, model, num_states, strategy):
@@ -45,7 +45,7 @@ class Display(Common):
         :return:
         """
         values = [t] + portfolio.values_to_report()
-        self.add_to_table(values, self.configuration.table_headers)
+        self.add_to_table(values, self.params.table_headers)
 
     def add_to_table(self, values_to_report, table_headers):
         """
@@ -58,7 +58,7 @@ class Display(Common):
             table_headers,
             values_to_report
         )))
-        self.configuration.results = self.configuration.results.append(
+        self.params.results = self.params.results.append(
             row, ignore_index=True)
 
     def report_final(self, portfolio):
@@ -88,8 +88,8 @@ class Display(Common):
         :param action_name:
         :return:
         """
-        last_index = self.configuration.results.shape[0] - 1
-        self.configuration.results.loc[last_index, 'action'] = action_name
+        last_index = self.params.results.shape[0] - 1
+        self.params.results.loc[last_index, 'action'] = action_name
 
     def report_reward(self, reward, current_state):
         """
@@ -98,9 +98,9 @@ class Display(Common):
         :param current_state:
         :return:
         """
-        last_index = self.configuration.results.shape[0] - 1
-        self.configuration.results.loc[last_index, 'reward'] = reward
-        self.configuration.results.loc[last_index, 'state'] = current_state
+        last_index = self.params.results.shape[0] - 1
+        self.params.results.loc[last_index, 'reward'] = reward
+        self.params.results.loc[last_index, 'state'] = current_state
 
     def progress(self, i, num_episodes, last_avg, start, end):
         """
@@ -156,7 +156,7 @@ class Display(Common):
         return
 
     def results(self, portfolio, do_plot=False):
-        df = self.configuration.results.copy()
+        df = self.params.results.copy()
         self.recolor_ref(df, 'forecast', 'price')
         self.reformat(df, 'price')
         self.reformat(df, 'value')
@@ -176,16 +176,16 @@ class Display(Common):
 
     def plot_value(self):
         plt.title('Price, forecast and P/L')
-        plt.scatter(range(self.configuration.results.shape[0]),
-                    self.configuration.results.loc[:, 'netValue'],
+        plt.scatter(range(self.params.results.shape[0]),
+                    self.params.results.loc[:, 'netValue'],
                     marker='.')
-        plt.plot(self.configuration.results.loc[:, 'netValue'],
+        plt.plot(self.params.results.loc[:, 'netValue'],
                  linewidth=0.3, c='k')
-        plt.plot(self.configuration.results.loc[:, 'price'], c='k')
-        plt.plot(self.configuration.results.loc[:, 'forecast'],
+        plt.plot(self.params.results.loc[:, 'price'], c='k')
+        plt.plot(self.params.results.loc[:, 'forecast'],
                  c='blue', linestyle=':')
-        plt.scatter(range(len(self.configuration.results.shares)),
-                    self.configuration.results.shares * 100, s=0.2)
+        plt.scatter(range(len(self.params.results.shares)),
+                    self.params.results.shares * 100, s=0.2)
         plt.axhline(y=0, c='r', linewidth=0.5)
         plt.show()
 
@@ -233,10 +233,10 @@ class Display(Common):
         :param start:
         :return:
         """
-        if (index % self.configuration.num_episodes_update == 0) or \
-                (index == (self.configuration.num_episodes - 1)):
+        if (index % self.params.num_episodes_update == 0) or \
+                (index == (self.params.num_episodes - 1)):
             end = time.time()
             if avg_rewards:
                 last_avg = avg_rewards[-1]
-            self.progress(index, self.configuration.num_episodes,
+            self.progress(index, self.params.num_episodes,
                           last_avg, start, end)

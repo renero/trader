@@ -26,14 +26,14 @@ epsilon_min: 0.02
 decay_factor: 0.995
 
 # When to perform learning
-train_steps: 4
+train_steps: 32
 start_steps: 100
 
 # Batch size for training the model
 batch_size: 32
 
 # Experience Replay batch size
-experience_replay: True
+experience_replay: False
 exp_batch_size: 16
 
 # TensorBoard?
@@ -93,7 +93,7 @@ action:
 
 # Environment variables
 environment:
-  initial_budget: 2200.
+  initial_budget: 100.
   consider_stop_loss: false
   stop_loss: .05
   proportional_reward: true
@@ -117,3 +117,6 @@ table_headers:
   - action
   - reward
   - state
+
+# Seed to be used
+seed: 25

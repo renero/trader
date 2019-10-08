@@ -26,9 +26,9 @@ class Portfolio(Common):
 
         # copy the contents of the dictionary passed as argument. This dict
         # contains the parameters read in the initialization.
-        self.configuration = configuration
-        self.display = self.configuration.display
-        self.environment = self.configuration.environment
+        self.params = configuration
+        self.display = self.params.display
+        self.environment = self.params.environment
 
         self.budget = self.environment.initial_budget
         self.initial_budget = self.environment.initial_budget
@@ -97,7 +97,7 @@ class Portfolio(Common):
         # Stack the current state into the history
         self.history.append({'price_': environment.price_,
                              'forecast_': environment.forecast_})
-        if len(self.history) > self.configuration.stack_size:
+        if len(self.history) > self.params.stack_size:
             self.history.pop(0)
 
     @property
