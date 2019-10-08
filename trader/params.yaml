@@ -40,7 +40,7 @@ exp_batch_size: 16
 tensorboard: False
 tbdir: ./graphs/
 
- Reduction factor is the amount by which the number of cells in the network
+# Reduction factor is the amount by which the number of cells in the network
 # is to be reduced. If 1.0, then the num of cells will be the number of
 # possible states times the number of actions.
 cells_reduction_factor: 0.25
@@ -99,10 +99,10 @@ environment:
   proportional_reward: true
   reward_do_nothing: -1
   reward_success_buy: 0
-  reward_positive_sell: +10
-  reward_negative_sell: -5
-  reward_failed_buy: -1
-  reward_failed_sell: -3
+  reward_positive_sell: +1
+  reward_negative_sell: -1
+  reward_failed_buy: -0.5
+  reward_failed_sell: -0.5
 
 # Log headers
 table_headers:

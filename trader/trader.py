@@ -6,9 +6,13 @@
 #   https://github.com/sonaam1234/DeepLearningInFinance
 #
 
+import warnings
+
+from agent import Agent
 from environment import Environment
 from rl_dictionary import RLDictionary
-from agent import Agent
+
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 if __name__ == "__main__":
     # Init
