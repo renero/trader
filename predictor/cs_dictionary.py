@@ -9,7 +9,6 @@ class CSDictionary(Dictionary):
         super().__init__(default_params_filename, **kwargs)
 
         arguments = Arguments(args, kwargs)
-        print(arguments)
         setattr(self, 'train', False)
         setattr(self, 'predict', False)
         setattr(self, arguments.args.action, True)
@@ -24,14 +23,6 @@ class CSDictionary(Dictionary):
 
         # Build a self with a sequential number associated to each action
         setattr(self, 'num_models', len(self.model_names.keys()))
-
-        #     self.action_id[tup[0]] = tup[1]
-        #
-        # # Overwrite attributes specified by argument.
-        # if self.arg_window_size is not None:
-        #     self.window_size = self.arg_window_size
-        # if self.arg_ticks_file is not None:
-        #     self.ticks_file = self.arg_ticks_file
 
         # Start the logger
         self.log = Logger(self.log_level)

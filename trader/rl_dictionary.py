@@ -1,5 +1,6 @@
 from pandas import DataFrame
 
+from arguments import Arguments
 from utils.dictionary import Dictionary
 from display import Display
 from utils.my_dict import MyDict
@@ -7,12 +8,24 @@ from utils.my_dict import MyDict
 
 class RLDictionary(Dictionary):
 
-    def __init__(self, default_params_filename='params.yaml', **kwargs):
+    def __init__(self, default_params_filename='params.yaml', *args, **kwargs):
 
         super().__init__(default_params_filename, **kwargs)
         # Check that I've states and actions to start playing with.
         if not (self.action and self.state):
             raise AssertionError('No states or actions defined in config file.')
+
+        # Read the arguments passed in CLI to override parameters
+        arguments = Arguments(args, kwargs)
+        # Define what to do
+        setattr(self, 'what_to_do', arguments.args.action)
+        # Override other potential parameters specified in command line.
+        if arguments.args.debug is True:
+            setattr(self, 'debug', True)
+        if arguments.args.epochs is not None:
+            setattr(self, 'num_episodes', int(arguments.args.epochs[0]))
+        if arguments.args.forecast is not None:
+            setattr(self, 'data_path', arguments.args.forecast[0])
 
         # Build a self with a sequential number associated to each action
         setattr(self, 'action_id', MyDict())

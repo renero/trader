@@ -11,7 +11,7 @@ data_path: ../output/forecast_acciona_2019.csv
 delimiter: ','
 
 # Wanna save the model after training?
-save_model: false
+save_model: true
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
@@ -47,7 +47,7 @@ cells_reduction_factor: 0.25
 
 # Num. of episodes to run simulate and learn
 # Every how many episodes display the update in q-learning?
-num_episodes: 500
+num_episodes: 300
 num_episodes_update: 10
 
 # How many previous states of the environment to store?
@@ -110,7 +110,7 @@ table_headers:
   - price
   - forecast
   - budget
-  - ivestment
+  - investment
   - value
   - netValue
   - shares

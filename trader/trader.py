@@ -5,7 +5,7 @@
 # Forecast for GoldPrice comes from the code in DeepLearninginFinance:
 #   https://github.com/sonaam1234/DeepLearningInFinance
 #
-
+import sys
 import warnings
 
 from agent import Agent
@@ -16,14 +16,12 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 if __name__ == "__main__":
     # Init
-    params = RLDictionary()
+    params = RLDictionary(args=sys.argv)
     environment = Environment(params)
     agent = Agent(params)
 
     # Learn
-    # params.debug = True
     strategy = agent.q_learn(environment, do_plot=True)
-    # params.debug = False
 
     # Test
     done = False

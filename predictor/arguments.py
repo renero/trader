@@ -8,7 +8,7 @@ class Arguments(object):
     def __init__(self, *args):
         parser = argparse.ArgumentParser()
 
-        parser.add_argument('action', default='predict',
+        parser.add_argument('action', nargs='?', default='predict',
                             choices=self.possible_actions)
         parser.add_argument('-t', '--ticks', nargs=1, type=str,
                             help='Ticks file to process')
