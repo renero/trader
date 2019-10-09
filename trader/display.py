@@ -61,7 +61,26 @@ class Display(Common):
         self.params.results = self.params.results.append(
             row, ignore_index=True)
 
-    def report_final(self, portfolio):
+    def results(self, portfolio, do_plot=False):
+        df = self.params.results.copy()
+        self.recolor_ref(df, 'forecast', 'price')
+        self.reformat(df, 'price')
+        self.reformat(df, 'value')
+        self.reformat(df, 'shares')
+        self.recolor(df, 'budget')
+        self.recolor(df, 'netValue')
+        self.recolor(df, 'investment')
+        self.recolor(df, 'reward')
+        print(tabulate(df,
+                       headers='keys',
+                       tablefmt='psql',
+                       showindex=False,
+                       floatfmt=['.0f'] + ['.1f' for i in range(6)]))
+        self.report_summary(portfolio)
+        if do_plot is True:
+            self.plot_value()
+
+    def report_summary(self, portfolio):
         # total outcome and final metrics.
         if portfolio.portfolio_value != 0.0:
             total = portfolio.budget + portfolio.portfolio_value
@@ -154,25 +173,6 @@ class Display(Common):
             ' | '.join([(lambda x: x[1:])(s) for s in
                         states.keys()])))
         return
-
-    def results(self, portfolio, do_plot=False):
-        df = self.params.results.copy()
-        self.recolor_ref(df, 'forecast', 'price')
-        self.reformat(df, 'price')
-        self.reformat(df, 'value')
-        self.reformat(df, 'shares')
-        self.recolor(df, 'budget')
-        self.recolor(df, 'netValue')
-        self.recolor(df, 'cashflow')
-        self.recolor(df, 'reward')
-        print(tabulate(df,
-                       headers='keys',
-                       tablefmt='psql',
-                       showindex=False,
-                       floatfmt=['.0f'] + ['.1f' for i in range(6)]))
-        self.report_final(portfolio)
-        if do_plot is True:
-            self.plot_value()
 
     def plot_value(self):
         plt.title('Price, forecast and P/L')

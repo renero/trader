@@ -16,8 +16,8 @@ models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
 load_model: false
-model_file: ../output/rl_model3.json
-weights_file: ../output/rl_model3.h5
+model_file: ../output/rl_model_forecast_acciona_20191.json
+weights_file: ../output/rl_model_forecast_acciona_20191.h5
 
 # Parameters for the Q-Learning function
 gamma: 0.95
@@ -99,8 +99,8 @@ environment:
   proportional_reward: true
   reward_do_nothing: -1
   reward_success_buy: 0
-  reward_positive_sell: +1
-  reward_negative_sell: -1
+  reward_positive_sell: +1.
+  reward_negative_sell: -1.
   reward_failed_buy: -0.5
   reward_failed_sell: -0.5
 
@@ -110,7 +110,7 @@ table_headers:
   - price
   - forecast
   - budget
-  - cashflow
+  - ivestment
   - value
   - netValue
   - shares

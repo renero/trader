@@ -43,7 +43,7 @@ class Portfolio(Common):
     def buy(self, num_shares: float = 1.0) -> object:
         purchase_amount = num_shares * self.latest_price
         if purchase_amount > self.budget:
-            self.display.report_action('n/a')
+            self.display.report_action('f.buy')
             self.reward = self.environment.reward_failed_buy
             return self.reward
 
@@ -60,9 +60,12 @@ class Portfolio(Common):
     def sell(self, num_shares=1.0):
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
-            self.display.report_action('n/a')
+            self.display.report_action('f.sell')
             self.reward = self.environment.reward_failed_sell
             return self.reward
+
+        # what is the value of my investment before selling?
+        netValue_before = self.portfolio_value - self.investment
 
         self.budget += sell_price
         self.investment -= sell_price
@@ -70,13 +73,17 @@ class Portfolio(Common):
         self.portfolio_value -= sell_price
         self.movements.append((self.SELL, num_shares, self.latest_price))
 
+        # what is the value of my investment before selling?
+        netValue_after = self.portfolio_value - self.investment
+
         # Reward, in case of sell, can be proportional to gain/loss, if not
         # set that multiplier to 1.0
         gain_loss = 1.0
         if self.environment.proportional_reward is True:
             gain_loss = self.budget > self.initial_budget
 
-        if self.budget > self.initial_budget:
+        # if self.budget > self.initial_budget:
+        if netValue_after > 0:
             self.reward = self.environment.reward_positive_sell * gain_loss
         else:
             self.reward = self.environment.reward_negative_sell * gain_loss

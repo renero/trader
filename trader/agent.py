@@ -60,7 +60,7 @@ class Agent(Common):
                                   self.params.num_states,
                                   strategy)
 
-        self.log('\nTime elapsed: {}'.format(
+        self.log('Time elapsed: {}'.format(
             self.params.display.timer(time.time() - start)))
         return strategy
 

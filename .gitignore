@@ -166,3 +166,4 @@ dmypy.json
 
 # Pycharm
 .idea/
+/resources/Hands-On-Reinforcement-Learning-with-Python/

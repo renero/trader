@@ -21,9 +21,9 @@ if __name__ == "__main__":
     agent = Agent(params)
 
     # Learn
-    params.debug = True
+    # params.debug = True
     strategy = agent.q_learn(environment, do_plot=True)
-    params.debug = False
+    # params.debug = False
 
     # Test
     done = False
