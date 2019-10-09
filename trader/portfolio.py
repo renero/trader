@@ -96,8 +96,8 @@ class Portfolio(Common):
         """
         self.budget += sell_price
         self.investment -= sell_price
-        if self.investment < 0.0:
-            self.investment = 0.0
+        # if self.investment < 0.0:
+        #     self.investment = 0.0
         self.shares -= num_shares
         self.portfolio_value -= sell_price
         self.movements.append((self.SELL, num_shares, self.latest_price))
@@ -141,8 +141,8 @@ class Portfolio(Common):
 
     def values_to_report(self):
         net_value = self.portfolio_value - self.investment
-        if net_value < 0.0:
-            net_value = 0.0
+        # if net_value < 0.0:
+        #     net_value = 0.0
         return [
             self.latest_price,
             self.forecast,

@@ -5,6 +5,7 @@ from keras.layers import Dense, InputLayer
 from keras.models import Sequential, model_from_json
 
 from common import Common
+from file_io import valid_output_name
 from utils.dictionary import Dictionary
 
 
@@ -46,23 +47,10 @@ class RL_NN(Common):
 
     def save_model(self, model):
         self.log('\nSaving model, weights and results.')
-        # Check if file exists to abort saving operation
-        solved = False
-        char_to_append = ''
+
         fname = 'rl_model_' + splitext(
             basename(self.params.data_path))[0]
-        model_name = os.path.join(self.params.models_dir,
-                                  '{}{}.json'.format(fname, char_to_append))
-        while not solved:
-            model_name = os.path.join(self.params.models_dir,
-                                      '{}{}.json'.format(fname, char_to_append))
-            if os.path.isfile(model_name) is not True:
-                solved = True
-            else:
-                if char_to_append == '':
-                    char_to_append = str('1')
-                else:
-                    char_to_append = str(int(char_to_append) + 1)
+        model_name = valid_output_name(fname, self.params.models_dir, 'json')
 
         # serialize model to JSON
         model_json = model.to_json()
@@ -71,22 +59,26 @@ class RL_NN(Common):
         self.log('  Model: {}'.format(model_name))
 
         # Serialize weights to HDF5
-        weights_name = os.path.join(self.params.models_dir,
-                                    '{}{}.h5'.format(fname, char_to_append))
+        weights_name = model_name.replace('.json', '.h5')
         model.save_weights(weights_name)
         print('  Weights: {}'.format(weights_name))
 
         # Save also the results table
-        results_name = os.path.join(self.params.models_dir,
-                                    '{}{}.csv'.format(fname, char_to_append))
+        results_name = model_name.replace('.json', '.csv')
         self.params.results.to_csv(results_name,
-                                          sep=',',
-                                          header=True,
-                                          float_format='%.2f')
+                                   sep=',',
+                                   index=False,
+                                   header=True,
+                                   float_format='%.2f')
         print('  Results: {}'.format(results_name))
 
     def load_model(self, model, weights):
-        # load json and create model
+        """
+        load json and create model
+        :param model:
+        :param weights:
+        :return:
+        """
         json_file = open(model, 'r')
         loaded_model_json = json_file.read()
         json_file.close()
