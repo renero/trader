@@ -5,7 +5,6 @@ from rl_state import RL_State
 
 
 class state_forecast(RL_State):
-
     @staticmethod
     def update_state(portfolio: Portfolio):
         # guess what the state, given the forecast
@@ -19,7 +18,6 @@ class state_forecast(RL_State):
 
 
 class state_got_shares(RL_State):
-
     @staticmethod
     def update_state(portfolio: Portfolio):
         # Do I have shares in my portfolio?
@@ -31,7 +29,6 @@ class state_got_shares(RL_State):
 
 
 class state_last_prediction(RL_State):
-
     @staticmethod
     def update_state(portfolio: Portfolio):
         sign = lambda x: copysign(1, x)
@@ -49,7 +46,6 @@ class state_last_prediction(RL_State):
 
 
 class state_portfolio_value(RL_State):
-
     @staticmethod
     def update_state(portfolio: Portfolio):
         if portfolio.budget == portfolio.initial_budget:
@@ -62,7 +58,6 @@ class state_portfolio_value(RL_State):
 
 
 class state_pplast_pred(RL_State):
-
     @staticmethod
     def update_state(portfolio: Portfolio):
         sign = lambda x: copysign(1, x)
@@ -85,7 +80,6 @@ class state_pplast_pred(RL_State):
 
 
 class state_prevlast_pred(RL_State):
-
     @staticmethod
     def update_state(portfolio: Portfolio):
         sign = lambda x: copysign(1, x)
@@ -105,7 +99,6 @@ class state_prevlast_pred(RL_State):
 
 
 class state_stop_loss(RL_State):
-
     @staticmethod
     def update_state(portfolio: Portfolio):
         net_value = portfolio.portfolio_value - portfolio.investment
@@ -124,3 +117,11 @@ class state_stop_loss(RL_State):
             else:
                 value = 'NOSTPLOS'
         return value
+
+
+class state_what_can_do(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        can_buy = 'CB' if portfolio.can_buy else 'NB'
+        can_sell = 'CS' if portfolio.can_sell else 'NS'
+        return can_buy + can_sell

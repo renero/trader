@@ -25,12 +25,16 @@ class Environment(Common):
     stop_loss_alert: bool = False
 
     def __init__(self, configuration):
-        np.random.seed(1)
-        self.configuration = configuration
-        self.display = self.configuration.display
+        self.params = configuration
+        self.display = self.params.display
 
-        self.states = StatesCombiner(self.configuration.states_list)
-        self.read_market_data(self.configuration.data_path)
+        if 'seed' in self.params:
+            np.random.seed(self.params.seed)
+        else:
+            np.random.seed(1)
+
+        self.states = StatesCombiner(self.params.states_list)
+        self.read_market_data(self.params.data_path)
         self.init_environment(creation_time=True)
 
     def init_environment(self, creation_time):
@@ -41,7 +45,7 @@ class Environment(Common):
         :return: The initial state.
         """
         self.update_market_price()
-        self.portfolio = Portfolio(self.configuration,
+        self.portfolio = Portfolio(self.params,
                                    self.price_,
                                    self.forecast_)
         if creation_time is not True:
@@ -56,8 +60,8 @@ class Environment(Common):
         self.done_ = False
         self.t = 0
         del self.portfolio
-        self.configuration.results.drop(self.configuration.results.index,
-                                        inplace=True)
+        self.params.results.drop(self.params.results.index,
+                                 inplace=True)
         return self.init_environment(creation_time=False)
 
     def read_market_data(self, path):
@@ -66,10 +70,10 @@ class Environment(Common):
         :param path:
         :return:
         """
-        if 'delimiter' not in self.configuration:
+        if 'delimiter' not in self.params:
             delimiter = ','
         else:
-            delimiter = self.configuration.delimiter
+            delimiter = self.params.delimiter
         self.data_ = pd.read_csv(path, delimiter)
         self.max_states_ = self.data_.shape[0]
 
@@ -94,7 +98,7 @@ class Environment(Common):
         # Iterate through the list of states defined in the parameters file
         # and call the update_state() static method in them.
         new_substates = []
-        for module_param_name in self.configuration.state.keys():
+        for module_param_name in self.params.state.keys():
             # The extended classes are defined in the params file and must
             # start with the 'state_' string.
             module_name = 'state_' + module_param_name
@@ -113,17 +117,17 @@ class Environment(Common):
         :param action: the action.
         :return: state, reward, done and iter count.
         """
-        assert action < self.configuration.num_actions, \
+        assert action < self.params.num_actions, \
             'Action ID must be between 0 and {}'.format(
-                self.configuration.num_actions)
+                self.params.num_actions)
 
         # Call to the proper portfolio method, based on the action number
         # passed to this argument.
         self.reward_ = getattr(self.portfolio,
-                               self.configuration.action_name[action])()
+                               self.params.action_name[action])()
 
         # If I'm in stop loss situation, rewards gets a different value
-        self.reward_ = self.fix_reward(self.configuration.action_name[action])
+        self.reward_ = self.fix_reward(self.params.action_name[action])
         self.display.report_reward(
             self.reward_, self.states.name(self.current_state_))
 
@@ -154,12 +158,12 @@ class Environment(Common):
         # I've no money to buy.
         if action_name == 'buy' and \
                 self.portfolio.latest_price > self.portfolio.budget:
-            return self.configuration.environment.reward_stoploss_buy
+            return self.params.environment.reward_stoploss_buy
         # Fix the reward if I'm trying to sell and I DO have shares to sell
         elif action_name == 'sell' and self.portfolio.shares > 0.:
-            return self.configuration.environment.reward_stoploss_sell
+            return self.params.environment.reward_stoploss_sell
         else:
-            return self.configuration.environment.reward_stoploss_donothing
+            return self.params.environment.reward_stoploss_donothing
 
     @property
     def stop_loss(self) -> bool:
@@ -170,7 +174,7 @@ class Environment(Common):
         :return: True or False
         """
         # Quick jump-off in case I don't want to consider stop loss cases.
-        if self.configuration.environment.consider_stop_loss is False:
+        if self.params.environment.consider_stop_loss is False:
             return False
 
         net_value = self.portfolio.portfolio_value - self.portfolio.investment

@@ -1,3 +1,5 @@
+import math
+
 from common import Common
 from utils.dictionary import Dictionary
 
@@ -19,16 +21,13 @@ class Portfolio(Common):
     BUY = +1
     SELL = -1
 
-    def __init__(self,
-                 configuration,
-                 initial_price=0.,
-                 forecast=0.):
+    def __init__(self, configuration, initial_price=0., forecast=0.):
 
         # copy the contents of the dictionary passed as argument. This dict
         # contains the parameters read in the initialization.
-        self.configuration = configuration
-        self.display = self.configuration.display
-        self.environment = self.configuration.environment
+        self.params = configuration
+        self.display = self.params.display
+        self.environment = self.params.environment
 
         self.budget = self.environment.initial_budget
         self.initial_budget = self.environment.initial_budget
@@ -43,7 +42,7 @@ class Portfolio(Common):
     def buy(self, num_shares: float = 1.0) -> object:
         purchase_amount = num_shares * self.latest_price
         if purchase_amount > self.budget:
-            self.display.report_action('n/a')
+            self.display.report_action('f.buy')
             self.reward = self.environment.reward_failed_buy
             return self.reward
 
@@ -58,31 +57,52 @@ class Portfolio(Common):
         return self.reward
 
     def sell(self, num_shares=1.0):
+        """
+        SELL Operation
+        :param num_shares: number of shares. Deault to 1.
+        :return: The reward obtained by the operation.
+        """
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
-            self.display.report_action('n/a')
+            self.display.report_action('f.sell')
             self.reward = self.environment.reward_failed_sell
             return self.reward
 
-        self.budget += sell_price
-        self.investment -= sell_price
-        self.shares -= num_shares
-        self.portfolio_value -= sell_price
-        self.movements.append((self.SELL, num_shares, self.latest_price))
+        net_value_after = self.update_after_sell(num_shares, sell_price)
 
         # Reward, in case of sell, can be proportional to gain/loss, if not
         # set that multiplier to 1.0
         gain_loss = 1.0
         if self.environment.proportional_reward is True:
-            gain_loss = self.budget > self.initial_budget
+            gain_loss = abs(net_value_after) + 1.0
 
-        if self.budget > self.initial_budget:
+        if net_value_after >= 0:
             self.reward = self.environment.reward_positive_sell * gain_loss
         else:
             self.reward = self.environment.reward_negative_sell * gain_loss
 
         self.display.report_action('sell')
         return self.reward
+
+    def update_after_sell(self, num_shares, sell_price):
+        """
+        Update specific portfolio parameters after selling
+        :param num_shares: the nr. of shares sold
+        :param sell_price: the price at which the selling takes place
+        :return:
+        """
+        self.budget += sell_price
+        self.investment -= sell_price
+        # if self.investment < 0.0:
+        #     self.investment = 0.0
+        self.shares -= num_shares
+        self.portfolio_value -= sell_price
+        self.movements.append((self.SELL, num_shares, self.latest_price))
+
+        # what is the value of my investment after selling?
+        # net_value_after = self.portfolio_value - sell_price
+        net_value_after = self.portfolio_value - self.investment
+        return net_value_after
 
     def update(self, price, forecast):
         self.portfolio_value = self.shares * price
@@ -97,7 +117,7 @@ class Portfolio(Common):
         # Stack the current state into the history
         self.history.append({'price_': environment.price_,
                              'forecast_': environment.forecast_})
-        if len(self.history) > self.configuration.stack_size:
+        if len(self.history) > self.params.stack_size:
             self.history.pop(0)
 
     @property
@@ -116,12 +136,23 @@ class Portfolio(Common):
     def prevlast_price(self):
         return self.history[-2]['price_']
 
+    @property
+    def can_buy(self) -> bool:
+        return self.budget >= self.latest_price
+
+    @property
+    def can_sell(self) -> bool:
+        return self.shares > 0.
+
     def values_to_report(self):
+        net_value = self.portfolio_value - self.investment
+        # if net_value < 0.0:
+        #     net_value = 0.0
         return [
             self.latest_price,
             self.forecast,
             self.budget,
             self.investment,
             self.portfolio_value,
-            self.portfolio_value - self.investment,
+            net_value,
             self.shares]
