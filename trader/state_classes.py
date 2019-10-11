@@ -48,9 +48,10 @@ class state_last_prediction(RL_State):
 class state_portfolio_value(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
-        if portfolio.budget == portfolio.initial_budget:
+        value = portfolio.portfolio_value - portfolio.investment
+        if value == 0:
             value = 'EVEN'
-        elif portfolio.budget > portfolio.initial_budget:
+        elif value > 0:
             value = 'WINN'
         else:
             value = 'LOSE'
