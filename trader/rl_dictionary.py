@@ -20,6 +20,7 @@ class RLDictionary(Dictionary):
         # Read the arguments passed in CLI to override parameters
         arguments = Arguments(args, kwargs)
         # Define what to do
+        setattr(self, 'possible_actions', arguments.possible_actions)
         setattr(self, 'what_to_do', arguments.args.action)
         # Override other potential parameters specified in command line.
         if arguments.args.debug is True:

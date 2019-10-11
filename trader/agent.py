@@ -29,17 +29,21 @@ class Agent(Common):
 
     def q_load(self,
                env: Environment,
+               retrain: bool = False,
                display_strategy: bool = False) -> list:
         """
         Load an strategy to follow over a given environment, using RL,
         and acts following the strategy defined on it.
         :type env: Environment
+        :param retrain: If this flag is set to true, then compile the loaded
+        model to continue learning over it.
         :param display_strategy:
         """
         # create the Keras model and learn, or load it from disk.
         self.model = self.nn.load_model(self.params.model_file,
                                         self.params.weights_file)
-
+        if retrain is True:
+            self.model = self.nn.compile_model(self.model)
         # Extract the strategy matrix from the model.
         strategy = self.get_strategy()
         if display_strategy:
@@ -162,29 +166,6 @@ class Agent(Common):
         else:
             action = self.predict(state)
         return action
-
-    def step_learn(self, state, action, reward, new_state):
-        """
-        Fit the NN model to predict the action, given the action and
-        current state.
-        :param state:
-        :param action:
-        :param reward:
-        :param new_state:
-        :return: the loss and the metric resulting from the training.
-        """
-        target = reward + self.params.gamma * self.predict_value(
-            new_state)
-        target_vec = self.model.predict(self.onehot(state))[0]
-        target_vec[action] = target
-
-        history = self.model.fit(
-            self.onehot(state),
-            target_vec.reshape(-1, self.params.num_actions),
-            epochs=1, verbose=0, **self.callback_args
-        )
-        return history.history['loss'][0], \
-               history.history['mean_absolute_error'][0]
 
     def minibatch_learn(self, batch_size):
         """

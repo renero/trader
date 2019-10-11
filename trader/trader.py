@@ -21,8 +21,8 @@ if __name__ == "__main__":
     agent = Agent(params)
 
     # Flags with the actions specified in arguments
-    flag = {(key, params.what_to_do == key) for key in
-            params.arguments.possible_actions}
+    flag = {key: params.what_to_do == key for key in
+            params.possible_actions}
 
     # Do something
     if flag['simulate'] is True:
@@ -30,7 +30,7 @@ if __name__ == "__main__":
         agent.simulate(environment, strategy)
     elif flag['learn'] or flag['retrain']:
         if flag['retrain']:
-            agent.q_load(environment)
+            agent.q_load(environment, retrain=flag['retrain'])
         strategy = agent.q_learn(environment,
                                  fresh_model=flag['learn'],
                                  do_plot=True)

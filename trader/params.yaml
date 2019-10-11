@@ -16,8 +16,8 @@ models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
 load_model: false
-model_file: ../output/rl_model_forecast_acciona_2019_1.json
-weights_file: ../output/rl_model_forecast_acciona_2019_1.h5
+model_file: ../output/rl_model_forecast_acciona_2018b.json
+weights_file: ../output/rl_model_forecast_acciona_2018b.h5
 
 # Parameters for the Q-Learning function
 gamma: 0.95
