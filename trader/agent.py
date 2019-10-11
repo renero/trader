@@ -52,18 +52,22 @@ class Agent(Common):
 
     def q_learn(self,
                 env: Environment,
+                fresh_model: bool = True,
                 display_strategy: bool = False,
                 do_plot: bool = False) -> list:
         """
         Learns an strategy to follow over a given environment,
         using RL.
         :type env: Environment
+        :param fresh_model: if False, it does not create the NN from scratch,
+            but, it uses the one previously loaded.
         :param display_strategy:
         :type do_plot: bool
         """
         start = time.time()
         # create the Keras model and learn, or load it from disk.
-        self.model = self.nn.create_model()
+        if fresh_model is True:
+            self.model = self.nn.create_model()
         avg_rewards, avg_loss, avg_mae = self.reinforce_learn(env)
 
         # display anything?

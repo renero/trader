@@ -20,21 +20,25 @@ if __name__ == "__main__":
     environment = Environment(params)
     agent = Agent(params)
 
-    # Learn
-    if params.what_to_do == 'simulate':
+    # Flags with the actions specified in arguments
+    flag = {(key, params.what_to_do == key) for key in
+            params.arguments.possible_actions}
+
+    # Do something
+    if flag['simulate'] is True:
         strategy = agent.q_load(environment)
-        agent.simulate(environment,strategy )
-    elif params.what_to_do == 'learn':
-        strategy = agent.q_learn(environment, do_plot=True)
+        agent.simulate(environment, strategy)
+    elif flag['learn'] or flag['retrain']:
+        if flag['retrain']:
+            agent.q_load(environment)
+        strategy = agent.q_learn(environment,
+                                 fresh_model=flag['learn'],
+                                 do_plot=True)
         # Save the model?
         if params.save_model is True:
             agent.nn.save_model(agent.model)
         # Simulate what has been learnt with the data.
         agent.simulate(environment, strategy)
-    elif params.what_to_do == 'retrain':
-        print('Still do not know how to retrain an existing model!')
-        exit(0)
     else:  # predict
-        print('Still do not know how to performa single prediction!')
+        print('Still do not know how to perform a single prediction!')
         exit(0)
-

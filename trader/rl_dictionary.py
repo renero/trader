@@ -8,6 +8,8 @@ from utils.my_dict import MyDict
 
 class RLDictionary(Dictionary):
 
+    arguments: Arguments = None
+
     def __init__(self, default_params_filename='params.yaml', *args, **kwargs):
 
         super().__init__(default_params_filename, **kwargs)
