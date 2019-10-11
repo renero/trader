@@ -7,17 +7,17 @@
 debug: true
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../output/forecast_acciona_2019.csv
+data_path: ../output/forecast_acciona_2018b.csv
 delimiter: ','
 
 # Wanna save the model after training?
-save_model: true
+save_model: false
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
-load_model: false
-model_file: ../output/rl_model_forecast_acciona_20191.json
-weights_file: ../output/rl_model_forecast_acciona_20191.h5
+load_model: true
+model_file: ../output/rl_model_forecast_acciona_2019_1.json
+weights_file: ../output/rl_model_forecast_acciona_2019_1.h5
 
 # Parameters for the Q-Learning function
 gamma: 0.95
