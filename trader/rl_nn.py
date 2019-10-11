@@ -14,30 +14,67 @@ class RL_NN(Common):
     def __init__(self, configuration: Dictionary):
         self.params = configuration
 
-    def create_model(self) -> Sequential:
-        num_cells = int(
-            self.params.num_states * \
-            self.params.num_actions * \
-            self.params.cells_reduction_factor)
-        self.log('Default cells: {}, but truncated to 64'.format(num_cells))
-        num_cells = 64
+    # def create_model(self) -> Sequential:
+    #     num_cells = int(
+    #         self.params.num_states * \
+    #         self.params.num_actions * \
+    #         self.params.cells_reduction_factor)
+    #     self.log('Default cells: {}, but truncated to 64'.format(num_cells))
+    #     num_cells = 64
+    #
+    #     model = Sequential()
+    #     model.add(
+    #         InputLayer(batch_input_shape=(None, self.params.num_states)))
+    #     model.add(Dense(
+    #         num_cells,
+    #         input_shape=(self.params.num_states,),
+    #         activation='relu'))
+    #     model.add(Dense(32, activation='relu'))
+    #     model.add(Dense(8, activation='relu'))
+    #     model.add(
+    #         Dense(
+    #             self.params.num_actions,
+    #             input_shape=(
+    #                 num_cells,),
+    #             activation='linear'))
+    #     model.compile(loss='mse', optimizer='adam', metrics=['mae'])
+    #
+    #     if self.params.debug is True:
+    #         self.log('Model Summary')
+    #         model.summary()
+    #
+    #     return model
 
+    def create_model(self) -> Sequential:
         model = Sequential()
+
+        # Input layer
         model.add(
             InputLayer(batch_input_shape=(None, self.params.num_states)))
-        model.add(Dense(
-            num_cells,
-            input_shape=(self.params.num_states,),
-            activation='relu'))
-        model.add(Dense(32, activation='relu'))
-        model.add(Dense(8, activation='relu'))
+        first_layer = True
+
+        # Create all the layers
+        for num_cells in self.params.deep_qnet.hidden_layers:
+            if first_layer:
+                model.add(Dense(
+                    num_cells,
+                    input_shape=(self.params.num_states,),
+                    activation=self.params.deep_qnet.activation))
+                first_layer = False
+            else:
+                model.add(Dense(num_cells,
+                                activation=self.params.deep_qnet.activation))
+
+        # Output Layer
+        last_layer_cells = self.params.deep_qnet.hidden_layers[-1]
         model.add(
-            Dense(
-                self.params.num_actions,
-                input_shape=(
-                    num_cells,),
-                activation='linear'))
-        model.compile(loss='mse', optimizer='adam', metrics=['mae'])
+            Dense(self.params.num_actions, input_shape=(last_layer_cells,),
+                  activation='linear'))
+
+        model.compile(
+            loss=self.params.deep_qnet.loss,
+            optimizer=self.params.deep_qnet.optimizer,
+            metrics=self.params.deep_qnet.metrics)
 
         if self.params.debug is True:
             self.log('Model Summary')

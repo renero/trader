@@ -42,15 +42,3 @@ class Dictionary(MyDict):
                 print(exc)
 
         self.add_dict(self, params)
-
-    # @property
-    # def save_model(self):
-    #     return self._save_model
-    #
-    # @property
-    # def state(self):
-    #     return self._state
-    #
-    #
-    #
-    #

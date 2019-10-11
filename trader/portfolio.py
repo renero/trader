@@ -21,10 +21,7 @@ class Portfolio(Common):
     BUY = +1
     SELL = -1
 
-    def __init__(self,
-                 configuration,
-                 initial_price=0.,
-                 forecast=0.):
+    def __init__(self, configuration, initial_price=0., forecast=0.):
 
         # copy the contents of the dictionary passed as argument. This dict
         # contains the parameters read in the initialization.
@@ -138,6 +135,14 @@ class Portfolio(Common):
     @property
     def prevlast_price(self):
         return self.history[-2]['price_']
+
+    @property
+    def can_buy(self) -> bool:
+        return self.budget >= self.latest_price
+
+    @property
+    def can_sell(self) -> bool:
+        return self.shares > 0.
 
     def values_to_report(self):
         net_value = self.portfolio_value - self.investment

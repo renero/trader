@@ -69,6 +69,12 @@ state:
     names:
       - YESHAVE
       - NOTHAVE
+  what_can_do:
+    names:
+      - NBNS          # No BUY, No SELL
+      - CBNS          # Can BUY, No SELL
+      - CBCS          # Can Buy, Can SELL
+      - NBCS          # No BUY, Can SELL
   last_prediction:
     names:
       - PUNKNW
@@ -120,3 +126,15 @@ table_headers:
 
 # Seed to be used
 seed: 25
+
+# Network parameters
+deep_qnet:
+  hidden_layers:
+    - 64
+    - 32
+    - 8
+  activation: relu
+  loss: mse
+  optimizer: adam
+  metrics:
+    - mae
