@@ -61,7 +61,7 @@ class Display(Common):
         self.params.results = self.params.results.append(
             row, ignore_index=True)
 
-    def results(self, portfolio, do_plot=False):
+    def summary(self, portfolio, do_plot=False):
         df = self.params.results.copy()
         self.recolor_ref(df, 'forecast', 'price')
         self.reformat(df, 'price')
@@ -76,12 +76,12 @@ class Display(Common):
                        tablefmt='psql',
                        showindex=False,
                        floatfmt=['.0f'] + ['.1f' for i in range(6)]))
-        self.report_summary(portfolio)
+        self.report_totals(portfolio)
         if do_plot is True:
             # self.plot_value()
             self.plot_results(self.params.results)
 
-    def report_summary(self, portfolio):
+    def report_totals(self, portfolio):
         # total outcome and final metrics.
         if portfolio.portfolio_value != 0.0:
             total = portfolio.budget + portfolio.portfolio_value

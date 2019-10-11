@@ -27,12 +27,35 @@ class Agent(Common):
                 histogram_freq=0, write_graph=True, write_images=False)
             self.callback_args = {'callbacks': self.tensorboard}
 
+    def q_load(self,
+               env: Environment,
+               display_strategy: bool = False) -> list:
+        """
+        Load an strategy to follow over a given environment, using RL,
+        and acts following the strategy defined on it.
+        :type env: Environment
+        :param display_strategy:
+        """
+        # create the Keras model and learn, or load it from disk.
+        self.model = self.nn.load_model(self.params.model_file,
+                                        self.params.weights_file)
+
+        # Extract the strategy matrix from the model.
+        strategy = self.get_strategy()
+        if display_strategy:
+            self.display.strategy(self,
+                                  env,
+                                  self.model,
+                                  self.params.num_states,
+                                  strategy)
+        return strategy
+
     def q_learn(self,
                 env: Environment,
                 display_strategy: bool = False,
                 do_plot: bool = False) -> list:
         """
-        Learns or Load an strategy to follow over a given environment,
+        Learns an strategy to follow over a given environment,
         using RL.
         :type env: Environment
         :param display_strategy:
@@ -40,12 +63,8 @@ class Agent(Common):
         """
         start = time.time()
         # create the Keras model and learn, or load it from disk.
-        if self.params.load_model is True:
-            self.model = self.nn.load_model(self.params.model_file,
-                                            self.params.weights_file)
-        else:
-            self.model = self.nn.create_model()
-            avg_rewards, avg_loss, avg_mae = self.reinforce_learn(env)
+        self.model = self.nn.create_model()
+        avg_rewards, avg_loss, avg_mae = self.reinforce_learn(env)
 
         # display anything?
         if do_plot is True and self.params.load_model is False:
@@ -245,3 +264,21 @@ class Agent(Common):
             for i in range(self.params.num_states)
         ]
         return strategy
+
+    def simulate(self, environment, strategy):
+        """
+        Simulate over a dataset, given a strategy and an environment.
+        :param environment:
+        :param strategy:
+        :return:
+        """
+        done = False
+        total_reward = 0.
+        self.params.debug = True
+        state = environment.reset()
+        while not done:
+            action = environment.decide_next_action(state, strategy)
+            next_state, reward, done, _ = environment.step(action)
+            total_reward += reward
+            state = next_state
+        self.params.display.summary(environment.portfolio, do_plot=True)
