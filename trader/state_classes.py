@@ -4,6 +4,19 @@ from portfolio import Portfolio
 from rl_state import RL_State
 
 
+class state_portfolio_value(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        value = portfolio.gain
+        if value == 0:
+            value = 'EVEN'
+        elif value > 0:
+            value = 'WINN'
+        else:
+            value = 'LOSE'
+        return value
+
+
 class state_forecast(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
@@ -43,19 +56,6 @@ class state_last_prediction(RL_State):
             return 'PVALID'
         else:
             return 'PWRONG'
-
-
-class state_portfolio_value(RL_State):
-    @staticmethod
-    def update_state(portfolio: Portfolio):
-        value = portfolio.portfolio_value - portfolio.investment
-        if value == 0:
-            value = 'EVEN'
-        elif value > 0:
-            value = 'WINN'
-        else:
-            value = 'LOSE'
-        return value
 
 
 class state_pplast_pred(RL_State):

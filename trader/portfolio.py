@@ -137,6 +137,10 @@ class Portfolio(Common):
         return self.history[-2]['price_']
 
     @property
+    def gain(self):
+        return self.portfolio_value - self.investment
+
+    @property
     def can_buy(self) -> bool:
         return self.budget >= self.latest_price
 
