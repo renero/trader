@@ -101,7 +101,7 @@ class Environment(Common):
         for module_param_name in self.params.state.keys():
             # The extended classes are defined in the params file and must
             # start with the 'state_' string.
-            module_name = 'state_' + module_param_name
+            module_name = 'State' + module_param_name
             module = importlib.import_module('state_classes')  # module_name)
             state_class = getattr(module, module_name)
             new_substate = state_class.update_state(self.portfolio)

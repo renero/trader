@@ -7,7 +7,6 @@ from utils.my_dict import MyDict
 
 
 class RLDictionary(Dictionary):
-
     arguments: Arguments = None
 
     def __init__(self, default_params_filename='params.yaml', *args, **kwargs):
@@ -46,8 +45,6 @@ class RLDictionary(Dictionary):
         # Build a list of lists with the names of all possible states.
         setattr(self, 'states_list', list())
         for state in self.state.keys():
-            # if state[0] == '_':
-            #   self.states_list.append(self.state[state].names)
             self.states_list.append(self.state[state].names)
 
         # Compute the total number of states as the multiplication of the

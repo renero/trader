@@ -55,41 +55,74 @@ stack_size: 3
 
 # Different states in which the environment might be.
 state:
-  portfolio_value:
+  Gain:
     names:
-      - EVEN
-      - WINN
+      - GAIN
       - LOSE
-  forecast:
+  HaveShares:
     names:
-      - STAL
-      - GOUP
-      - DOWN
-  got_shares:
+      - HAVE
+      - DONT
+  CanBuy:
     names:
-      - YESHAVE
-      - NOTHAVE
-  what_can_do:
+      - BUY
+      - NOB
+  CanSell:
     names:
-      - NBNS          # No BUY, No SELL
-      - CBNS          # Can BUY, No SELL
-      - CBCS          # Can Buy, Can SELL
-      - NBCS          # No BUY, Can SELL
-  last_prediction:
+      - SELL
+      - NOS
+  PredUpward:
     names:
-      - PUNKNW
-      - PVALID
-      - PWRONG
-  prevlast_pred:
+      - UPW
+      - DWN
+  LastPredOk:
     names:
-      - PPUNKNW
-      - PPVALID
-      - PPWRONG
-  pplast_pred:
+      - LOK
+      - LNOK
+  PrevLastPredOk:
     names:
-      - PPPUNKNW
-      - PPPVALID
-      - PPPWRONG
+      - PLOK
+      - PLNOK
+  PrevPrevLastPredOk:
+    names:
+      - PPLOK
+      - PPLNOK
+
+#  portfolio_value:
+#    names:
+#      - EVEN
+#      - WINN
+#      - LOSE
+#  forecast:
+#    names:
+#      - STAL
+#      - GOUP
+#      - DOWN
+#  got_shares:
+#    names:
+#      - YESHAVE
+#      - NOTHAVE
+#  what_can_do:
+#    names:
+#      - NBNS          # No BUY, No SELL
+#      - CBNS          # Can BUY, No SELL
+#      - CBCS          # Can Buy, Can SELL
+#      - NBCS          # No BUY, Can SELL
+#  last_prediction:
+#    names:
+#      - PUNKNW
+#      - PVALID
+#      - PWRONG
+#  prevlast_pred:
+#    names:
+#      - PPUNKNW
+#      - PPVALID
+#      - PPWRONG
+#  pplast_pred:
+#    names:
+#      - PPPUNKNW
+#      - PPPVALID
+#      - PPPWRONG
 
 # Actions to be accomplished by the agent (Portfolio class)
 action:

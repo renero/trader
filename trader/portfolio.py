@@ -133,11 +133,11 @@ class Portfolio(Common):
 
     @property
     def gain(self):
-        return self.portfolio_value - self.investment
+        return (self.portfolio_value - self.investment) >= 0
 
     @property
     def have_shares(self):
-        return self.shares
+        return self.shares > 0
 
     @property
     def can_buy(self) -> bool:
@@ -148,15 +148,14 @@ class Portfolio(Common):
         return self.shares > 0.
 
     @property
-    def forecast_direction(self):
-        if self.latest_price <= self.last_forecast:
-            return +1.
-        else:
-            return -1.
+    def prediction_upward(self):
+        return self.latest_price <= self.last_forecast
 
     @property
     def last_forecast(self):
-        return self.history[-1]['forecast_']
+        if len(self.history) > 0:
+            return self.history[-1]['forecast_']
+        return 0.
 
     @property
     def prevlast_forecast(self):
