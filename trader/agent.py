@@ -27,25 +27,52 @@ class Agent(Common):
                 histogram_freq=0, write_graph=True, write_images=False)
             self.callback_args = {'callbacks': self.tensorboard}
 
+    def q_load(self,
+               env: Environment,
+               retrain: bool = False,
+               display_strategy: bool = False) -> list:
+        """
+        Load an strategy to follow over a given environment, using RL,
+        and acts following the strategy defined on it.
+        :type env: Environment
+        :param retrain: If this flag is set to true, then compile the loaded
+        model to continue learning over it.
+        :param display_strategy:
+        """
+        # create the Keras model and learn, or load it from disk.
+        self.model = self.nn.load_model(self.params.model_file,
+                                        self.params.weights_file)
+        if retrain is True:
+            self.model = self.nn.compile_model(self.model)
+        # Extract the strategy matrix from the model.
+        strategy = self.get_strategy()
+        if display_strategy:
+            self.display.strategy(self,
+                                  env,
+                                  self.model,
+                                  self.params.num_states,
+                                  strategy)
+        return strategy
+
     def q_learn(self,
                 env: Environment,
+                fresh_model: bool = True,
                 display_strategy: bool = False,
                 do_plot: bool = False) -> list:
         """
-        Learns or Load an strategy to follow over a given environment,
+        Learns an strategy to follow over a given environment,
         using RL.
         :type env: Environment
+        :param fresh_model: if False, it does not create the NN from scratch,
+            but, it uses the one previously loaded.
         :param display_strategy:
         :type do_plot: bool
         """
         start = time.time()
         # create the Keras model and learn, or load it from disk.
-        if self.params.load_model is True:
-            self.model = self.nn.load_model(self.params.model_file,
-                                            self.params.weights_file)
-        else:
+        if fresh_model is True:
             self.model = self.nn.create_model()
-            avg_rewards, avg_loss, avg_mae = self.reinforce_learn(env)
+        avg_rewards, avg_loss, avg_mae = self.reinforce_learn(env)
 
         # display anything?
         if do_plot is True and self.params.load_model is False:
@@ -140,29 +167,6 @@ class Agent(Common):
             action = self.predict(state)
         return action
 
-    def step_learn(self, state, action, reward, new_state):
-        """
-        Fit the NN model to predict the action, given the action and
-        current state.
-        :param state:
-        :param action:
-        :param reward:
-        :param new_state:
-        :return: the loss and the metric resulting from the training.
-        """
-        target = reward + self.params.gamma * self.predict_value(
-            new_state)
-        target_vec = self.model.predict(self.onehot(state))[0]
-        target_vec[action] = target
-
-        history = self.model.fit(
-            self.onehot(state),
-            target_vec.reshape(-1, self.params.num_actions),
-            epochs=1, verbose=0, **self.callback_args
-        )
-        return history.history['loss'][0], \
-               history.history['mean_absolute_error'][0]
-
     def minibatch_learn(self, batch_size):
         """
         MiniBatch Learning routine.
@@ -245,3 +249,21 @@ class Agent(Common):
             for i in range(self.params.num_states)
         ]
         return strategy
+
+    def simulate(self, environment, strategy):
+        """
+        Simulate over a dataset, given a strategy and an environment.
+        :param environment:
+        :param strategy:
+        :return:
+        """
+        done = False
+        total_reward = 0.
+        self.params.debug = True
+        state = environment.reset()
+        while not done:
+            action = environment.decide_next_action(state, strategy)
+            next_state, reward, done, _ = environment.step(action)
+            total_reward += reward
+            state = next_state
+        self.params.display.summary(environment.portfolio, do_plot=True)

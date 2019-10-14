@@ -3,7 +3,7 @@ import argparse
 
 class Arguments(object):
     args = None
-    possible_actions = ['simulate', 'train', 'retrain', 'predict']
+    possible_actions = ['simulate', 'learn', 'retrain', 'predict']
 
     def __init__(self, *args):
         parser = argparse.ArgumentParser()

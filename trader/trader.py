@@ -20,22 +20,25 @@ if __name__ == "__main__":
     environment = Environment(params)
     agent = Agent(params)
 
-    # Learn
-    strategy = agent.q_learn(environment, do_plot=True)
+    # Flags with the actions specified in arguments
+    flag = {key: params.what_to_do == key for key in
+            params.possible_actions}
 
-    # Test
-    done = False
-    total_reward = 0.
-    params.debug = True
-    state = environment.reset()
-    while not done:
-        action = environment.decide_next_action(state, strategy)
-        next_state, reward, done, _ = environment.step(action)
-        total_reward += reward
-        state = next_state
-
-    params.display.results(environment.portfolio, do_plot=True)
-
-    # Save the model?
-    if params.save_model is True:
-        agent.nn.save_model(agent.model)
+    # Do something
+    if flag['simulate'] is True:
+        strategy = agent.q_load(environment)
+        agent.simulate(environment, strategy)
+    elif flag['learn'] or flag['retrain']:
+        if flag['retrain']:
+            agent.q_load(environment, retrain=flag['retrain'])
+        strategy = agent.q_learn(environment,
+                                 fresh_model=flag['learn'],
+                                 do_plot=True)
+        # Save the model?
+        if params.save_model is True:
+            agent.nn.save_model(agent.model)
+        # Simulate what has been learnt with the data.
+        agent.simulate(environment, strategy)
+    else:  # predict
+        print('Still do not know how to perform a single prediction!')
+        exit(0)

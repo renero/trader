@@ -8,6 +8,8 @@ from utils.my_dict import MyDict
 
 class RLDictionary(Dictionary):
 
+    arguments: Arguments = None
+
     def __init__(self, default_params_filename='params.yaml', *args, **kwargs):
 
         super().__init__(default_params_filename, **kwargs)
@@ -18,6 +20,7 @@ class RLDictionary(Dictionary):
         # Read the arguments passed in CLI to override parameters
         arguments = Arguments(args, kwargs)
         # Define what to do
+        setattr(self, 'possible_actions', arguments.possible_actions)
         setattr(self, 'what_to_do', arguments.args.action)
         # Override other potential parameters specified in command line.
         if arguments.args.debug is True:

@@ -61,7 +61,7 @@ class Display(Common):
         self.params.results = self.params.results.append(
             row, ignore_index=True)
 
-    def results(self, portfolio, do_plot=False):
+    def summary(self, portfolio, do_plot=False):
         df = self.params.results.copy()
         self.recolor_ref(df, 'forecast', 'price')
         self.reformat(df, 'price')
@@ -76,11 +76,12 @@ class Display(Common):
                        tablefmt='psql',
                        showindex=False,
                        floatfmt=['.0f'] + ['.1f' for i in range(6)]))
-        self.report_summary(portfolio)
+        self.report_totals(portfolio)
         if do_plot is True:
-            self.plot_value()
+            # self.plot_value()
+            self.plot_results(self.params.results)
 
-    def report_summary(self, portfolio):
+    def report_totals(self, portfolio):
         # total outcome and final metrics.
         if portfolio.portfolio_value != 0.0:
             total = portfolio.budget + portfolio.portfolio_value
@@ -174,19 +175,31 @@ class Display(Common):
                         states.keys()])))
         return
 
-    def plot_value(self):
-        plt.title('Price, forecast and P/L')
-        plt.scatter(range(self.params.results.shape[0]),
-                    self.params.results.loc[:, 'netValue'],
+    @staticmethod
+    def plot_results(results):
+        data = results.copy(deep=True)
+        data = data.dropna()
+
+        def color_action(a):
+            actions = ['buy', 'sell', 'f.buy', 'f.sell', 'n/a']
+            return actions.index(a)
+
+        data['action_id'] = data.action.apply(lambda a: color_action(a))
+        data.head()
+        colors = {0: 'green', 1: 'red', 2: '#E8D842', 3: '#BE5B11',
+                  4: '#BBBBBB'}
+        fig, (ax1, ax2) = plt.subplots(2,
+                                       sharex=True,
+                                       figsize=(14, 10),
+                                       gridspec_kw={'height_ratios': [1, 3]})
+        fig.suptitle('Portfolio Value and Shares price')
+        ax1.axhline(y=0, color='red', alpha=0.4)
+        ax1.plot(data.netValue)
+        ax1.xaxis.set_ticks_position('none')
+        ax2.scatter(range(len(data.price)), data.price,
+                    c=data.action_id.apply(lambda x: colors[x]),
                     marker='.')
-        plt.plot(self.params.results.loc[:, 'netValue'],
-                 linewidth=0.3, c='k')
-        plt.plot(self.params.results.loc[:, 'price'], c='k')
-        plt.plot(self.params.results.loc[:, 'forecast'],
-                 c='blue', linestyle=':')
-        plt.scatter(range(len(self.params.results.shares)),
-                    self.params.results.shares * 100, s=0.2)
-        plt.axhline(y=0, c='r', linewidth=0.5)
+        ax2.plot(data.price, c='black', linewidth=0.5)
         plt.show()
 
     @staticmethod
