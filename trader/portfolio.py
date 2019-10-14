@@ -120,25 +120,24 @@ class Portfolio(Common):
         if len(self.history) > self.params.stack_size:
             self.history.pop(0)
 
-    @property
-    def last_forecast(self):
-        return self.history[-1]['forecast_']
-
-    @property
-    def last_price(self):
-        return self.history[-1]['price_']
-
-    @property
-    def prevlast_forecast(self):
-        return self.history[-2]['forecast_']
-
-    @property
-    def prevlast_price(self):
-        return self.history[-2]['price_']
+    def values_to_report(self):
+        net_value = self.portfolio_value - self.investment
+        return [
+            self.latest_price,
+            self.forecast,
+            self.budget,
+            self.investment,
+            self.portfolio_value,
+            net_value,
+            self.shares]
 
     @property
     def gain(self):
         return self.portfolio_value - self.investment
+
+    @property
+    def have_shares(self):
+        return self.shares
 
     @property
     def can_buy(self) -> bool:
@@ -148,15 +147,29 @@ class Portfolio(Common):
     def can_sell(self) -> bool:
         return self.shares > 0.
 
-    def values_to_report(self):
-        net_value = self.portfolio_value - self.investment
-        # if net_value < 0.0:
-        #     net_value = 0.0
-        return [
-            self.latest_price,
-            self.forecast,
-            self.budget,
-            self.investment,
-            self.portfolio_value,
-            net_value,
-            self.shares]
+    @property
+    def forecast_direction(self):
+        if self.latest_price <= self.last_forecast:
+            return +1.
+        else:
+            return -1.
+
+    @property
+    def last_forecast(self):
+        return self.history[-1]['forecast_']
+
+    @property
+    def prevlast_forecast(self):
+        return self.history[-2]['forecast_']
+
+    @property
+    def last_price(self):
+        return self.history[-1]['price_']
+
+    @property
+    def prevlast_price(self):
+        return self.history[-2]['price_']
+
+    @property
+    def can_buy(self) -> bool:
+        return self.budget >= self.latest_price
