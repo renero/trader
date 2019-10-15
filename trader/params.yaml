@@ -103,7 +103,7 @@ environment:
   reward_do_nothing: -1.
   reward_success_buy: 0.
   reward_positive_sell: +1.
-  reward_negative_sell: -0.8
+  reward_negative_sell: -0.1
   reward_failed_buy: -1.
   reward_failed_sell: -1.
 

@@ -202,8 +202,8 @@ class Display(Common):
         #
         # Price, forecast and operations
         #
-        ax2.xaxis.set_xticks([i for i in range(0, data.price.shape[0], 10)],
-                             minor=True)
+
+        ax2.set_xticks(ax2.get_xticks()[::10])
         ax2.scatter(range(len(data.price)), data.price,
                     c=data.action_id.apply(lambda x: colors[x]),
                     marker='.')
