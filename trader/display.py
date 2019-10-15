@@ -193,13 +193,23 @@ class Display(Common):
                                        figsize=(14, 10),
                                        gridspec_kw={'height_ratios': [1, 3]})
         fig.suptitle('Portfolio Value and Shares price')
+        #
+        # Portfolio Value
+        #
         ax1.axhline(y=0, color='red', alpha=0.4)
         ax1.plot(data.netValue)
         ax1.xaxis.set_ticks_position('none')
+        #
+        # Price, forecast and operations
+        #
+        ax2.xaxis.set_xticks([i for i in range(0, data.price.shape[0], 10)],
+                             minor=True)
         ax2.scatter(range(len(data.price)), data.price,
                     c=data.action_id.apply(lambda x: colors[x]),
                     marker='.')
-        ax2.plot(data.price, c='black', linewidth=0.5)
+        ax2.plot(data.price, c='black', linewidth=0.6)
+        ax2.plot(data.forecast, 'k--', linewidth=0.5)
+        ax2.grid(True, which='major', axis='x')
         plt.show()
 
     @staticmethod

@@ -15,9 +15,9 @@ save_model: true
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
-load_model: false
-model_file: ../output/rl_model_forecast_acciona_2018b.json
-weights_file: ../output/rl_model_forecast_acciona_2018b.h5
+load_model: true
+model_file: ../output/rl_model_forecast_acciona_2018b_2.json
+weights_file: ../output/rl_model_forecast_acciona_2018b_2.h5
 
 # Parameters for the Q-Learning function
 gamma: 0.95
@@ -88,42 +88,6 @@ state:
       - PPLOK
       - PPLNOK
 
-#  portfolio_value:
-#    names:
-#      - EVEN
-#      - WINN
-#      - LOSE
-#  forecast:
-#    names:
-#      - STAL
-#      - GOUP
-#      - DOWN
-#  got_shares:
-#    names:
-#      - YESHAVE
-#      - NOTHAVE
-#  what_can_do:
-#    names:
-#      - NBNS          # No BUY, No SELL
-#      - CBNS          # Can BUY, No SELL
-#      - CBCS          # Can Buy, Can SELL
-#      - NBCS          # No BUY, Can SELL
-#  last_prediction:
-#    names:
-#      - PUNKNW
-#      - PVALID
-#      - PWRONG
-#  prevlast_pred:
-#    names:
-#      - PPUNKNW
-#      - PPVALID
-#      - PPWRONG
-#  pplast_pred:
-#    names:
-#      - PPPUNKNW
-#      - PPPVALID
-#      - PPPWRONG
-
 # Actions to be accomplished by the agent (Portfolio class)
 action:
   - wait
@@ -135,13 +99,13 @@ environment:
   initial_budget: 100.
   consider_stop_loss: false
   stop_loss: .05
-  proportional_reward: true
-  reward_do_nothing: -1
-  reward_success_buy: 0
+  proportional_reward: false
+  reward_do_nothing: -1.
+  reward_success_buy: 0.
   reward_positive_sell: +1.
-  reward_negative_sell: -1.
-  reward_failed_buy: -0.5
-  reward_failed_sell: -0.5
+  reward_negative_sell: -0.8
+  reward_failed_buy: -1.
+  reward_failed_sell: -1.
 
 # Log headers
 table_headers:
