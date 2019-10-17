@@ -36,15 +36,15 @@ class Portfolio(Common):
 
     def wait(self):
         self.display.report_action('none')
-        self.reward = 0.  # self.environment.reward_do_nothing
-        return 0.  # self.reward
+        self.reward = self.portfolio_value  # self.environment.reward_do_nothing
+        return self.reward  # self.reward
 
     def buy(self, num_shares: float = 1.0) -> object:
         purchase_amount = num_shares * self.latest_price
         if purchase_amount > self.budget:
             self.display.report_action('f.buy')
             self.reward = 0.  # self.environment.reward_failed_buy
-            return 0.  # self.reward
+            return self.reward  # self.reward
 
         self.budget -= purchase_amount
         self.investment += purchase_amount
@@ -54,7 +54,7 @@ class Portfolio(Common):
         self.reward = 0.  # self.environment.reward_success_buy
 
         self.display.report_action('buy')
-        return 0.  # self.reward
+        return self.reward  # self.reward
 
     def sell(self, num_shares=1.0):
         """
@@ -65,7 +65,7 @@ class Portfolio(Common):
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
             self.display.report_action('f.sell')
-            self.reward = 0.  # self.environment.reward_failed_sell
+            self.reward = self.portfolio_value  # self.environment.reward_failed_sell
             return self.reward
 
         net_value_after = self.update_after_sell(num_shares, sell_price)
