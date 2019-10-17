@@ -36,25 +36,25 @@ class Portfolio(Common):
 
     def wait(self):
         self.display.report_action('none')
-        self.reward = self.environment.reward_do_nothing
-        return self.reward
+        self.reward = 0.  # self.environment.reward_do_nothing
+        return 0.  # self.reward
 
     def buy(self, num_shares: float = 1.0) -> object:
         purchase_amount = num_shares * self.latest_price
         if purchase_amount > self.budget:
             self.display.report_action('f.buy')
-            self.reward = self.environment.reward_failed_buy
-            return self.reward
+            self.reward = 0.  # self.environment.reward_failed_buy
+            return 0.  # self.reward
 
         self.budget -= purchase_amount
         self.investment += purchase_amount
         self.shares += num_shares
         self.portfolio_value += purchase_amount
         self.movements.append((self.BUY, num_shares, self.latest_price))
-        self.reward = self.environment.reward_success_buy
+        self.reward = 0.  # self.environment.reward_success_buy
 
         self.display.report_action('buy')
-        return self.reward
+        return 0.  # self.reward
 
     def sell(self, num_shares=1.0):
         """
@@ -65,21 +65,22 @@ class Portfolio(Common):
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
             self.display.report_action('f.sell')
-            self.reward = self.environment.reward_failed_sell
+            self.reward = 0.  # self.environment.reward_failed_sell
             return self.reward
 
         net_value_after = self.update_after_sell(num_shares, sell_price)
+        self.reward = net_value_after
 
         # Reward, in case of sell, can be proportional to gain/loss, if not
         # set that multiplier to 1.0
-        gain_loss = 1.0
-        if self.environment.proportional_reward is True:
-            gain_loss = abs(net_value_after) + 1.0
-
-        if net_value_after >= 0:
-            self.reward = self.environment.reward_positive_sell * gain_loss
-        else:
-            self.reward = self.environment.reward_negative_sell * gain_loss
+        # gain_loss = 1.0
+        # if self.environment.proportional_reward is True:
+        #     gain_loss = abs(net_value_after) + 1.0
+        #
+        # if net_value_after >= 0:
+        #     self.reward = self.environment.reward_positive_sell * gain_loss
+        # else:
+        #     self.reward = self.environment.reward_negative_sell * gain_loss
 
         self.display.report_action('sell')
         return self.reward
@@ -93,8 +94,6 @@ class Portfolio(Common):
         """
         self.budget += sell_price
         self.investment -= sell_price
-        # if self.investment < 0.0:
-        #     self.investment = 0.0
         self.shares -= num_shares
         self.portfolio_value -= sell_price
         self.movements.append((self.SELL, num_shares, self.latest_price))
