@@ -83,10 +83,10 @@ state:
     names:
       - PLOK
       - PLNOK
-  PrevPrevLastPredOk:
-    names:
-      - PPLOK
-      - PPLNOK
+#  PrevPrevLastPredOk:
+#    names:
+#      - PPLOK
+#      - PPLNOK
 
 # Actions to be accomplished by the agent (Portfolio class)
 action:

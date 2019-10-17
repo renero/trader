@@ -250,11 +250,12 @@ class Agent(Common):
         ]
         return strategy
 
-    def simulate(self, environment, strategy):
+    def simulate(self, environment, strategy, do_plot=True):
         """
         Simulate over a dataset, given a strategy and an environment.
         :param environment:
         :param strategy:
+        :param do_plot:
         :return:
         """
         done = False
@@ -266,4 +267,4 @@ class Agent(Common):
             next_state, reward, done, _ = environment.step(action)
             total_reward += reward
             state = next_state
-        self.params.display.summary(environment.portfolio, do_plot=True)
+        self.params.display.summary(environment.portfolio, do_plot=do_plot)
