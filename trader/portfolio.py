@@ -43,7 +43,7 @@ class Portfolio(Common):
         purchase_amount = num_shares * self.latest_price
         if purchase_amount > self.budget:
             self.display.report_action('f.buy')
-            self.reward = 0.  # self.environment.reward_failed_buy
+            self.reward = self.portfolio_value - self.investment  # self.environment.reward_failed_buy
             return self.reward  # self.reward
 
         self.budget -= purchase_amount
