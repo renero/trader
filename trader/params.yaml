@@ -15,7 +15,7 @@ save_model: false
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
-load_model: false
+# load_model: false
 model_file: ../output/rl_model_forecast_acciona_2018b_4.json
 weights_file: ../output/rl_model_forecast_acciona_2018b_4.h5
 
