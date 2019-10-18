@@ -238,7 +238,7 @@ class Agent(Common):
     def predict_value(self, state):
         return np.max(self.model.predict(self.onehot(state)))
 
-    def get_strategy(self):
+    def get_strategy(self) -> list:
         """
         Get the defined strategy from the weights of the model.
         :return: strategy matrix
@@ -250,7 +250,7 @@ class Agent(Common):
         ]
         return strategy
 
-    def simulate(self, environment, strategy, do_plot=True):
+    def simulate(self, environment: Environment, strategy: list, do_plot=True):
         """
         Simulate over a dataset, given a strategy and an environment.
         :param environment:

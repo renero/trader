@@ -15,9 +15,9 @@ save_model: true
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
-load_model: true
-model_file: ../output/rl_model_forecast_acciona_2018b_2.json
-weights_file: ../output/rl_model_forecast_acciona_2018b_2.h5
+load_model: false
+model_file: ../output/rl_model_forecast_acciona_2018b_4.json
+weights_file: ../output/rl_model_forecast_acciona_2018b_4.h5
 
 # Parameters for the Q-Learning function
 gamma: 0.95
