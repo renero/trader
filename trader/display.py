@@ -181,13 +181,13 @@ class Display(Common):
         data = data.dropna()
 
         def color_action(a):
-            actions = ['buy', 'sell', 'f.buy', 'f.sell', 'n/a']
+            actions = ['buy', 'sell', 'f.buy', 'f.sell', 'n/a', 'wait']
             return actions.index(a)
 
         data['action_id'] = data.action.apply(lambda a: color_action(a))
         data.head()
         colors = {0: 'green', 1: 'red', 2: '#E8D842', 3: '#BE5B11',
-                  4: '#BBBBBB'}
+                  4: '#BBBBBB', 5: '#BBBBBB'}
         fig, (ax1, ax2) = plt.subplots(2,
                                        sharex=True,
                                        figsize=(14, 10),

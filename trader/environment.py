@@ -139,7 +139,7 @@ class Environment(Common):
             return self.new_state_, self.reward_, self.done_, self.t
 
         self.update_market_price()
-        self.portfolio.update(self.price_, self.forecast_)
+        self.portfolio.update_after_step(self.price_, self.forecast_)
         self.new_state_ = self.update_state()
         self.display.report(self.portfolio, self.t)
         self.portfolio.append_to_history(self)

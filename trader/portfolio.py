@@ -1,5 +1,3 @@
-import math
-
 from common import Common
 from utils.dictionary import Dictionary
 
@@ -10,6 +8,7 @@ class Portfolio(Common):
     budget = 0.
     investment = 0
     portfolio_value: float = 0.
+    net_value: float = 0
     shares: float = 0.
     latest_price: float = 0.
     forecast: float = 0.
@@ -22,7 +21,6 @@ class Portfolio(Common):
     SELL = -1
 
     def __init__(self, configuration, initial_price=0., forecast=0.):
-
         # copy the contents of the dictionary passed as argument. This dict
         # contains the parameters read in the initialization.
         self.params = configuration
@@ -34,27 +32,53 @@ class Portfolio(Common):
         self.latest_price = initial_price
         self.forecast = forecast
 
+    def update_after_step(self, price, forecast):
+        """
+        Updates portfolio after an interation step.
+        :param price: new price registered
+        :param forecast: new forecast registered
+        :return: the portfolio object
+        """
+        self.portfolio_value = self.shares * price
+        self.latest_price = price
+        self.forecast = forecast
+        return self
+
     def wait(self):
-        self.display.report_action('none')
-        self.reward = self.environment.reward_do_nothing
+        action_name = 'wait'
+        self.display.report_action(action_name)
+        self.reward = self.decide_reward(action_name, num_shares=0)
         return self.reward
 
     def buy(self, num_shares: float = 1.0) -> object:
-        purchase_amount = num_shares * self.latest_price
-        if purchase_amount > self.budget:
-            self.display.report_action('f.buy')
-            self.reward = self.environment.reward_failed_buy
-            return self.reward
+        buy_price = num_shares * self.latest_price
+        if buy_price > self.budget:
+            action_name = 'f.buy'
+            self.display.report_action(action_name)
+            self.reward = self.decide_reward(action_name, num_shares)
+            return self.reward  # self.reward
 
-        self.budget -= purchase_amount
-        self.investment += purchase_amount
-        self.shares += num_shares
-        self.portfolio_value += purchase_amount
-        self.movements.append((self.BUY, num_shares, self.latest_price))
-        self.reward = self.environment.reward_success_buy
+        action_name = 'buy'
+        self.update_after_buy(num_shares, buy_price)
+        self.reward = self.decide_reward(action_name, num_shares)
 
-        self.display.report_action('buy')
+        self.display.report_action(action_name)
         return self.reward
+
+    def update_after_buy(self, num_shares, buy_price):
+        """
+        Update portfolio parameters after buying shares
+        :param num_shares: the nr. shares bought
+        :param buy_price: the price at which the purchase takes place
+        :return:
+        """
+        self.budget -= buy_price
+        self.investment += buy_price
+        self.shares += num_shares
+        self.portfolio_value += buy_price
+        self.movements.append((self.BUY, num_shares, self.latest_price))
+        # what is the value of my investment after selling?
+        self.net_value = self.portfolio_value - self.investment
 
     def sell(self, num_shares=1.0):
         """
@@ -64,24 +88,15 @@ class Portfolio(Common):
         """
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
-            self.display.report_action('f.sell')
-            self.reward = self.environment.reward_failed_sell
+            action_name = 'f.sell'
+            self.display.report_action(action_name)
+            self.reward = self.decide_reward(action_name, num_shares)
             return self.reward
 
-        net_value_after = self.update_after_sell(num_shares, sell_price)
-
-        # Reward, in case of sell, can be proportional to gain/loss, if not
-        # set that multiplier to 1.0
-        gain_loss = 1.0
-        if self.environment.proportional_reward is True:
-            gain_loss = abs(net_value_after) + 1.0
-
-        if net_value_after >= 0:
-            self.reward = self.environment.reward_positive_sell * gain_loss
-        else:
-            self.reward = self.environment.reward_negative_sell * gain_loss
-
-        self.display.report_action('sell')
+        action_name = 'sell'
+        self.update_after_sell(num_shares, sell_price)
+        self.reward = self.decide_reward(action_name, num_shares)
+        self.display.report_action(action_name)
         return self.reward
 
     def update_after_sell(self, num_shares, sell_price):
@@ -93,22 +108,41 @@ class Portfolio(Common):
         """
         self.budget += sell_price
         self.investment -= sell_price
-        # if self.investment < 0.0:
-        #     self.investment = 0.0
         self.shares -= num_shares
         self.portfolio_value -= sell_price
         self.movements.append((self.SELL, num_shares, self.latest_price))
-
         # what is the value of my investment after selling?
-        # net_value_after = self.portfolio_value - sell_price
-        net_value_after = self.portfolio_value - self.investment
-        return net_value_after
+        self.net_value = self.portfolio_value - self.investment
 
-    def update(self, price, forecast):
-        self.portfolio_value = self.shares * price
-        self.latest_price = price
-        self.forecast = forecast
-        return self
+    def decide_reward(self, action_name, num_shares):
+        # Are we working with direct reward?
+        if self.params.environment.direct_reward is True:
+            if action_name == 'buy':
+                return 0.0
+            else:
+                return self.portfolio_value - self.investment
+
+        # From this point, we're in preset reward
+        # Reward, in case of sell, can be proportional to gain/loss, if not
+        # set that multiplier to 1.0
+        reward = 0.
+        if action_name == 'wait':
+            reward = self.environment.reward_do_nothing
+        elif action_name == 'buy':
+            reward = self.environment.reward_success_buy
+        elif action_name == 'sell':
+            gain_loss = 1.0
+            if self.environment.proportional_reward is True:
+                gain_loss = abs(self.net_value) + 1.0
+            if self.net_value >= 0:
+                reward = self.environment.reward_positive_sell * gain_loss
+            else:
+                reward = self.environment.reward_negative_sell * gain_loss
+        elif action_name == 'f.buy':
+            reward = self.environment.reward_failed_buy
+        elif action_name == 'f.sell':
+            reward = self.environment.reward_failed_sell
+        return reward
 
     def reset_history(self):
         del self.history[:]

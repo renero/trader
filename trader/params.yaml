@@ -11,13 +11,13 @@ data_path: ../output/forecast_acciona_2018b.csv
 delimiter: ','
 
 # Wanna save the model after training?
-save_model: true
+save_model: false
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
-load_model: true
-model_file: ../output/rl_model_forecast_acciona_2018b_2.json
-weights_file: ../output/rl_model_forecast_acciona_2018b_2.h5
+# load_model: false
+model_file: ../output/rl_model_forecast_acciona_2018b_4.json
+weights_file: ../output/rl_model_forecast_acciona_2018b_4.h5
 
 # Parameters for the Q-Learning function
 gamma: 0.95
@@ -26,8 +26,8 @@ epsilon_min: 0.02
 decay_factor: 0.995
 
 # When to perform learning
-train_steps: 32
-start_steps: 100
+train_steps: 24
+start_steps: 8
 
 # Batch size for training the model
 batch_size: 32
@@ -83,10 +83,10 @@ state:
     names:
       - PLOK
       - PLNOK
-#  PrevPrevLastPredOk:
-#    names:
-#      - PPLOK
-#      - PPLNOK
+  PrevPrevLastPredOk:
+    names:
+      - PPLOK
+      - PPLNOK
 
 # Actions to be accomplished by the agent (Portfolio class)
 action:
@@ -99,13 +99,17 @@ environment:
   initial_budget: 100.
   consider_stop_loss: false
   stop_loss: .05
-  proportional_reward: false
-  reward_do_nothing: -1.
-  reward_success_buy: 0.
-  reward_positive_sell: +1.
-  reward_negative_sell: -0.1
-  reward_failed_buy: -1.
-  reward_failed_sell: -1.
+  direct_reward: true         # If True, reward is always netValue, not
+                              # considering the values below.
+  proportional_reward: false  # Controls if reward is multiplied by net value.
+                              # when selling shares. Incompatible with
+                              # direct_reward
+  reward_do_nothing: -1.      # -0.94
+  reward_success_buy: 0.      # -0.94
+  reward_positive_sell: +1.   # +0.45
+  reward_negative_sell: -0.1  # -0.24
+  reward_failed_buy: -1.      # +0.99
+  reward_failed_sell: -1.     # -0.45
 
 # Log headers
 table_headers:

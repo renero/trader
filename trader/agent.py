@@ -75,7 +75,9 @@ class Agent(Common):
         avg_rewards, avg_loss, avg_mae = self.reinforce_learn(env)
 
         # display anything?
-        if do_plot is True and self.params.load_model is False:
+        plot_metrics = self.params.what_to_do == 'learn' or \
+                       self.params.what_to_do == 'retrain'
+        if do_plot is True and plot_metrics is True:
             self.display.plot_metrics(avg_loss, avg_mae, avg_rewards)
 
         # Extract the strategy matrix from the model.
@@ -238,7 +240,7 @@ class Agent(Common):
     def predict_value(self, state):
         return np.max(self.model.predict(self.onehot(state)))
 
-    def get_strategy(self):
+    def get_strategy(self) -> list:
         """
         Get the defined strategy from the weights of the model.
         :return: strategy matrix
@@ -250,7 +252,7 @@ class Agent(Common):
         ]
         return strategy
 
-    def simulate(self, environment, strategy, do_plot=True):
+    def simulate(self, environment: Environment, strategy: list, do_plot=True):
         """
         Simulate over a dataset, given a strategy and an environment.
         :param environment:
