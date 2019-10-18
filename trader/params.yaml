@@ -7,8 +7,13 @@
 debug: true
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../output/forecast_acciona_2018b.csv
+data_path: ../output/forecast_acciona_konkorde_2018b.csv
 delimiter: ','
+column_name:
+  price: yhat
+  forecast: forecast
+  green: verde
+  blue: azul
 
 # Wanna save the model after training?
 save_model: false
@@ -35,6 +40,9 @@ batch_size: 32
 # Experience Replay batch size
 experience_replay: False
 exp_batch_size: 16
+
+# Konkorde threshold, above which we can consider an upward trend
+k_threshold: 0.2
 
 # TensorBoard?
 tensorboard: False
@@ -87,6 +95,10 @@ state:
     names:
       - PPLOK
       - PPLNOK
+  Konkorde:
+    names:
+      - UPTREND
+      - DOWNTREND
 
 # Actions to be accomplished by the agent (Portfolio class)
 action:

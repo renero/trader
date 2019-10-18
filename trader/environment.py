@@ -18,11 +18,15 @@ class Environment(Common):
     portfolio = None
     price_ = 0.
     forecast_ = 0.
+    green_ = 0.
+    blue_ = 0.
+    konkorde_ = 0.
     max_actions_ = 0
     done_ = False
     reward_ = 0
     new_state_: int = 0
     stop_loss_alert: bool = False
+    have_konkorde = False
 
     def __init__(self, configuration):
         self.params = configuration
@@ -77,14 +81,31 @@ class Environment(Common):
         self.data_ = pd.read_csv(path, delimiter)
         self.max_states_ = self.data_.shape[0]
 
+        # Do i have konkorde?
+        if self.params.column_name['green'] in self.data_.columns and \
+                self.params.column_name['blue'] in self.data_.columns:
+            self.have_konkorde = True
+
     def update_market_price(self):
         """
         Set the price to the current time slot,
         reading column 0 from DF
         """
         assert self.data_ is not None, 'Price series data has not been read yet'
-        self.price_ = self.data_.iloc[self.t, 0]
-        self.forecast_ = self.data_.iloc[self.t, 1]
+        col_names = self.data_.columns
+
+        self.price_ = self.data_.iloc[
+            self.t, col_names.index(self.column_name['price'])]
+        self.forecast_ = self.data_.iloc[
+            self.t, col_names.index(self.column_name['forecast'])]
+
+        # If I do have konkorde indicators, I also read them.
+        if self.have_konkorde:
+            self.green_ = self.data_.iloc[
+                self.t, col_names.index(self.params.column_name['green'])]
+            self.blue_ = self.data_.iloc[
+                self.t, col_names.index(self.params.column_name['blue'])]
+            self.konkorde_ = self.green_ + self.blue_
 
     @staticmethod
     def decide_next_action(state, strategy):

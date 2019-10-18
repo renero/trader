@@ -12,6 +12,7 @@ class Portfolio(Common):
     shares: float = 0.
     latest_price: float = 0.
     forecast: float = 0.
+    konkorde = 0.
     reward = 0.
     movements = []
     history = []
@@ -32,16 +33,20 @@ class Portfolio(Common):
         self.latest_price = initial_price
         self.forecast = forecast
 
-    def update_after_step(self, price, forecast):
+    def update_after_step(self, price, forecast, konkorde=None):
         """
         Updates portfolio after an interation step.
         :param price: new price registered
         :param forecast: new forecast registered
+        :param konkorde: the konkorde value (computed from green & blue read
+            the data file, if applicable)
         :return: the portfolio object
         """
         self.portfolio_value = self.shares * price
         self.latest_price = price
         self.forecast = forecast
+        if konkorde is not None:
+            self.konkorde = konkorde
         return self
 
     def wait(self):
