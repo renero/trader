@@ -75,7 +75,9 @@ class Agent(Common):
         avg_rewards, avg_loss, avg_mae = self.reinforce_learn(env)
 
         # display anything?
-        if do_plot is True and self.params.load_model is False:
+        plot_metrics = self.params.what_to_do == 'learn' or \
+                       self.params.what_to_do == 'retrain'
+        if do_plot is True and plot_metrics is True:
             self.display.plot_metrics(avg_loss, avg_mae, avg_rewards)
 
         # Extract the strategy matrix from the model.

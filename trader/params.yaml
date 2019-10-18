@@ -11,7 +11,7 @@ data_path: ../output/forecast_acciona_2018b.csv
 delimiter: ','
 
 # Wanna save the model after training?
-save_model: true
+save_model: false
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
