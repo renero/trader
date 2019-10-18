@@ -181,7 +181,7 @@ class Display(Common):
         data = data.dropna()
 
         def color_action(a):
-            actions = ['buy', 'sell', 'f.buy', 'f.sell', 'n/a', 'none']
+            actions = ['buy', 'sell', 'f.buy', 'f.sell', 'n/a', 'wait']
             return actions.index(a)
 
         data['action_id'] = data.action.apply(lambda a: color_action(a))
