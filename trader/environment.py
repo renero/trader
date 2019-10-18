@@ -92,12 +92,12 @@ class Environment(Common):
         reading column 0 from DF
         """
         assert self.data_ is not None, 'Price series data has not been read yet'
-        col_names = self.data_.columns
+        col_names = list(self.data_.columns)
 
         self.price_ = self.data_.iloc[
-            self.t, col_names.index(self.column_name['price'])]
+            self.t, col_names.index(self.params.column_name['price'])]
         self.forecast_ = self.data_.iloc[
-            self.t, col_names.index(self.column_name['forecast'])]
+            self.t, col_names.index(self.params.column_name['forecast'])]
 
         # If I do have konkorde indicators, I also read them.
         if self.have_konkorde:

@@ -10,7 +10,7 @@ debug: true
 data_path: ../output/forecast_acciona_konkorde_2018b.csv
 delimiter: ','
 column_name:
-  price: yhat
+  price: test_y
   forecast: forecast
   green: verde
   blue: azul
