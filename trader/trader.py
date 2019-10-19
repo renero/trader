@@ -40,5 +40,5 @@ if __name__ == "__main__":
         # Simulate what has been learnt with the data.
         agent.simulate(environment, strategy)
     else:  # predict
-        print('Still do not know how to perform a single prediction!')
+        params.log.error('Don\'t know how to perform a single prediction!')
         exit(0)

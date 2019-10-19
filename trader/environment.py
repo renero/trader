@@ -30,6 +30,7 @@ class Environment(Common):
 
     def __init__(self, configuration):
         self.params = configuration
+        self.log = self.params.log
         self.display = self.params.display
 
         if 'seed' in self.params:
@@ -37,7 +38,7 @@ class Environment(Common):
         else:
             np.random.seed(1)
 
-        self.states = StatesCombiner(self.params.states_list)
+        self.states = StatesCombiner(self.params)
         self.read_market_data(self.params.data_path)
         self.init_environment(creation_time=True)
 
@@ -80,11 +81,13 @@ class Environment(Common):
             delimiter = self.params.delimiter
         self.data_ = pd.read_csv(path, delimiter)
         self.max_states_ = self.data_.shape[0]
+        self.log.info('Read trader file: {}'.format(path))
 
         # Do i have konkorde?
         if self.params.column_name['green'] in self.data_.columns and \
                 self.params.column_name['blue'] in self.data_.columns:
             self.have_konkorde = True
+            self.log.info('Konkorde index present!')
 
     def update_market_price(self):
         """

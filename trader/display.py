@@ -7,12 +7,14 @@ from pandas import Series
 from tabulate import tabulate
 
 from common import Common
+from logger import Logger
 
 
 class Display(Common):
 
     def __init__(self, configuration):
         self.params = configuration
+        self.log: Logger = self.params.log
 
     @staticmethod
     def strategy(trader, env, model, num_states, strategy):
@@ -88,18 +90,16 @@ class Display(Common):
         else:
             total = portfolio.budget
         percentage = 100. * ((total / portfolio.initial_budget) - 1.0)
-        self.log('Final....: € {:.2f} [{} %]'.format(
+        self.log.info('Final....: € {:.2f} [{} %]'.format(
             total, self.color(percentage)))
-        self.log('Budget...: € {:.1f} [{} %]'.format(
+        self.log.info('Budget...: € {:.1f} [{} %]'.format(
             portfolio.budget,
             self.color((portfolio.budget / portfolio.initial_budget) * 100.)))
-        self.log('Cash Flow: {}'.format(
+        self.log.info('Cash Flow: {}'.format(
             self.color(portfolio.investment * -1.)))
-        self.log(
-            'Shares...: {:d}'.format(int(portfolio.shares)))
-        self.log(
-            'Sh.Value.: {:.1f}'.format(portfolio.portfolio_value))
-        self.log('P/L......: € {}'.format(
+        self.log.info('Shares...: {:d}'.format(int(portfolio.shares)))
+        self.log.info('Sh.Value.: {:.1f}'.format(portfolio.portfolio_value))
+        self.log.info('P/L......: € {}'.format(
             self.color(portfolio.portfolio_value - portfolio.investment)))
 
     def report_action(self, action_name):
@@ -134,19 +134,18 @@ class Display(Common):
         :return:
         """
         percentage = (i / num_episodes) * 100.0
-        self.log(
-            "Epoch {:>5}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
+        self.log.info(
+            "Epoch {:>6}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
                 i,
                 num_episodes,
                 percentage,
                 last_avg), end='')
         if percentage == 0.0:
-            self.log(' Est.time: UNKNOWN')
+            self.log.info('Est.time: UNKNOWN')
             return
         elapsed = end - start
         remaining = ((100. - percentage) * elapsed) / percentage
-        self.log(
-            ' Est.time: {}'.format(self.timer(remaining)))
+        self.log.info('Est.time: {}'.format(self.timer(remaining)))
 
     @staticmethod
     def timer(elapsed):
@@ -170,7 +169,7 @@ class Display(Common):
         file.
         :return: None
         """
-        self.log('List of states: [{}]'.format(
+        self.log.info('List of states: [{}]'.format(
             ' | '.join([(lambda x: x[1:])(s) for s in
                         states.keys()])))
         return

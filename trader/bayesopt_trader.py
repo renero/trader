@@ -22,13 +22,12 @@ if __name__ == "__main__":
                     Real(-1., +1., name='reward_failed_buy'),
                     Real(-1., +1., name='reward_failed_sell')]
 
-
     # define the function used to evaluate a given configuration
     @use_named_args(search_space)
     def evaluate_model(**new_params):
         # something
         for k in new_params:
-            print('Setting {} to {:.2f}'.format(k, new_params[k]))
+            params.log.info('Setting {} to {:.2f}'.format(k, new_params[k]))
             params.environment[k] = new_params[k]
 
         # calculate the output metric from the model
@@ -36,14 +35,14 @@ if __name__ == "__main__":
         portfolio = environment.portfolio
         total = portfolio.budget + portfolio.portfolio_value
         estimate = total / (portfolio.budget * 1.5)
-        print('Estimate got (not inverse): {:.3f}'.format(estimate))
+        params.log.info('Estimate got (not inverse): {:.3f}'.format(estimate))
         return 1.0 - estimate
 
 
     # perform optimization
     result = gp_minimize(evaluate_model, search_space)
     # summarizing finding:
-    print('Best Performance: %.3f' % (1.0 - result.fun))
-    print('Best Parameters:', result.x)
+    params.log.info('Best Performance: %.3f' % (1.0 - result.fun))
+    params.log.info('Best Parameters:', result.x)
     for i in range(6):
         print(result.x[i])

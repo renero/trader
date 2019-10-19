@@ -3,7 +3,7 @@ import inspect
 import sys
 
 
-def caller_name(n):
+def who(n):
     """
     Get the class name and the method name of the caller to the log
 
@@ -15,7 +15,7 @@ def caller_name(n):
     """
     max_stack_len = len(inspect.stack())
     depth = n + 1
-    if (n+1) > max_stack_len:
+    if (n + 1) > max_stack_len:
         depth = n
     if 'self' not in sys._getframe(depth).f_locals:
         class_name = 'NA'
@@ -47,31 +47,36 @@ class Logger:
 
     def __init__(self, level=0):
         self._level = level
+        if self._level > 0:
+            print('Log level:', self._level)
 
-    def debug(self, msg):
+    def debug(self, what, **kwargs):
         if self._level < self._DEBUG:
             return
-        print('DEBUG: {}'.format(msg))
+        when = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
+        print('{} - {}DEBUG{} - {:<30} - {}'.format(
+            when, self.OKBLUE, self.ENDC, who(1), what, **kwargs))
 
-    def highlight(self, msg):
+    def highlight(self, what):
         now = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
-        print('{} - INFO - {:<30} - {}{}{}'.format(
+        print('{} - INFO  - {:<30} - {}{}{}'.format(
             now,
-            caller_name(1),
-            self.INFOGREY, msg, self.ENDC))
+            who(1),
+            self.INFOGREY, what, self.ENDC))
 
-    def info(self, msg):
+    def info(self, what, **kwargs):
         if self._level < self._INFO:
             return
-        now = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
-        print('{} - INFO - {:<30} - {}'.format(now, caller_name(1), msg))
+        when = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
+        print('{} - INFO  - {:<30} - {}'.format(
+            when, who(1), what, **kwargs))
 
-    def warn(self, msg):
+    def warn(self, what):
         if self._level < self._WARN:
             return
-        print('{}WARN: {}{}'.format(self.WARNING, msg, self.ENDC))
+        print('{}WARN: {}{}'.format(self.WARNING, what, self.ENDC))
 
-    def error(self, msg):
+    def error(self, what):
         if self._level < self._ERROR:
             return
-        print('{}ERROR: {}{}'.format(self.FAIL, msg, self.ENDC))
+        print('{}ERROR: {}{}'.format(self.FAIL, what, self.ENDC))

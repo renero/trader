@@ -18,10 +18,24 @@ class Agent(Common):
     def __init__(self, configuration):
         self.params = configuration
         self.display = self.params.display
+        self.log = self.params.log
+        env_params = self.params.environment
+
+        self.log.info('Creating agent')
         self.nn = RL_NN(self.params)
         self.model = None
+
+        # display some helpful info
+        if self.params.environment.direct_reward is True:
+            self.log.info('Direct Reward mode')
+        else:
+            self.log.info('Preset reward mode {}'.format(
+                '(proport.)' if env_params.proportional_reward is True else ''
+            ))
+
         self.callback_args = {}
         if self.params.tensorboard is True:
+            self.log.info('Using TensorBoard')
             self.tensorboard = TensorBoard(
                 log_dir=self.params.tbdir,
                 histogram_freq=0, write_graph=True, write_images=False)
@@ -44,6 +58,7 @@ class Agent(Common):
                                         self.params.weights_file)
         if retrain is True:
             self.model = self.nn.compile_model(self.model)
+
         # Extract the strategy matrix from the model.
         strategy = self.get_strategy()
         if display_strategy:
@@ -89,7 +104,7 @@ class Agent(Common):
                                   self.params.num_states,
                                   strategy)
 
-        self.log('Time elapsed: {}'.format(
+        self.log.info('Time elapsed: {}'.format(
             self.params.display.timer(time.time() - start)))
         return strategy
 
@@ -109,6 +124,7 @@ class Agent(Common):
         epsilon = self.params.epsilon
 
         # Loop over 'num_episodes'
+        self.log.debug('Loop over {} episodes'.format(self.params.num_episodes))
         for step_num in range(self.params.num_episodes):
             state = env.reset()
             self.display.rl_train_report(step_num, avg_rewards, last_avg, start)

@@ -26,6 +26,7 @@ class Portfolio(Common):
         # contains the parameters read in the initialization.
         self.params = configuration
         self.display = self.params.display
+        self.log = self.params.log
         self.environment = self.params.environment
 
         self.budget = self.environment.initial_budget

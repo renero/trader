@@ -13,6 +13,7 @@ class RL_NN(Common):
 
     def __init__(self, configuration: Dictionary):
         self.params = configuration
+        self.log = self.params.log
 
     def create_model(self) -> Sequential:
         model = Sequential()
@@ -41,7 +42,7 @@ class RL_NN(Common):
                   activation='linear'))
         model = self.compile_model(model)
         if self.params.debug is True:
-            self.log('Model Summary')
+            self.log.info('Model Summary')
             model.summary()
 
         return model
@@ -54,7 +55,7 @@ class RL_NN(Common):
         return model
 
     def save_model(self, model):
-        self.log('\nSaving model, weights and results.')
+        self.log.info('\nSaving model, weights and results.')
 
         fname = 'rl_model_' + splitext(
             basename(self.params.data_path))[0]
@@ -64,12 +65,12 @@ class RL_NN(Common):
         model_json = model.to_json()
         with open(model_name, 'w') as json_file:
             json_file.write(model_json)
-        self.log('  Model: {}'.format(model_name))
+        self.log.info('  Model: {}'.format(model_name))
 
         # Serialize weights to HDF5
         weights_name = model_name.replace('.json', '.h5')
         model.save_weights(weights_name)
-        print('  Weights: {}'.format(weights_name))
+        self.log.info('  Weights: {}'.format(weights_name))
 
         # Save also the results table
         results_name = model_name.replace('.json', '.csv')
@@ -78,7 +79,7 @@ class RL_NN(Common):
                                    index=False,
                                    header=True,
                                    float_format='%.2f')
-        print('  Results: {}'.format(results_name))
+        self.log.info('  Results: {}'.format(results_name))
 
     def load_model(self, model, weights):
         """
@@ -91,9 +92,9 @@ class RL_NN(Common):
         loaded_model_json = json_file.read()
         json_file.close()
         loaded_model = model_from_json(loaded_model_json)
-        print("Loaded model from disk: {}".format(model))
+        self.log.info("Loaded model from disk: {}".format(model))
 
         # load weights into new model
         loaded_model.load_weights(weights)
-        print("Loaded model from disk: {}".format(weights))
+        self.log.info("Loaded weights from disk: {}".format(weights))
         return loaded_model
