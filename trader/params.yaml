@@ -19,7 +19,7 @@ column_name:
   blue: azul
 
 # Wanna save the model after training?
-save_model: false
+save_model: true
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
@@ -34,8 +34,8 @@ epsilon_min: 0.02
 decay_factor: 0.995
 
 # When to perform learning
-train_steps: 32
-start_steps: 8
+train_steps: 1
+start_steps: 32
 
 # Batch size for training the model
 batch_size: 32
@@ -45,7 +45,7 @@ experience_replay: False
 exp_batch_size: 16
 
 # Konkorde threshold, above which we can consider an upward trend
-k_threshold: 0.2
+k_threshold: 0.15
 
 # TensorBoard?
 tensorboard: False
@@ -146,9 +146,9 @@ seed: 25
 # Network parameters
 deep_qnet:
   hidden_layers:
-    - 512
-    - 128
+    - 64
     - 32
+    - 8
   activation: relu
   loss: mse
   optimizer: adam

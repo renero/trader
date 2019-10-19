@@ -222,7 +222,7 @@ class Agent(Common):
             nn_input, nn_output,
             epochs=1, verbose=0, batch_size=batch_size,
             **self.callback_args)
-        return h.history['loss'][0], h.history['mean_absolute_error'][0]
+        return h.history['loss'][0], h.history['mae'][0]
 
     def experience_replay(self):
         """
