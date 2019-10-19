@@ -134,18 +134,17 @@ class Display(Common):
         :return:
         """
         percentage = (i / num_episodes) * 100.0
-        self.log.info(
-            "Epoch {:>5}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
+        msg = 'Epoch...: {}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}'.format(
                 i,
                 num_episodes,
                 percentage,
-                last_avg), end='')
+                last_avg)
         if percentage == 0.0:
-            self.log.info('Est.time: UNKNOWN')
+            self.log.info('{} Est.time: UNKNOWN'.format(msg))
             return
         elapsed = end - start
         remaining = ((100. - percentage) * elapsed) / percentage
-        self.log.info('Est.time: {}'.format(self.timer(remaining)))
+        self.log.info('{} Est.time: {}'.format(msg, self.timer(remaining)))
 
     @staticmethod
     def timer(elapsed):

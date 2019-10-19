@@ -146,9 +146,9 @@ seed: 25
 # Network parameters
 deep_qnet:
   hidden_layers:
-    - 64
+    - 512
+    - 128
     - 32
-    - 8
   activation: relu
   loss: mse
   optimizer: adam
