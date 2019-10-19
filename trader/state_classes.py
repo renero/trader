@@ -1,4 +1,4 @@
-from math import copysign, fabs
+from math import copysign
 
 from portfolio import Portfolio
 from rl_state import RL_State
@@ -32,6 +32,13 @@ class StatePredUpward(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
         return 'UPW' if portfolio.prediction_upward else 'DWN'
+
+
+class StateKonkorde(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        return 'UPTREND' if portfolio.konkorde >= portfolio.params.k_threshold \
+            else 'DOWNTREND'
 
 
 class StateLastPredOk(RL_State):

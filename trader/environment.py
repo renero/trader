@@ -18,14 +18,19 @@ class Environment(Common):
     portfolio = None
     price_ = 0.
     forecast_ = 0.
+    green_ = 0.
+    blue_ = 0.
+    konkorde_ = 0.
     max_actions_ = 0
     done_ = False
     reward_ = 0
     new_state_: int = 0
     stop_loss_alert: bool = False
+    have_konkorde = False
 
     def __init__(self, configuration):
         self.params = configuration
+        self.log = self.params.log
         self.display = self.params.display
 
         if 'seed' in self.params:
@@ -33,7 +38,7 @@ class Environment(Common):
         else:
             np.random.seed(1)
 
-        self.states = StatesCombiner(self.params.states_list)
+        self.states = StatesCombiner(self.params)
         self.read_market_data(self.params.data_path)
         self.init_environment(creation_time=True)
 
@@ -76,6 +81,13 @@ class Environment(Common):
             delimiter = self.params.delimiter
         self.data_ = pd.read_csv(path, delimiter)
         self.max_states_ = self.data_.shape[0]
+        self.log.info('Read trader file: {}'.format(path))
+
+        # Do i have konkorde?
+        if self.params.column_name['green'] in self.data_.columns and \
+                self.params.column_name['blue'] in self.data_.columns:
+            self.have_konkorde = True
+            self.log.info('Konkorde index present!')
 
     def update_market_price(self):
         """
@@ -83,8 +95,20 @@ class Environment(Common):
         reading column 0 from DF
         """
         assert self.data_ is not None, 'Price series data has not been read yet'
-        self.price_ = self.data_.iloc[self.t, 0]
-        self.forecast_ = self.data_.iloc[self.t, 1]
+        col_names = list(self.data_.columns)
+
+        self.price_ = self.data_.iloc[
+            self.t, col_names.index(self.params.column_name['price'])]
+        self.forecast_ = self.data_.iloc[
+            self.t, col_names.index(self.params.column_name['forecast'])]
+
+        # If I do have konkorde indicators, I also read them.
+        if self.have_konkorde:
+            self.green_ = self.data_.iloc[
+                self.t, col_names.index(self.params.column_name['green'])]
+            self.blue_ = self.data_.iloc[
+                self.t, col_names.index(self.params.column_name['blue'])]
+            self.konkorde_ = self.green_ + self.blue_
 
     @staticmethod
     def decide_next_action(state, strategy):

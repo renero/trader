@@ -1,13 +1,13 @@
 from pandas import DataFrame
 
 from arguments import Arguments
-from utils.dictionary import Dictionary
 from display import Display
+from logger import Logger
+from utils.dictionary import Dictionary
 from utils.my_dict import MyDict
 
 
 class RLDictionary(Dictionary):
-    arguments: Arguments = None
 
     def __init__(self, default_params_filename='params.yaml', *args, **kwargs):
 
@@ -18,9 +18,17 @@ class RLDictionary(Dictionary):
 
         # Read the arguments passed in CLI to override parameters
         arguments = Arguments(args, kwargs)
+
+        # Start the logger
+        if 'log_level' not in self:
+            self.log_level = 3  # default value = INFO
+        self.log = Logger(self.log_level)
+
         # Define what to do
         setattr(self, 'possible_actions', arguments.possible_actions)
         setattr(self, 'what_to_do', arguments.args.action)
+        self.log.info(self.what_to_do)
+
         # Override other potential parameters specified in command line.
         if arguments.args.debug is True:
             setattr(self, 'debug', True)
@@ -54,6 +62,7 @@ class RLDictionary(Dictionary):
         for state in self.state.keys():
             self.num_states = self.num_states * len(
                 self.state[state].names)
+        self.log.debug('{} possible states'.format(self.num_states))
 
         # Create a display property to centralize all reporting activity into
         # a single function. That way I can store it all in a single dataframe

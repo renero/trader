@@ -4,11 +4,19 @@
 #
 
 # Debug flag
+# Log level:
+# 0 = Silent, 1 = Errors only, 2 = Warnings too, 3 = info, 4 = Debug
 debug: true
+log_level: 4
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../output/forecast_acciona_2018b.csv
+data_path: ../output/forecast_acciona_konkorde_2018b.csv
 delimiter: ','
+column_name:
+  price: test_y
+  forecast: forecast
+  green: verde
+  blue: azul
 
 # Wanna save the model after training?
 save_model: false
@@ -26,7 +34,7 @@ epsilon_min: 0.02
 decay_factor: 0.995
 
 # When to perform learning
-train_steps: 24
+train_steps: 32
 start_steps: 8
 
 # Batch size for training the model
@@ -35,6 +43,9 @@ batch_size: 32
 # Experience Replay batch size
 experience_replay: False
 exp_batch_size: 16
+
+# Konkorde threshold, above which we can consider an upward trend
+k_threshold: 0.2
 
 # TensorBoard?
 tensorboard: False
@@ -87,6 +98,10 @@ state:
     names:
       - PPLOK
       - PPLNOK
+  Konkorde:
+    names:
+      - UPTREND
+      - DOWNTREND
 
 # Actions to be accomplished by the agent (Portfolio class)
 action:
@@ -131,9 +146,9 @@ seed: 25
 # Network parameters
 deep_qnet:
   hidden_layers:
-    - 64
+    - 512
+    - 128
     - 32
-    - 8
   activation: relu
   loss: mse
   optimizer: adam

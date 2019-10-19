@@ -21,7 +21,11 @@ class StatesCombiner:
     nr_substates = 0
     max_id = 0
 
-    def __init__(self, list_of_states):
+    def __init__(self, configuration):
+        self.params = configuration
+        self.log = self.params.log
+
+        list_of_states = self.params.states_list
         self.nr_substates = len(list_of_states)
         for s in list_of_states:
             self.state_list.append(s)
