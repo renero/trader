@@ -1,4 +1,3 @@
-import os
 from os.path import splitext, basename
 
 from keras.layers import Dense, InputLayer

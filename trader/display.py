@@ -135,7 +135,7 @@ class Display(Common):
         """
         percentage = (i / num_episodes) * 100.0
         self.log.info(
-            "Epoch {:>6}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
+            "Epoch {:>5}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}".format(
                 i,
                 num_episodes,
                 percentage,

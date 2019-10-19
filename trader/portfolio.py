@@ -126,6 +126,8 @@ class Portfolio(Common):
             if action_name == 'buy':
                 return 0.0
             else:
+                if action_name == 'wait' and self.shares == 0.:
+                    return -0.05
                 return self.portfolio_value - self.investment
 
         # From this point, we're in preset reward
