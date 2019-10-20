@@ -3,7 +3,6 @@ import os
 from os.path import dirname, realpath, join
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from sklearn.preprocessing import MinMaxScaler
@@ -45,7 +44,7 @@ def valid_output_name(filename: str, path: str, extension=None) -> str:
         if extension:
             output_filepath = join(
                 path, filename) + '_{:d}.{}'.format(
-                    idx, extension)
+                idx, extension)
         else:
             output_filepath = join(path, filename + '_{}'.format(idx))
         idx += 1
