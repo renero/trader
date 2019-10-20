@@ -54,8 +54,7 @@ class Agent(Common):
         :param display_strategy:
         """
         # create the Keras model and learn, or load it from disk.
-        self.model = self.nn.load_model(self.params.model_file,
-                                        self.params.weights_file)
+        self.model = self.nn.load_model(self.params.model_file)
         if retrain is True:
             self.model = self.nn.compile_model(self.model)
 

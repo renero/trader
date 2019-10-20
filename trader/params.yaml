@@ -10,7 +10,7 @@ debug: true
 log_level: 4
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../output/forecast_acciona_konkorde_2018b.csv
+data_path: ../output/forecast_acciona_konkorde_2019.csv
 delimiter: ','
 column_name:
   price: test_y
@@ -23,9 +23,7 @@ save_model: true
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
-# load_model: false
-model_file: ../output/rl_model_forecast_acciona_2018b_4.json
-weights_file: ../output/rl_model_forecast_acciona_2018b_4.h5
+model_file: ../staging/rl_model_forecast_acciona_konkorde_2018b_3
 
 # Parameters for the Q-Learning function
 gamma: 0.95

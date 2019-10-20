@@ -80,20 +80,20 @@ class RL_NN(Common):
                                    float_format='%.2f')
         self.log.info('  Results: {}'.format(results_name))
 
-    def load_model(self, model, weights):
+    def load_model(self, model_basename):
         """
         load json and create model
-        :param model:
-        :param weights:
-        :return:
+        :param model_basename: model basename without extension. 'h5' and
+        'json' will be added
+        :return: the loaded model
         """
-        json_file = open(model, 'r')
+        json_file = open('{}.json'.format(model_basename), 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         loaded_model = model_from_json(loaded_model_json)
-        self.log.info("Loaded model from disk: {}".format(model))
+        self.log.info("Loaded model from disk: {}.json".format(model_basename))
 
         # load weights into new model
-        loaded_model.load_weights(weights)
-        self.log.info("Loaded weights from disk: {}".format(weights))
+        loaded_model.load_weights('{}.h5'.format(model_basename))
+        self.log.info("Loaded weights from disk: {}.h5".format(model_basename))
         return loaded_model
