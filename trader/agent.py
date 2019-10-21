@@ -124,9 +124,8 @@ class Agent(Common):
 
         # Loop over 'num_episodes'
         self.log.debug('Loop over {} episodes'.format(self.params.num_episodes))
-        for step_num in range(self.params.num_episodes):
+        for episode in range(self.params.num_episodes):
             state = env.reset()
-            self.display.rl_train_report(step_num, avg_rewards, last_avg, start)
             done = False
             sum_rewards = 0
             sum_loss = 0
@@ -145,7 +144,7 @@ class Agent(Common):
 
                 # loss, mae = self.step_learn(state, action, reward, new_state)
                 if episode_step % self.params.train_steps == 0 and \
-                        episode_step > self.params.start_steps:
+                        episode > self.params.start_episodes:
                     loss, mae = self.minibatch_learn(self.params.batch_size)
                     # Update states and metrics
                     num_calls_learn += 1
@@ -156,9 +155,14 @@ class Agent(Common):
 
                 episode_step += 1
 
-            self.log.debug(
-                'Finished episode {} after {} steps [{} calls]'.format(
-                    step_num, episode_step, num_calls_learn))
+            self.display.rl_train_report(episode, avg_rewards, last_avg, start)
+            if (episode % self.params.num_episodes_update == 0) or \
+                    (episode == (self.params.num_episodes - 1)):
+                self.log.debug(
+                    'Finished episode {} after {} steps [{} calls]'.format(
+                        episode, episode_step, num_calls_learn))
+
+            #  Update average metrics
             avg_rewards.append(sum_rewards / self.params.num_episodes)
             avg_loss.append(sum_loss / self.params.num_episodes)
             avg_mae.append(sum_mae / self.params.num_episodes)
@@ -198,10 +202,6 @@ class Agent(Common):
         if mem_size < batch_size:
             return 0.0, 0.0
 
-        self.log.debug('Minibatch pos [{} .. {}]'.format(
-            mem_size - batch_size - 1,
-            mem_size - 1
-        ))
         mini_batch = np.empty(shape=(0, 5), dtype=np.int32)
         for i in range(mem_size - batch_size - 1, mem_size - 1):
             mini_batch = np.append(
@@ -213,7 +213,6 @@ class Agent(Common):
             nn_input, nn_output,
             epochs=1, verbose=0, batch_size=batch_size,
             **self.callback_args)
-        # self.log.debug('History contain keys: {}'.format(h.history.keys()))
         return h.history['loss'][0], h.history['mae'][0]
 
     def prepare_nn_data(self, mini_batch):
