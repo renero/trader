@@ -200,28 +200,32 @@ class Agent(Common):
                 mini_batch,
                 np.asarray(self.memory[i]).astype(int).reshape(1, -1),
                 axis=0)
-
-        nn_input = np.empty((0, self.params.num_states), dtype=np.int32)
-        nn_output = np.empty((0, self.params.num_actions))
-        for state, action, reward, next_state, done in mini_batch:
-            target = reward
-            if not done:
-                target = reward + self.params.gamma * self.predict_value(
-                    next_state)
-            nn_input = np.append(nn_input, self.onehot(state), axis=0)
-            labeled_output = self.model.predict(self.onehot(state))[0]
-            labeled_output[action] = target
-            y = labeled_output.reshape(-1, self.params.num_actions)
-            nn_output = np.append(nn_output, y, axis=0)
-
-        # h = self.model.train_on_batch(
-        #     nn_input, nn_output)
-        # return h[0], h[1]
+        nn_input, nn_output = self.prepare_nn_data(mini_batch)
         h = self.model.fit(
             nn_input, nn_output,
             epochs=1, verbose=0, batch_size=batch_size,
             **self.callback_args)
+        self.log.debug('History contain keys: {}'.format(h.history.keys()))
         return h.history['loss'][0], h.history['mae'][0]
+
+    def prepare_nn_data(self, mini_batch):
+        nn_input = np.empty((0, self.params.num_states), dtype=np.int32)
+        nn_output = np.empty((0, self.params.num_actions))
+        for state, action, reward, next_state, done in mini_batch:
+            y = self.predict_output(state, action, reward, next_state, done)
+            nn_input = np.append(nn_input, self.onehot(state), axis=0)
+            nn_output = np.append(nn_output, y, axis=0)
+        return nn_input, nn_output
+
+    def predict_output(self, state, action, reward, next_state, done):
+        target = reward
+        if not done:
+            target = reward + self.params.gamma * self.predict_value(
+                next_state)
+        labeled_output = self.model.predict(self.onehot(state))[0]
+        labeled_output[action] = target
+        y = labeled_output.reshape(-1, self.params.num_actions)
+        return y
 
     def experience_replay(self):
         """
@@ -230,18 +234,12 @@ class Agent(Common):
         """
         mini_batch = random.sample(self.memory,
                                    self.params.exp_batch_size)
-        for state, action, reward, next_state, done in mini_batch:
-            target = reward
-            if not done:
-                target = reward + self.params.gamma * self.predict_value(
-                    next_state)
-            target_vec = self.model.predict(self.onehot(state))[0]
-            target_vec[action] = target
-            self.model.fit(
-                self.onehot(state),
-                target_vec.reshape(-1, self.params.num_actions),
-                epochs=1, verbose=0,
-                **self.callback_args)
+
+        nn_input, nn_output = self.prepare_nn_data(mini_batch)
+        self.model.fit(
+            nn_input, nn_output,
+            epochs=1, verbose=0, batch_size=self.params.exp_batch_size,
+            **self.callback_args)
 
     def onehot(self, state: int) -> np.ndarray:
         return np.identity(self.params.num_states)[state:state + 1]

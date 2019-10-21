@@ -23,7 +23,7 @@ save_model: true
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
-model_file: ../staging/rl_model_forecast_acciona_konkorde_2018b_3
+model_file: ../output/rl_model_forecast_acciona_konkorde_2010_2018
 
 # Parameters for the Q-Learning function
 gamma: 0.95

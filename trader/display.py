@@ -197,10 +197,10 @@ class Display(Common):
         ax1.axhline(y=0, color='red', alpha=0.4)
         ax1.plot(data.netValue)
         ax1.xaxis.set_ticks_position('none')
+
         #
         # Price, forecast and operations
         #
-
         ax2.set_xticks(ax2.get_xticks()[::10])
         ax2.scatter(range(len(data.price)), data.price,
                     c=data.action_id.apply(lambda x: colors[x]),
@@ -208,6 +208,8 @@ class Display(Common):
         ax2.plot(data.price, c='black', linewidth=0.6)
         ax2.plot(data.forecast, 'k--', linewidth=0.5)
         ax2.grid(True, which='major', axis='x')
+
+        # Konkorde ?
         plt.show()
 
     @staticmethod
