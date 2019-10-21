@@ -54,8 +54,8 @@ class Logger:
         if self._level < self._DEBUG:
             return
         when = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
-        print('{} - {}DEBUG{} - {:<30} - {}'.format(
-            when, self.OKBLUE, self.ENDC, who(1), what, **kwargs))
+        print('{} - {}DEBUG - {:<30} - {}{}'.format(
+            when, self.OKBLUE, who(1), what, self.ENDC, **kwargs))
 
     def highlight(self, what):
         now = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())

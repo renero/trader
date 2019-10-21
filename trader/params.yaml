@@ -7,10 +7,10 @@
 # Log level:
 # 0 = Silent, 1 = Errors only, 2 = Warnings too, 3 = info, 4 = Debug
 debug: true
-log_level: 4
+log_level: 3
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../output/forecast_acciona_konkorde_2019.csv
+data_path: ../output/forecast_acciona_konkorde_2018b.csv
 delimiter: ','
 column_name:
   price: test_y
@@ -19,7 +19,7 @@ column_name:
   blue: azul
 
 # Wanna save the model after training?
-save_model: true
+save_model: false
 models_dir: ../output/
 
 # Specify here if you want to load a pre-trained model
@@ -32,8 +32,8 @@ epsilon_min: 0.02
 decay_factor: 0.995
 
 # When to perform learning
-train_steps: 1
-start_steps: 32
+train_steps: 32
+start_steps: 0
 
 # Batch size for training the model
 batch_size: 32

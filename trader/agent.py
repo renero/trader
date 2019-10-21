@@ -132,6 +132,7 @@ class Agent(Common):
             sum_loss = 0
             sum_mae = 0
             episode_step = 0
+            num_calls_learn = 0
             while not done:
                 # Decide whether generating random action or predict most
                 # likely from the give state.
@@ -143,11 +144,11 @@ class Agent(Common):
                 self.memory.append((state, action, reward, new_state, done))
 
                 # loss, mae = self.step_learn(state, action, reward, new_state)
-                if episode_step % self.params.train_steps and \
+                if episode_step % self.params.train_steps == 0 and \
                         episode_step > self.params.start_steps:
                     loss, mae = self.minibatch_learn(self.params.batch_size)
-
                     # Update states and metrics
+                    num_calls_learn += 1
                     state = new_state
                     sum_rewards += reward
                     sum_loss += loss
@@ -155,6 +156,9 @@ class Agent(Common):
 
                 episode_step += 1
 
+            self.log.debug(
+                'Finished episode {} after {} steps [{} calls]'.format(
+                    step_num, episode_step, num_calls_learn))
             avg_rewards.append(sum_rewards / self.params.num_episodes)
             avg_loss.append(sum_loss / self.params.num_episodes)
             avg_mae.append(sum_mae / self.params.num_episodes)
@@ -194,6 +198,10 @@ class Agent(Common):
         if mem_size < batch_size:
             return 0.0, 0.0
 
+        self.log.debug('Minibatch pos [{} .. {}]'.format(
+            mem_size - batch_size - 1,
+            mem_size - 1
+        ))
         mini_batch = np.empty(shape=(0, 5), dtype=np.int32)
         for i in range(mem_size - batch_size - 1, mem_size - 1):
             mini_batch = np.append(
@@ -205,7 +213,7 @@ class Agent(Common):
             nn_input, nn_output,
             epochs=1, verbose=0, batch_size=batch_size,
             **self.callback_args)
-        self.log.debug('History contain keys: {}'.format(h.history.keys()))
+        # self.log.debug('History contain keys: {}'.format(h.history.keys()))
         return h.history['loss'][0], h.history['mae'][0]
 
     def prepare_nn_data(self, mini_batch):
