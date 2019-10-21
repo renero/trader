@@ -80,7 +80,6 @@ class Display(Common):
                        floatfmt=['.0f'] + ['.1f' for i in range(6)]))
         self.report_totals(portfolio)
         if do_plot is True:
-            # self.plot_value()
             self.plot_results(self.params.results)
 
     def report_totals(self, portfolio):
@@ -210,6 +209,7 @@ class Display(Common):
         ax2.grid(True, which='major', axis='x')
 
         # Konkorde ?
+
         plt.show()
 
     @staticmethod
