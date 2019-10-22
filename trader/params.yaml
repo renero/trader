@@ -36,7 +36,7 @@ train_steps: 24
 start_episodes: 10
 
 # Batch size for training the model
-batch_size: 32
+batch_size: 24
 
 # Experience Replay batch size
 experience_replay: False
