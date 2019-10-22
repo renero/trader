@@ -86,13 +86,13 @@ class Agent(Common):
         # create the Keras model and learn, or load it from disk.
         if fresh_model is True:
             self.model = self.nn.create_model()
-        avg_rewards, avg_loss, avg_mae = self.reinforce_learn(env)
+        avg_rewards, avg_loss, avg_mae, avg_value = self.reinforce_learn(env)
 
         # display anything?
         plot_metrics = self.params.what_to_do == 'learn' or \
                        self.params.what_to_do == 'retrain'
         if do_plot is True and plot_metrics is True:
-            self.display.plot_metrics(avg_loss, avg_mae, avg_rewards)
+            self.display.plot_metrics(avg_loss, avg_mae, avg_rewards, avg_value)
 
         # Extract the strategy matrix from the model.
         strategy = self.get_strategy()
@@ -118,6 +118,7 @@ class Agent(Common):
         avg_rewards = []
         avg_loss = []
         avg_mae = []
+        avg_netValue = []
         last_avg: float = 0.0
         start = time.time()
         epsilon = self.params.epsilon
@@ -132,6 +133,7 @@ class Agent(Common):
             sum_mae = 0
             episode_step = 0
             num_calls_learn = 0
+            sum_netvalue = 0.
             while not done:
                 # Decide whether generating random action or predict most
                 # likely from the give state.
@@ -152,6 +154,7 @@ class Agent(Common):
                     sum_rewards += reward
                     sum_loss += loss
                     sum_mae += mae
+                    sum_netvalue += env.memory.results.netValue.iloc[-1]
 
                 episode_step += 1
 
@@ -166,6 +169,7 @@ class Agent(Common):
             avg_rewards.append(sum_rewards / self.params.num_episodes)
             avg_loss.append(sum_loss / self.params.num_episodes)
             avg_mae.append(sum_mae / self.params.num_episodes)
+            avg_netValue.append(sum_netvalue / self.params.num_episodes)
 
             # Batch Replay
             if self.params.experience_replay is True:
@@ -176,7 +180,7 @@ class Agent(Common):
             if epsilon >= self.params.epsilon_min:
                 epsilon *= self.params.decay_factor
 
-        return avg_rewards, avg_loss, avg_mae
+        return avg_rewards, avg_loss, avg_mae, avg_netValue
 
     def epsilon_greedy(self, epsilon, state):
         """

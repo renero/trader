@@ -204,11 +204,11 @@ class Display(Common):
         plt.xlabel('Number of games')
         plt.show()
 
-    def plot_metrics(self, avg_loss, avg_mae, avg_rewards):
-        self.chart(avg_rewards, 'Average reward per game', 'line',
-                   ma=True)
+    def plot_metrics(self, avg_loss, avg_mae, avg_rewards, avg_value):
+        self.chart(avg_rewards, 'Average reward per game', 'line', ma=True)
         self.chart(avg_loss, 'Avg loss', 'line', ma=True)
         self.chart(avg_mae, 'Avg MAE', 'line', ma=True)
+        self.chart(avg_value, 'Avg. Value', 'line', ma=True)
 
     def rl_train_report(self, index, avg_rewards, last_avg, start):
         """
