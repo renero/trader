@@ -1,6 +1,8 @@
 from pandas import DataFrame, Series
 
 
+# TODO Hacer esta clase generica para poder manejar varios dataframes
+
 class Memory:
 
     def __init__(self, configuration):

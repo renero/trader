@@ -23,11 +23,11 @@ class Common:
         return colored(string, 'white')
 
     def no_color(self, number: float):
-        string = '{:.1f}'.format(number)
+        string = '{:.2f}'.format(number)
         return self.white(string)
 
     def color(self, number: float):
-        string = '{:.1f}'.format(number)
+        string = '{:.2f}'.format(number)
         if number > 0.0:
             return self.green(string)
         elif number < 0.0:
@@ -36,14 +36,14 @@ class Common:
             return self.white(string)
 
     def cond_color(self, number, ref):
-        string = '{:.1f}'.format(number)
+        string = '{:.2f}'.format(number)
         if number > ref:
             return self.green(string)
         elif number < ref:
             return self.red(string)
         else:
             number = 0.0
-            string = '{:.1f}'.format(number)
+            string = '{:.2f}'.format(number)
             return self.white(string)
 
     def recolor(self, df, column_name):

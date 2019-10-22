@@ -10,6 +10,7 @@ from environment import Environment
 from rl_nn import RL_NN
 
 
+# TODO Mover la memoria deque a la clase "memory"
 class Agent(Common):
     configuration = None
     tensorboard = None

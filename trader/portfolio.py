@@ -102,8 +102,8 @@ class Portfolio(Common):
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
             action_name = 'f.sell'
-            self.memory.record_action(action_name)
             self.reward = self.decide_reward(action_name, num_shares)
+            self.memory.record_action(action_name)
             return self.reward
 
         action_name = 'sell'
@@ -130,7 +130,7 @@ class Portfolio(Common):
 
     def decide_reward(self, action_name, num_shares):
         def sigmoid(x: float):
-            return 1. / (1. + math.pow(math.e, -x))
+            return 1. / math.sqrt(1. + math.pow(x, 2.))
 
         # Are we working with direct reward?
         if self.params.environment.direct_reward is True:

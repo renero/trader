@@ -1,5 +1,5 @@
 import time
-from math import log10, pow
+from math import log10, pow, floor
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -51,11 +51,13 @@ class Display(Common):
         self.recolor(df, 'netValue')
         self.recolor(df, 'investment')
         self.recolor(df, 'reward')
+        if self.params.have_konkorde:
+            self.recolor(df, 'konkorde')
         print(tabulate(df,
                        headers='keys',
                        tablefmt='psql',
                        showindex=False,
-                       floatfmt=['.0f'] + ['.1f' for i in range(6)]))
+                       floatfmt=['.0f'] + ['.2f' for i in range(6)]))
         self.report_totals(portfolio)
         if do_plot is True:
             self.plot_results(results, self.params.have_konkorde)
@@ -90,12 +92,17 @@ class Display(Common):
         :param end:
         :return:
         """
+
+        def magnitude(x):
+            return int(floor(log10(x)))
+
         percentage = (i / num_episodes) * 100.0
-        msg = 'Epoch...: {}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}'.format(
+        msg = 'Epoch...: {:0{m}}/{:<{m}} [{:>5.1f}%] Avg reward: {:+.3f}'.format(
             i,
             num_episodes,
             percentage,
-            last_avg)
+            last_avg,
+            m=magnitude(num_episodes)+1)
         if percentage == 0.0:
             self.log.info('{} Est.time: UNKNOWN'.format(msg))
             return
@@ -182,7 +189,7 @@ class Display(Common):
               ma: bool = False):
         """
         Plots a chart of the array passed
-        :param array:
+        :param arrays:
         :param metric_name: label to be displayed on Y axis
         :param chart_type: either 'line' or 'scatter'
         :param ma: moving average?
@@ -199,6 +206,7 @@ class Display(Common):
                 len(arrays), len(metric_name))
 
         # Plot every array passed
+        plt.axhline(0, color='grey', alpha=0.4)
         for index, array in enumerate(arrays):
             data = Display.smooth(array) if ma is True else array
             if chart_type == 'scatter':
