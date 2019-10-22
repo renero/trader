@@ -176,8 +176,8 @@ class Display(Common):
         plt.show()
 
     @staticmethod
-    def chart(array,
-              metric_name='',
+    def chart(arrays,
+              metric_name=None,
               chart_type='line',
               ma: bool = False):
         """
@@ -188,27 +188,45 @@ class Display(Common):
         :param ma: moving average?
         :return:
         """
-        if ma is True:
-            magnitude = int(log10(len(array))) - 1
-            period = int(pow(10, magnitude))
-            if period == 1:
-                period = 10
-            data = np.convolve(array, np.ones((period,)) / period, mode='valid')
-        else:
-            data = array
-        if chart_type == 'scatter':
-            plt.scatter(range(len(data)), data)
-        else:
-            plt.plot(data)
+        if metric_name is None:
+            metric_name = ['']
+        if type(arrays[0]) is not list:
+            arrays = [arrays]
+        if type(metric_name) is not list:
+            metric_name = [metric_name]
+        assert len(arrays) == len(metric_name), \
+            '{} arrays passed, but only {} metric names'.format(
+                len(arrays), len(metric_name))
+
+        # Plot every array passed
+        for index, array in enumerate(arrays):
+            data = Display.smooth(array) if ma is True else array
+            if chart_type == 'scatter':
+                plt.scatter(range(len(data)), data)
+            else:
+                plt.plot(data, label=metric_name[index])
         plt.ylabel(metric_name)
         plt.xlabel('Number of games')
+        plt.legend()
         plt.show()
 
+    @staticmethod
+    def smooth(array):
+        """Compute the moving average over the array"""
+        magnitude = int(log10(len(array))) - 1
+        period = int(pow(10, magnitude))
+        if period == 1:
+            period = 10
+        data = np.convolve(array, np.ones((period,)) / period,
+                           mode='valid')
+        return data
+
     def plot_metrics(self, avg_loss, avg_mae, avg_rewards, avg_value):
-        self.chart(avg_rewards, 'Average reward per game', 'line', ma=True)
+        self.chart([avg_rewards, avg_value],
+                   ['Average reward', 'Average net value'],
+                   ma=True)
         self.chart(avg_loss, 'Avg loss', 'line', ma=True)
         self.chart(avg_mae, 'Avg MAE', 'line', ma=True)
-        self.chart(avg_value, 'Avg. Value', 'line', ma=True)
 
     def rl_train_report(self, index, avg_rewards, last_avg, start):
         """
