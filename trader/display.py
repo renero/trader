@@ -169,7 +169,7 @@ class Display(Common):
         # Konkorde ?
         if have_konkorde:
             ax3 = ax2.twinx()
-            ax3.set_ylim(-2., +10.)
+            ax3.set_ylim(-1.5, +15.)
             ax3.plot(data.konkorde, 'g', alpha=0.4)
 
         plt.show()
