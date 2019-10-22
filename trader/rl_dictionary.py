@@ -68,11 +68,4 @@ class RLDictionary(Dictionary):
         # a single function. That way I can store it all in a single dataframe
         # for later analysis.
         setattr(self, 'display', Display)
-        self.display = Display(self)
-
-        # Create a DataFrame within the configuration to store all the values
-        # that are relevant to later perform data analysis.
-        # The YAML file contains the column names in a parameter called
-        # table_headers.
-        setattr(self, 'results', DataFrame)
-        self.results = DataFrame(columns=self.table_headers)
+        self.display: Display = Display(self)

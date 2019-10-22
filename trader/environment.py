@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 from common import Common
+from memory import Memory
 from portfolio import Portfolio
 from states_combiner import StatesCombiner
 
@@ -32,6 +33,8 @@ class Environment(Common):
         self.params = configuration
         self.log = self.params.log
         self.display = self.params.display
+        self.memory = Memory(self.params)
+        self.results = self.memory.results
 
         if 'seed' in self.params:
             np.random.seed(self.params.seed)
@@ -52,9 +55,10 @@ class Environment(Common):
         self.update_market_price()
         self.portfolio = Portfolio(self.params,
                                    self.price_,
-                                   self.forecast_)
+                                   self.forecast_,
+                                   self.memory)
         if creation_time is not True:
-            self.display.report(self.portfolio, t=0, disp_header=True)
+            self.memory.record_values(self.portfolio, t=0)
         return self.update_state()
 
     def reset(self):
@@ -65,8 +69,7 @@ class Environment(Common):
         self.done_ = False
         self.t = 0
         del self.portfolio
-        self.params.results.drop(self.params.results.index,
-                                 inplace=True)
+        self.memory.reset()
         return self.init_environment(creation_time=False)
 
     def read_market_data(self, path):
@@ -84,9 +87,11 @@ class Environment(Common):
         self.log.info('Read trader file: {}'.format(path))
 
         # Do i have konkorde?
+        setattr(self.params, 'have_konkorde', bool)
+        self.params.have_konkorde = False
         if self.params.column_name['green'] in self.data_.columns and \
                 self.params.column_name['blue'] in self.data_.columns:
-            self.have_konkorde = True
+            self.params.have_konkorde = True
             self.log.info('Konkorde index present!')
 
     def update_market_price(self):
@@ -103,7 +108,7 @@ class Environment(Common):
             self.t, col_names.index(self.params.column_name['forecast'])]
 
         # If I do have konkorde indicators, I also read them.
-        if self.have_konkorde:
+        if self.params.have_konkorde:
             self.green_ = self.data_.iloc[
                 self.t, col_names.index(self.params.column_name['green'])]
             self.blue_ = self.data_.iloc[
@@ -152,20 +157,23 @@ class Environment(Common):
 
         # If I'm in stop loss situation, rewards gets a different value
         self.reward_ = self.fix_reward(self.params.action_name[action])
-        self.display.report_reward(
-            self.reward_, self.states.name(self.current_state_))
+        self.memory.record_reward(self.reward_,
+                                  self.states.name(self.current_state_))
 
         self.t += 1
         if self.t >= self.max_states_:
             self.done_ = True
-            self.display.report(self.portfolio, self.t - 1, disp_footer=True)
+            self.memory.record_values(self.portfolio, self.t - 1)
             self.portfolio.reset_history()
             return self.new_state_, self.reward_, self.done_, self.t
 
         self.update_market_price()
-        self.portfolio.update_after_step(self.price_, self.forecast_)
+        if self.params.have_konkorde:
+            self.portfolio.update_after_step(self.price_, self.forecast_, self.konkorde_)
+        else:
+            self.portfolio.update_after_step(self.price_, self.forecast_)
         self.new_state_ = self.update_state()
-        self.display.report(self.portfolio, self.t)
+        self.memory.record_values(self.portfolio, self.t)
         self.portfolio.append_to_history(self)
 
         return self.new_state_, self.reward_, self.done_, self.t

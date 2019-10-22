@@ -41,7 +41,7 @@ class RL_NN(Common):
                   activation='linear'))
         model = self.compile_model(model)
         if self.params.debug is True:
-            self.log.info('Model Summary')
+            self.log.debug('Model Summary')
             model.summary()
 
         return model
@@ -53,7 +53,7 @@ class RL_NN(Common):
             metrics=self.params.deep_qnet.metrics)
         return model
 
-    def save_model(self, model):
+    def save_model(self, model, results):
         self.log.info('\nSaving model, weights and results.')
 
         fname = 'rl_model_' + splitext(
@@ -73,11 +73,11 @@ class RL_NN(Common):
 
         # Save also the results table
         results_name = model_name.replace('.json', '.csv')
-        self.params.results.to_csv(results_name,
-                                   sep=',',
-                                   index=False,
-                                   header=True,
-                                   float_format='%.2f')
+        results.to_csv(results_name,
+                       sep=',',
+                       index=False,
+                       header=True,
+                       float_format='%.2f')
         self.log.info('  Results: {}'.format(results_name))
 
     def load_model(self, model_basename):

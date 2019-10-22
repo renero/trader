@@ -1,3 +1,5 @@
+import math
+
 from common import Common
 from utils.dictionary import Dictionary
 
@@ -21,13 +23,18 @@ class Portfolio(Common):
     BUY = +1
     SELL = -1
 
-    def __init__(self, configuration, initial_price=0., forecast=0.):
+    def __init__(self,
+                 configuration,
+                 initial_price,
+                 forecast,
+                 env_memory):
         # copy the contents of the dictionary passed as argument. This dict
         # contains the parameters read in the initialization.
         self.params = configuration
         self.display = self.params.display
         self.log = self.params.log
         self.environment = self.params.environment
+        self.memory = env_memory
 
         self.budget = self.environment.initial_budget
         self.initial_budget = self.environment.initial_budget
@@ -52,7 +59,7 @@ class Portfolio(Common):
 
     def wait(self):
         action_name = 'wait'
-        self.display.report_action(action_name)
+        self.memory.record_action(action_name)
         self.reward = self.decide_reward(action_name, num_shares=0)
         return self.reward
 
@@ -60,7 +67,7 @@ class Portfolio(Common):
         buy_price = num_shares * self.latest_price
         if buy_price > self.budget:
             action_name = 'f.buy'
-            self.display.report_action(action_name)
+            self.memory.record_action(action_name)
             self.reward = self.decide_reward(action_name, num_shares)
             return self.reward  # self.reward
 
@@ -68,7 +75,7 @@ class Portfolio(Common):
         self.update_after_buy(num_shares, buy_price)
         self.reward = self.decide_reward(action_name, num_shares)
 
-        self.display.report_action(action_name)
+        self.memory.record_action(action_name)
         return self.reward
 
     def update_after_buy(self, num_shares, buy_price):
@@ -95,14 +102,14 @@ class Portfolio(Common):
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
             action_name = 'f.sell'
-            self.display.report_action(action_name)
+            self.memory.record_action(action_name)
             self.reward = self.decide_reward(action_name, num_shares)
             return self.reward
 
         action_name = 'sell'
         self.update_after_sell(num_shares, sell_price)
         self.reward = self.decide_reward(action_name, num_shares)
-        self.display.report_action(action_name)
+        self.memory.record_action(action_name)
         return self.reward
 
     def update_after_sell(self, num_shares, sell_price):
@@ -117,10 +124,14 @@ class Portfolio(Common):
         self.shares -= num_shares
         self.portfolio_value -= sell_price
         self.movements.append((self.SELL, num_shares, self.latest_price))
+
         # what is the value of my investment after selling?
         self.net_value = self.portfolio_value - self.investment
 
     def decide_reward(self, action_name, num_shares):
+        def sigmoid(x: float):
+            return 1. / (1. + math.pow(math.e, -x))
+
         # Are we working with direct reward?
         if self.params.environment.direct_reward is True:
             if action_name == 'buy':
@@ -128,7 +139,7 @@ class Portfolio(Common):
             else:
                 if action_name == 'wait' and self.shares == 0.:
                     return -0.05
-                return self.portfolio_value - self.investment
+                return sigmoid(self.portfolio_value - self.investment)
 
         # From this point, we're in preset reward
         # Reward, in case of sell, can be proportional to gain/loss, if not
@@ -162,16 +173,20 @@ class Portfolio(Common):
         if len(self.history) > self.params.stack_size:
             self.history.pop(0)
 
-    def values_to_report(self):
+    def values_to_record(self):
         net_value = self.portfolio_value - self.investment
-        return [
-            self.latest_price,
-            self.forecast,
-            self.budget,
-            self.investment,
-            self.portfolio_value,
-            net_value,
-            self.shares]
+        values = [
+                self.latest_price,
+                self.forecast,
+                self.budget,
+                self.investment,
+                self.portfolio_value,
+                net_value,
+                self.shares
+        ]
+        if self.params.have_konkorde:
+            return values + [self.konkorde]
+        return values
 
     @property
     def gain(self):

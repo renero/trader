@@ -36,7 +36,7 @@ if __name__ == "__main__":
                                  do_plot=True)
         # Save the model?
         if params.save_model is True:
-            agent.nn.save_model(agent.model)
+            agent.nn.save_model(agent.model, environment.memory.results)
         # Simulate what has been learnt with the data.
         agent.simulate(environment, strategy)
     else:  # predict

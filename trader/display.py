@@ -3,11 +3,12 @@ from math import log10, pow
 
 import matplotlib.pyplot as plt
 import numpy as np
-from pandas import Series
+from pandas import DataFrame
 from tabulate import tabulate
 
 from common import Common
 from logger import Logger
+from portfolio import Portfolio
 
 
 class Display(Common):
@@ -37,34 +38,11 @@ class Display(Common):
                 model.predict(np.identity(num_states)[i:i + 1])))
         print()
 
-    def report(self, portfolio, t: int, disp_header=False, disp_footer=False):
-        """
-        Displays a simple report of tha main variables in the QLearning algo
-        :param portfolio:
-        :param t:
-        :param disp_header:
-        :param disp_footer:
-        :return:
-        """
-        values = [t] + portfolio.values_to_report()
-        self.add_to_table(values, self.params.table_headers)
-
-    def add_to_table(self, values_to_report, table_headers):
-        """
-        Add the report values to the results table.
-        :param values_to_report: the list of values
-        :param table_headers:
-        :return:
-        """
-        row = Series(dict(zip(
-            table_headers,
-            values_to_report
-        )))
-        self.params.results = self.params.results.append(
-            row, ignore_index=True)
-
-    def summary(self, portfolio, do_plot=False):
-        df = self.params.results.copy()
+    def summary(self,
+                results: DataFrame,
+                portfolio: Portfolio,
+                do_plot=False) -> None:
+        df = results.copy()
         self.recolor_ref(df, 'forecast', 'price')
         self.reformat(df, 'price')
         self.reformat(df, 'value')
@@ -80,7 +58,7 @@ class Display(Common):
                        floatfmt=['.0f'] + ['.1f' for i in range(6)]))
         self.report_totals(portfolio)
         if do_plot is True:
-            self.plot_results(self.params.results)
+            self.plot_results(results, self.params.have_konkorde)
 
     def report_totals(self, portfolio):
         # total outcome and final metrics.
@@ -101,26 +79,6 @@ class Display(Common):
         self.log.info('P/L......: € {}'.format(
             self.color(portfolio.portfolio_value - portfolio.investment)))
 
-    def report_action(self, action_name):
-        """
-        Display only what action was selected.
-        :param action_name:
-        :return:
-        """
-        last_index = self.params.results.shape[0] - 1
-        self.params.results.loc[last_index, 'action'] = action_name
-
-    def report_reward(self, reward, current_state):
-        """
-        Display only what is the reward resulting from the action selected.
-        :param reward:
-        :param current_state:
-        :return:
-        """
-        last_index = self.params.results.shape[0] - 1
-        self.params.results.loc[last_index, 'reward'] = reward
-        self.params.results.loc[last_index, 'state'] = current_state
-
     def progress(self, i, num_episodes, last_avg, start, end):
         """
         Report the progress during learning
@@ -134,10 +92,10 @@ class Display(Common):
         """
         percentage = (i / num_episodes) * 100.0
         msg = 'Epoch...: {}/{:<5} [{:>5.1f}%] Avg reward: {:+.3f}'.format(
-                i,
-                num_episodes,
-                percentage,
-                last_avg)
+            i,
+            num_episodes,
+            percentage,
+            last_avg)
         if percentage == 0.0:
             self.log.info('{} Est.time: UNKNOWN'.format(msg))
             return
@@ -173,7 +131,7 @@ class Display(Common):
         return
 
     @staticmethod
-    def plot_results(results):
+    def plot_results(results, have_konkorde):
         data = results.copy(deep=True)
         data = data.dropna()
 
@@ -209,6 +167,10 @@ class Display(Common):
         ax2.grid(True, which='major', axis='x')
 
         # Konkorde ?
+        if have_konkorde:
+            ax3 = ax2.twinx()
+            ax3.set_ylim(-2., +10.)
+            ax3.plot(data.konkorde, 'g', alpha=0.4)
 
         plt.show()
 

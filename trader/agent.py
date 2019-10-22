@@ -289,4 +289,6 @@ class Agent(Common):
             next_state, reward, done, _ = environment.step(action)
             total_reward += reward
             state = next_state
-        self.params.display.summary(environment.portfolio, do_plot=do_plot)
+        self.params.display.summary(environment.memory.results,
+                                    environment.portfolio,
+                                    do_plot=do_plot)

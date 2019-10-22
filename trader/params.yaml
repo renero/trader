@@ -28,8 +28,8 @@ model_file: ../output/rl_model_forecast_acciona_konkorde_2010_2018
 # Parameters for the Q-Learning function
 gamma: 0.95
 epsilon: 1.0
-epsilon_min: 0.02
-decay_factor: 0.995
+epsilon_min: 0.1
+decay_factor: 0.998
 
 # When to perform learning
 train_steps: 24
@@ -134,6 +134,7 @@ table_headers:
   - value
   - netValue
   - shares
+  - konkorde
   - action
   - reward
   - state
