@@ -150,7 +150,7 @@ class Display(Common):
         data['action_id'] = data.action.apply(lambda a: color_action(a))
         data.head()
         colors = {0: 'green', 1: 'red', 2: '#E8D842', 3: '#BE5B11',
-                  4: '#BBBBBB', 5: '#BBBBBB'}
+                  4: 'white', 5: 'white'}
         fig, (ax1, ax2) = plt.subplots(2,
                                        sharex=True,
                                        figsize=(14, 10),
@@ -159,21 +159,21 @@ class Display(Common):
         #
         # Portfolio Value
         #
-        ax1.axhline(y=0, color='red', alpha=0.4)
-        ax1.plot(data.netValue)
+        ax1.axhline(y=0, color='red', alpha=0.4, linewidth=0.4)
         ax1.scatter(range(len(data.price)), data.netValue,
                     c=data.action_id.apply(lambda x: colors[x]),
                     marker='.')
+        ax1.plot(data.netValue, linewidth=0.6)
         ax1.xaxis.set_ticks_position('none')
 
         #
         # Price, forecast and operations
         #
         ax2.set_xticks(ax2.get_xticks()[::10])
+        ax2.plot(data.price, c='black', linewidth=0.6)
         ax2.scatter(range(len(data.price)), data.price,
                     c=data.action_id.apply(lambda x: colors[x]),
                     marker='.')
-        ax2.plot(data.price, c='black', linewidth=0.6)
         ax2.plot(data.forecast, 'k--', linewidth=0.5)
         ax2.grid(True, which='major', axis='x')
 
