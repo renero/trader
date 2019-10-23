@@ -33,6 +33,7 @@ class Environment(Common):
         self.display = self.params.display
         self.memory = Memory(self.params)
         self.results = self.memory.results
+        self.log.info('Creating Environment')
 
         if 'seed' in self.params:
             np.random.seed(self.params.seed)
@@ -41,7 +42,10 @@ class Environment(Common):
 
         self.states = StatesCombiner(self.params)
         self.read_market_data(self.params.data_path)
+        self.portfolio = Portfolio(self.params,
+                                   self.price_, self.forecast_, self.memory)
         self.init_environment(creation_time=True)
+        self.log.info('Environment created')
 
     def init_environment(self, creation_time):
         """
@@ -51,10 +55,13 @@ class Environment(Common):
         :return: The initial state.
         """
         self.update_market_price()
-        self.portfolio = Portfolio(self.params,
-                                   self.price_,
-                                   self.forecast_,
-                                   self.memory)
+        # self.portfolio = Portfolio(self.params,
+        #                            self.price_,
+        #                            self.forecast_,
+        #                            self.memory)
+        self.portfolio.reset(self.price_,
+                             self.forecast_,
+                             self.memory)
         if creation_time is not True:
             self.memory.record_values(self.portfolio, t=0)
         return self.update_state()
@@ -67,7 +74,7 @@ class Environment(Common):
         self.log.debug('Resetting environment')
         self.done_ = False
         self.t = 0
-        del self.portfolio
+        # del self.portfolio
         self.memory.reset()
         return self.init_environment(creation_time=False)
 

@@ -206,10 +206,10 @@ class Display(Common):
                 len(arrays), len(metric_name))
 
         # Plot every array passed
-        color = ['blue', 'orange', 'green', 'red']
+        color = ['blue', 'red', 'orange', 'green']
         fig, ax = plt.subplots()
-        plt.axhline(0, color='grey', alpha=0.4)
         for index, array in enumerate(arrays):
+            ax.axhline(0, color='grey', linewidth=0.5, alpha=0.4)
             data = Display.smooth(array) if ma is True else array
             if index > 0:
                 ax = ax.twinx()
@@ -218,8 +218,8 @@ class Display(Common):
                            color=color[index], alpha=0.5)
             else:
                 ax.plot(data, label=metric_name[index],
-                        color=color[index], alpha=0.5, linewidth=0.7)
-            ax.set_ylabel(metric_name[index])
+                        color=color[index], alpha=0.5, linewidth=0.8)
+            ax.set_ylabel(metric_name[index], color=color[index])
         plt.xlabel('Number of games')
         plt.legend()
         fig.tight_layout()

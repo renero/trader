@@ -3,11 +3,6 @@
 # @renero
 #
 
-# Debug flag
-# Log level:
-# 0 = Silent, 1 = Errors only, 2 = Warnings too, 3 = info, 4 = Debug
-log_level: 3
-
 # Data Path. Where is the data from which l#earning how to invest?
 data_path: ../output/forecast_acciona_konkorde_2018b.csv
 delimiter: ','
@@ -26,11 +21,11 @@ model_file: ../output/rl_model_forecast_acciona_konkorde_2010_2018
 # Parameters for the Q-Learning function
 gamma: 0.95
 epsilon: 1.0
-epsilon_min: 0.1
-decay_factor: 0.998
+epsilon_min: 0.01
+decay_factor: 0.995
 
 # When to perform learning
-train_steps: 10
+train_steps: 24
 start_episodes: 0
 
 # Batch size for training the model
@@ -143,9 +138,9 @@ seed: 25
 # Network parameters
 deep_qnet:
   hidden_layers:
-    - 512
-    - 128
-    - 32
+    - 18
+    - 36
+    - 9
   activation: relu
   loss: mse
   optimizer: adam

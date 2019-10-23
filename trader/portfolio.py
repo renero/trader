@@ -36,12 +36,31 @@ class Portfolio(Common):
         self.display = self.params.display
         self.log = self.params.log
         self.environment = self.params.environment
-        self.memory = env_memory
 
         self.budget = self.environment.initial_budget
         self.initial_budget = self.environment.initial_budget
         self.latest_price = initial_price
         self.forecast = forecast
+        self.memory = env_memory
+        self.log.info('Portfolio created with initial budget: {:.1f}'.format(
+            self.initial_budget))
+
+    def reset(self, initial_price, forecast, env_memory):
+        self.initial_budget = self.environment.initial_budget
+        self.budget = self.environment.initial_budget
+        self.latest_price = initial_price
+        self.forecast = forecast
+        self.memory = env_memory
+        self.investment = 0
+        self.portfolio_value: float = 0.
+        self.net_value: float = 0
+        self.shares: float = 0.
+        self.konkorde = 0.
+        self.reward = 0.
+        self.movements = []
+        self.history = []
+        # self.log.info('Portfolio reset to initial budget: {:.1f}'.format(
+        #     self.initial_budget))
 
     def update_after_step(self, price, forecast, konkorde=None):
         """
@@ -148,6 +167,7 @@ class Portfolio(Common):
 
     def direct_reward(self, action_name, num_shares):
         """ Direct reward is directly related to portfolio value """
+
         def sigmoid(x: float):
             return x / math.sqrt(1. + math.pow(x, 2.))
 
@@ -163,6 +183,10 @@ class Portfolio(Common):
             # to reverse the reward sign to negative.
             if action_name in self.failed_actions:
                 net_value = -1. * abs(net_value)
+                # There is a corner case when it is a failed action but there
+                # are no shares, and value is 0. In that case, we must punish.
+                if net_value == 0.0:
+                    net_value = -1.0
             self.log.debug(
                 '  direct reward: net value s({:.2f})={:.2f}'.format(
                     net_value, sigmoid(net_value)

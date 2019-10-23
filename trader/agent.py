@@ -134,7 +134,6 @@ class Agent(Common):
             sum_mae = 0
             episode_step = 0
             num_calls_learn = 0
-            sum_netvalue = 0.
 
             while not done:
                 # Decide whether generating random action or predict most
@@ -157,7 +156,6 @@ class Agent(Common):
                 # Update states and metrics
                 state = new_state
                 sum_rewards += reward
-                sum_netvalue += env.memory.results.netValue.iloc[-1]
                 episode_step += 1
 
             self.display.rl_train_report(episode, avg_rewards, last_avg, start)
@@ -171,7 +169,7 @@ class Agent(Common):
             avg_rewards.append(sum_rewards / self.params.num_episodes)
             avg_loss.append(sum_loss / self.params.num_episodes)
             avg_mae.append(sum_mae / self.params.num_episodes)
-            avg_netValue.append(sum_netvalue / self.params.num_episodes)
+            avg_netValue.append(env.memory.results.netValue.iloc[-1])
 
             # Batch Replay
             if self.params.experience_replay is True:
