@@ -161,7 +161,7 @@ class Display(Common):
         #
         ax1.axhline(y=0, color='red', alpha=0.4)
         ax1.plot(data.netValue)
-        ax1.scatter(range(len(data.price)), data.price,
+        ax1.scatter(range(len(data.price)), data.netValue,
                     c=data.action_id.apply(lambda x: colors[x]),
                     marker='.')
         ax1.xaxis.set_ticks_position('none')

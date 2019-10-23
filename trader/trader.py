@@ -31,6 +31,7 @@ if __name__ == "__main__":
     elif flag['learn'] or flag['retrain']:
         if flag['retrain']:
             agent.q_load(environment, retrain=flag['retrain'])
+            params.epsilon = params.epsilon_min
         strategy = agent.q_learn(environment,
                                  fresh_model=flag['learn'],
                                  do_plot=True)
