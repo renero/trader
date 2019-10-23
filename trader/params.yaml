@@ -24,15 +24,15 @@ epsilon: 1.0
 epsilon_min: 0.01
 decay_factor: 0.995
 
-# When to perform learning
-train_steps: 24
+# 'train_steps' specify after how many steps call the 'fit' method
+# 'batch_size' indicates how many experiences to be fit at once.
+# 'start_episodes' indicates how many steps to run before starting to learn
+train_steps: 4
+batch_size: 8
 start_episodes: 0
 
-# Batch size for training the model
-batch_size: 24
-
 # Experience Replay batch size
-experience_replay: False
+experience_replay: true
 exp_batch_size: 16
 
 # Konkorde threshold, above which we can consider an upward trend
@@ -138,9 +138,9 @@ seed: 25
 # Network parameters
 deep_qnet:
   hidden_layers:
-    - 18
-    - 36
-    - 9
+    - 64
+    - 32
+    - 8
   activation: relu
   loss: mse
   optimizer: adam

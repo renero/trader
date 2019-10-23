@@ -13,12 +13,12 @@ class Arguments(object):
                             choices=self.possible_actions)
         parser.add_argument('-d', '--debug', nargs=1, type=int,
                             help='Debug level (0..4), default 0.')
-        parser.add_argument('-s', '--save', action='store_true',
-                            help='Save ON, default OFF')
-        parser.add_argument('-e', '--epochs', nargs=1, type=int,
+        parser.add_argument('-e', '--epochs', nargs=1, type=int, required=True,
                             help='Number of epochs in training')
         parser.add_argument('-f', '--file', nargs=1, type=str,
                             help='Forecast file to process')
+        parser.add_argument('-s', '--save', action='store_true',
+                            help='Save ON, default OFF')
 
         self.args = parser.parse_args()
         action_name = 'arg_{}'.format(self.args.action)

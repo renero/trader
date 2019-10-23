@@ -244,19 +244,30 @@ class Display(Common):
         self.chart(avg_loss, 'Avg loss', 'line', ma=True)
         self.chart(avg_mae, 'Avg MAE', 'line', ma=True)
 
-    def rl_train_report(self, index, avg_rewards, last_avg, start):
+    def rl_train_report(self,
+                        episode,
+                        episode_step,
+                        avg_rewards,
+                        last_avg,
+                        start):
         """
         Displays report periodically
-        :param index:
+        :param episode:
+        :param episode_step:
         :param avg_rewards:
         :param last_avg:
         :param start:
         :return:
         """
-        if (index % self.params.num_episodes_update == 0) or \
-                (index == (self.params.num_episodes - 1)):
+        if (episode % self.params.num_episodes_update == 0) or \
+                (episode == (self.params.num_episodes - 1)):
             end = time.time()
             if avg_rewards:
                 last_avg = avg_rewards[-1]
-            self.progress(index, self.params.num_episodes,
+            self.progress(episode, self.params.num_episodes,
                           last_avg, start, end)
+        if (episode % self.params.num_episodes_update == 0) or \
+                (episode == (self.params.num_episodes - 1)):
+            self.log.debug(
+                'Finished episode {} after {} steps]'.format(
+                    episode, episode_step))

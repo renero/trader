@@ -2,6 +2,7 @@ from os.path import splitext, basename
 
 from keras.layers import Dense, InputLayer
 from keras.models import Sequential, model_from_json
+from keras.optimizers import Adam
 
 from common import Common
 from file_io import valid_output_name
@@ -49,7 +50,8 @@ class RL_NN(Common):
     def compile_model(self, model):
         model.compile(
             loss=self.params.deep_qnet.loss,
-            optimizer=self.params.deep_qnet.optimizer,
+            # optimizer=self.params.deep_qnet.optimizer,
+            optimizer=Adam(lr=0.001),
             metrics=self.params.deep_qnet.metrics)
         return model
 

@@ -34,6 +34,13 @@ class Agent(Common):
                 '(proport.)' if env_params.proportional_reward is True else ''
             ))
 
+        if self.params.experience_replay is True:
+            self.log.info(
+                'Experience replay mode {}'.format(self.params.exp_batch_size))
+        else:
+            self.log.info(
+                'Minibatch learning mode {}'.format(self.params.batch_size))
+
         self.callback_args = {}
         if self.params.tensorboard is True:
             self.log.info('Using TensorBoard')
@@ -133,7 +140,6 @@ class Agent(Common):
             sum_loss = 0
             sum_mae = 0
             episode_step = 0
-            num_calls_learn = 0
 
             while not done:
                 # Decide whether generating random action or predict most
@@ -144,26 +150,17 @@ class Agent(Common):
                 # reward and information on whether we've finish.
                 new_state, reward, done, _ = env.step(action)
                 self.memory.append((state, action, reward, new_state, done))
-
-                # loss, mae = self.step_learn(state, action, reward, new_state)
-                if episode_step % self.params.train_steps == 0 and \
-                        episode > self.params.start_episodes:
-                    loss, mae = self.minibatch_learn(self.params.batch_size)
-                    num_calls_learn += 1
-                    sum_loss += loss
-                    sum_mae += mae
+                loss, mae = self.do_learn(episode, episode_step)
 
                 # Update states and metrics
+                sum_loss += loss
+                sum_mae += mae
                 state = new_state
                 sum_rewards += reward
                 episode_step += 1
 
-            self.display.rl_train_report(episode, avg_rewards, last_avg, start)
-            if (episode % self.params.num_episodes_update == 0) or \
-                    (episode == (self.params.num_episodes - 1)):
-                self.log.debug(
-                    'Finished episode {} after {} steps [{} calls]'.format(
-                        episode, episode_step, num_calls_learn))
+            self.display.rl_train_report(
+                episode, episode_step, avg_rewards, last_avg, start)
 
             #  Update average metrics
             avg_rewards.append(sum_rewards / self.params.num_episodes)
@@ -171,16 +168,23 @@ class Agent(Common):
             avg_mae.append(sum_mae / self.params.num_episodes)
             avg_netValue.append(env.memory.results.netValue.iloc[-1])
 
-            # Batch Replay
-            if self.params.experience_replay is True:
-                if len(self.memory) > self.params.exp_batch_size:
-                    self.experience_replay()
-
             # Epsilon decays here
             if epsilon >= self.params.epsilon_min:
                 epsilon *= self.params.decay_factor
 
         return avg_rewards, avg_loss, avg_mae, avg_netValue
+
+    def do_learn(self, episode, episode_step):
+        """ perform minibatch learning or experience replay """
+        loss = 0.
+        mae = 0.
+        if self.params.experience_replay is True:
+            loss, mae = self.experience_replay()
+        else:
+            if episode_step % self.params.train_steps == 0 and \
+                    episode > self.params.start_episodes:
+                loss, mae = self.minibatch_learn(self.params.batch_size)
+        return loss, mae
 
     def epsilon_greedy(self, epsilon, state):
         """
@@ -243,16 +247,19 @@ class Agent(Common):
     def experience_replay(self):
         """
         Primarily from: https://github.com/edwardhdlu/q-trader
-        :return: None
+        :return: loss and mae.
         """
+        if len(self.memory) <= self.params.exp_batch_size:
+            return 0., 0.
+
         mini_batch = random.sample(self.memory,
                                    self.params.exp_batch_size)
-
         nn_input, nn_output = self.prepare_nn_data(mini_batch)
-        self.model.fit(
+        h = self.model.fit(
             nn_input, nn_output,
             epochs=1, verbose=0, batch_size=self.params.exp_batch_size,
             **self.callback_args)
+        return h.history['loss'][0], h.history['mae'][0]
 
     def onehot(self, state: int) -> np.ndarray:
         return np.identity(self.params.num_states)[state:state + 1]
