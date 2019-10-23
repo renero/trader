@@ -1,3 +1,4 @@
+from datetime import datetime
 import time
 from math import log10, pow, floor
 
@@ -102,7 +103,7 @@ class Display(Common):
             num_episodes,
             percentage,
             last_avg,
-            m=magnitude(num_episodes)+1)
+            m=magnitude(num_episodes) + 1)
         if percentage == 0.0:
             self.log.info('{} Est.time: UNKNOWN'.format(msg))
             return
@@ -154,12 +155,15 @@ class Display(Common):
                                        sharex=True,
                                        figsize=(14, 10),
                                        gridspec_kw={'height_ratios': [1, 3]})
-        fig.suptitle('Portfolio Value and Shares price')
+        fig.suptitle('Portfolio Value and Shares price ({})'.format(Display.ts))
         #
         # Portfolio Value
         #
         ax1.axhline(y=0, color='red', alpha=0.4)
         ax1.plot(data.netValue)
+        ax1.scatter(range(len(data.price)), data.price,
+                    c=data.action_id.apply(lambda x: colors[x]),
+                    marker='.')
         ax1.xaxis.set_ticks_position('none')
 
         #
@@ -206,6 +210,7 @@ class Display(Common):
                 len(arrays), len(metric_name))
 
         # Plot every array passed
+        timestamp = Display.ts
         color = ['blue', 'red', 'orange', 'green']
         fig, ax = plt.subplots()
         for index, array in enumerate(arrays):
@@ -222,6 +227,7 @@ class Display(Common):
             ax.set_ylabel(metric_name[index], color=color[index])
         plt.xlabel('Number of games')
         plt.legend()
+        plt.title(timestamp)
         fig.tight_layout()
         plt.show()
 
@@ -271,3 +277,8 @@ class Display(Common):
             self.log.debug(
                 'Finished episode {} after {} steps]'.format(
                     episode, episode_step))
+
+    @property
+    def ts(self) -> str:
+        return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
