@@ -40,7 +40,7 @@ class RL_NN(Common):
             Dense(self.params.num_actions, input_shape=(last_layer_cells,),
                   activation='linear'))
         model = self.compile_model(model)
-        if self.params.debug is True:
+        if self.params.debug and self.params.log_level > 2:
             self.log.debug('Model Summary')
             model.summary()
 

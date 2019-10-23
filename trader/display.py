@@ -206,27 +206,32 @@ class Display(Common):
                 len(arrays), len(metric_name))
 
         # Plot every array passed
+        fig, ax = plt.subplots()
         plt.axhline(0, color='grey', alpha=0.4)
         for index, array in enumerate(arrays):
             data = Display.smooth(array) if ma is True else array
+            if index > 0:
+                ax = ax.twinx()
             if chart_type == 'scatter':
-                plt.scatter(range(len(data)), data)
+                ax.scatter(range(len(data)), data)
             else:
-                plt.plot(data, label=metric_name[index])
-        plt.ylabel(metric_name)
+                ax.plot(data, label=metric_name[index])
+            ax.set_ylabel(metric_name[index])
         plt.xlabel('Number of games')
         plt.legend()
+        fig.tight_layout()
         plt.show()
 
     @staticmethod
     def smooth(array):
         """Compute the moving average over the array"""
+        if len(array) < 10:
+            return array
         magnitude = int(log10(len(array))) - 1
         period = int(pow(10, magnitude))
         if period == 1:
             period = 10
-        data = np.convolve(array, np.ones((period,)) / period,
-                           mode='valid')
+        data = np.convolve(array, np.ones((period,)) / period, mode='valid')
         return data
 
     def plot_metrics(self, avg_loss, avg_mae, avg_rewards, avg_value):

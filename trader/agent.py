@@ -135,6 +135,7 @@ class Agent(Common):
             episode_step = 0
             num_calls_learn = 0
             sum_netvalue = 0.
+
             while not done:
                 # Decide whether generating random action or predict most
                 # likely from the give state.
@@ -149,14 +150,14 @@ class Agent(Common):
                 if episode_step % self.params.train_steps == 0 and \
                         episode > self.params.start_episodes:
                     loss, mae = self.minibatch_learn(self.params.batch_size)
-                    # Update states and metrics
                     num_calls_learn += 1
-                    state = new_state
-                    sum_rewards += reward
                     sum_loss += loss
                     sum_mae += mae
-                    sum_netvalue += env.memory.results.netValue.iloc[-1]
 
+                # Update states and metrics
+                state = new_state
+                sum_rewards += reward
+                sum_netvalue += env.memory.results.netValue.iloc[-1]
                 episode_step += 1
 
             self.display.rl_train_report(episode, avg_rewards, last_avg, start)
@@ -205,8 +206,10 @@ class Agent(Common):
         """
         mem_size = len(self.memory)
         if mem_size < batch_size:
+            self.log.debug('Not enough samples for minibatch learn, skipping')
             return 0.0, 0.0
 
+        self.log.debug('Minibatch learn')
         mini_batch = np.empty(shape=(0, 5), dtype=np.int32)
         for i in range(mem_size - batch_size - 1, mem_size - 1):
             mini_batch = np.append(

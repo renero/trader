@@ -1,5 +1,4 @@
 import importlib
-from math import fabs
 
 import numpy as np
 import pandas as pd
@@ -26,7 +25,6 @@ class Environment(Common):
     done_ = False
     reward_ = 0
     new_state_: int = 0
-    stop_loss_alert: bool = False
     have_konkorde = False
 
     def __init__(self, configuration):
@@ -66,6 +64,7 @@ class Environment(Common):
         Reset all internal states
         :return:
         """
+        self.log.debug('Resetting environment')
         self.done_ = False
         self.t = 0
         del self.portfolio
@@ -138,6 +137,8 @@ class Environment(Common):
 
         # Get the ID resulting from the combination of the sub-states
         self.current_state_ = self.states.get_id(*new_substates)
+        self.log.debug('t={}, state updated to: {}'.format(
+            self.t, self.states.name(self.current_state_)))
         return self.current_state_
 
     def step(self, action):
@@ -152,13 +153,16 @@ class Environment(Common):
 
         # Call to the proper portfolio method, based on the action number
         # passed to this argument.
+        self.log.debug('t={}, price={}, action decided={}'.format(
+            self.t, self.price_, action))
         self.reward_ = getattr(self.portfolio,
                                self.params.action_name[action])()
-
-        # If I'm in stop loss situation, rewards gets a different value
-        self.reward_ = self.fix_reward(self.params.action_name[action])
         self.memory.record_reward(self.reward_,
                                   self.states.name(self.current_state_))
+        self.log.debug(
+            't={}, reward ({:.2f}), recorded to action \'{}\''.format(
+                self.t, self.reward_, self.states.name(self.current_state_)
+            ))
 
         self.t += 1
         if self.t >= self.max_states_:
@@ -169,7 +173,8 @@ class Environment(Common):
 
         self.update_market_price()
         if self.params.have_konkorde:
-            self.portfolio.update_after_step(self.price_, self.forecast_, self.konkorde_)
+            self.portfolio.update_after_step(self.price_, self.forecast_,
+                                             self.konkorde_)
         else:
             self.portfolio.update_after_step(self.price_, self.forecast_)
         self.new_state_ = self.update_state()
@@ -177,54 +182,3 @@ class Environment(Common):
         self.portfolio.append_to_history(self)
 
         return self.new_state_, self.reward_, self.done_, self.t
-
-    def fix_reward(self, action_name: str) -> int:
-        """
-        Reward cannot be the same under stop loss alarm.
-        :param action_name: the name of the action determined.
-        :return: the new reward value, given that we might be under stop loss
-        """
-        if self.stop_loss is not True:
-            return self.reward_
-        # Fix the reward if I try to buy and it is not a failed attempt cause
-        # I've no money to buy.
-        if action_name == 'buy' and \
-                self.portfolio.latest_price > self.portfolio.budget:
-            return self.params.environment.reward_stoploss_buy
-        # Fix the reward if I'm trying to sell and I DO have shares to sell
-        elif action_name == 'sell' and self.portfolio.shares > 0.:
-            return self.params.environment.reward_stoploss_sell
-        else:
-            return self.params.environment.reward_stoploss_donothing
-
-    @property
-    def stop_loss(self) -> bool:
-        """
-        Determine if we're under stop loss alarm condition. It is based on the
-        net value of my investment at current moment in time.
-        The parameter can be expressed as a percentage or actual value.
-        :return: True or False
-        """
-        # Quick jump-off in case I don't want to consider stop loss cases.
-        if self.params.environment.consider_stop_loss is False:
-            return False
-
-        net_value = self.portfolio.portfolio_value - self.portfolio.investment
-        stop_loss = self.portfolio.configuration.environment.stop_loss
-
-        if net_value == 0.:
-            return False
-
-        if stop_loss < 1.0:  # percentage of initial budget
-            if (net_value / self.portfolio.initial_budget) < 0.0 and \
-                    fabs(
-                        net_value / self.portfolio.initial_budget) >= stop_loss:
-                value = True
-            else:
-                value = False
-        else:  # actual value
-            if net_value < stop_loss:
-                value = True
-            else:
-                value = False
-        return value

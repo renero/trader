@@ -1,5 +1,3 @@
-from pandas import DataFrame
-
 from arguments import Arguments
 from display import Display
 from logger import Logger
@@ -19,6 +17,12 @@ class RLDictionary(Dictionary):
         # Read the arguments passed in CLI to override parameters
         arguments = Arguments(args, kwargs)
 
+        # Override other potential parameters specified in command line.
+        setattr(self, 'debug', arguments.args.debug is not None)
+        setattr(self, 'log_level',
+                arguments.args.debug[0] if arguments.args.debug is not None \
+                    else 0)
+
         # Start the logger
         if 'log_level' not in self:
             self.log_level = 3  # default value = INFO
@@ -29,12 +33,10 @@ class RLDictionary(Dictionary):
         setattr(self, 'what_to_do', arguments.args.action)
         self.log.info(self.what_to_do)
 
-        # Override other potential parameters specified in command line.
-        if arguments.args.debug is True:
-            setattr(self, 'debug', True)
+        setattr(self, 'save_model', arguments.args.save)
         if arguments.args.epochs is not None:
             setattr(self, 'num_episodes', int(arguments.args.epochs[0]))
-        if arguments.args.forecast is not None:
+        if arguments.args.file is not None:
             setattr(self, 'data_path', arguments.args.forecast[0])
 
         # Build a self with a sequential number associated to each action
