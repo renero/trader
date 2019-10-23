@@ -31,7 +31,7 @@ class RLDictionary(Dictionary):
         # Define what to do
         setattr(self, 'possible_actions', arguments.possible_actions)
         setattr(self, 'what_to_do', arguments.args.action)
-        self.log.info(self.what_to_do)
+        self.log.info('{} mode'.format(self.what_to_do))
 
         setattr(self, 'save_model', arguments.args.save)
         if arguments.args.epochs is not None:

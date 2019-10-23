@@ -206,6 +206,7 @@ class Display(Common):
                 len(arrays), len(metric_name))
 
         # Plot every array passed
+        color = ['blue', 'orange', 'green', 'red']
         fig, ax = plt.subplots()
         plt.axhline(0, color='grey', alpha=0.4)
         for index, array in enumerate(arrays):
@@ -213,9 +214,11 @@ class Display(Common):
             if index > 0:
                 ax = ax.twinx()
             if chart_type == 'scatter':
-                ax.scatter(range(len(data)), data)
+                ax.scatter(range(len(data)), data,
+                           color=color[index], alpha=0.5)
             else:
-                ax.plot(data, label=metric_name[index])
+                ax.plot(data, label=metric_name[index],
+                        color=color[index], alpha=0.5, linewidth=0.7)
             ax.set_ylabel(metric_name[index])
         plt.xlabel('Number of games')
         plt.legend()
