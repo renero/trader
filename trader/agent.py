@@ -12,6 +12,9 @@ from rl_stats import RLStats
 
 
 # TODO Mover la memoria deque a la clase "memory"
+from spring import Spring
+
+
 class Agent(Common):
     configuration = None
     tensorboard = None
@@ -176,14 +179,39 @@ class Agent(Common):
         total_reward = 0.
         self.params.debug = True
         state = environment.reset()
+        if self.params.stop_drop is True:
+            alert = Spring(environment.price_,
+                           self.log,
+                           self.params.stop_drop_rate)
         while not done:
             action = environment.decide_next_action(state, strategy)
+            if self.params.stop_drop is True:
+                action = self.check_stopdrop(action, alert, environment.price_)
             next_state, reward, done, _ = environment.step(action)
             total_reward += reward
             state = next_state
         self.params.display.summary(environment.memory.results,
                                     environment.portfolio,
                                     do_plot=do_plot)
+
+    def check_stopdrop(self, action, alert, price):
+        """
+        Check if the new price drops significantly, and update positions.
+        :param action: the action decided by the Deep Q-Net
+        :param alert: the Spring object that controls price drops
+        :param price: the current price.
+        :return: the action, possibly modified after check
+        """
+        if alert.breaks(price):
+            self.log.debug('>>>> BREAK <<<<')
+            action = self.params.action.index('sell')
+
+        if action == self.params.action.index('buy'):
+            alert.anchor(price)
+        elif action == self.params.action.index('sell'):
+            alert.release()
+
+        return action
 
     def do_learn(self, episode, episode_step):
         """ perform minibatch learning or experience replay """

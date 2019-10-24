@@ -39,7 +39,7 @@ class RLDictionary(Dictionary):
         else:
             setattr(self, 'num_episodes', 1)
         if arguments.args.file is not None:
-            setattr(self, 'data_path', arguments.args.forecast[0])
+            setattr(self, 'data_path', arguments.args.file[0])
 
         # Build a self with a sequential number associated to each action
         setattr(self, 'action_id', MyDict())

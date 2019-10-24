@@ -4,7 +4,7 @@
 #
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../output/forecast_acciona_konkorde_2019.csv
+data_path: ../output/forecast_acciona_konkorde_2018b.csv
 delimiter: ','
 column_name:
   price: test_y
@@ -37,6 +37,10 @@ exp_batch_size: 16
 
 # Konkorde threshold, above which we can consider an upward trend
 k_threshold: 0.15
+
+# Do I want to hijack actions when price drops?
+stop_drop: true
+stop_drop_rate: 0.02
 
 # TensorBoard?
 tensorboard: False

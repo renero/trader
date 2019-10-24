@@ -12,6 +12,10 @@ from logger import Logger
 from portfolio import Portfolio
 
 
+def ts() -> str:
+    return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+
 class Display(Common):
 
     def __init__(self, configuration):
@@ -155,7 +159,8 @@ class Display(Common):
                                        sharex=True,
                                        figsize=(14, 10),
                                        gridspec_kw={'height_ratios': [1, 3]})
-        fig.suptitle('Portfolio Value and Shares price ({})'.format(Display.ts))
+        fig.suptitle(
+            'Portfolio Value and Shares price ({})'.format(ts()))
         #
         # Portfolio Value
         #
@@ -277,8 +282,4 @@ class Display(Common):
             self.log.debug(
                 'Finished episode {} after {} steps]'.format(
                     episode, episode_step))
-
-    @property
-    def ts(self) -> str:
-        return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 

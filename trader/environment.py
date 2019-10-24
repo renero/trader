@@ -155,8 +155,8 @@ class Environment(Common):
 
         # Call to the proper portfolio method, based on the action number
         # passed to this argument.
-        self.log.debug('t={}, price={}, action decided={}'.format(
-            self.t, self.price_, action))
+        self.log.debug('t={}, price={}, action decided {}={}'.format(
+            self.t, self.price_, action, self.params.action_name[action]))
         self.reward_ = getattr(self.portfolio,
                                self.params.action_name[action])()
         self.memory.record_reward(self.reward_,
