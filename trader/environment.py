@@ -1,10 +1,10 @@
 import importlib
-from math import fabs
 
 import numpy as np
 import pandas as pd
 
 from common import Common
+from memory import Memory
 from portfolio import Portfolio
 from states_combiner import StatesCombiner
 
@@ -25,13 +25,15 @@ class Environment(Common):
     done_ = False
     reward_ = 0
     new_state_: int = 0
-    stop_loss_alert: bool = False
     have_konkorde = False
 
     def __init__(self, configuration):
         self.params = configuration
         self.log = self.params.log
         self.display = self.params.display
+        self.memory = Memory(self.params)
+        self.results = self.memory.results
+        self.log.info('Creating Environment')
 
         if 'seed' in self.params:
             np.random.seed(self.params.seed)
@@ -40,7 +42,10 @@ class Environment(Common):
 
         self.states = StatesCombiner(self.params)
         self.read_market_data(self.params.data_path)
+        self.portfolio = Portfolio(self.params,
+                                   self.price_, self.forecast_, self.memory)
         self.init_environment(creation_time=True)
+        self.log.info('Environment created')
 
     def init_environment(self, creation_time):
         """
@@ -50,11 +55,11 @@ class Environment(Common):
         :return: The initial state.
         """
         self.update_market_price()
-        self.portfolio = Portfolio(self.params,
-                                   self.price_,
-                                   self.forecast_)
+        self.portfolio.reset(self.price_,
+                             self.forecast_,
+                             self.memory)
         if creation_time is not True:
-            self.display.report(self.portfolio, t=0, disp_header=True)
+            self.memory.record_values(self.portfolio, t=0)
         return self.update_state()
 
     def reset(self):
@@ -62,11 +67,10 @@ class Environment(Common):
         Reset all internal states
         :return:
         """
+        self.log.debug('Resetting environment')
         self.done_ = False
         self.t = 0
-        del self.portfolio
-        self.params.results.drop(self.params.results.index,
-                                 inplace=True)
+        self.memory.reset()
         return self.init_environment(creation_time=False)
 
     def read_market_data(self, path):
@@ -84,9 +88,11 @@ class Environment(Common):
         self.log.info('Read trader file: {}'.format(path))
 
         # Do i have konkorde?
+        setattr(self.params, 'have_konkorde', bool)
+        self.params.have_konkorde = False
         if self.params.column_name['green'] in self.data_.columns and \
                 self.params.column_name['blue'] in self.data_.columns:
-            self.have_konkorde = True
+            self.params.have_konkorde = True
             self.log.info('Konkorde index present!')
 
     def update_market_price(self):
@@ -103,7 +109,7 @@ class Environment(Common):
             self.t, col_names.index(self.params.column_name['forecast'])]
 
         # If I do have konkorde indicators, I also read them.
-        if self.have_konkorde:
+        if self.params.have_konkorde:
             self.green_ = self.data_.iloc[
                 self.t, col_names.index(self.params.column_name['green'])]
             self.blue_ = self.data_.iloc[
@@ -133,6 +139,8 @@ class Environment(Common):
 
         # Get the ID resulting from the combination of the sub-states
         self.current_state_ = self.states.get_id(*new_substates)
+        self.log.debug('t={}, state updated to: {}'.format(
+            self.t, self.states.name(self.current_state_)))
         return self.current_state_
 
     def step(self, action):
@@ -147,76 +155,32 @@ class Environment(Common):
 
         # Call to the proper portfolio method, based on the action number
         # passed to this argument.
+        self.log.debug('t={}, price={}, action decided {}={}'.format(
+            self.t, self.price_, action, self.params.action_name[action]))
         self.reward_ = getattr(self.portfolio,
                                self.params.action_name[action])()
-
-        # If I'm in stop loss situation, rewards gets a different value
-        self.reward_ = self.fix_reward(self.params.action_name[action])
-        self.display.report_reward(
-            self.reward_, self.states.name(self.current_state_))
+        self.memory.record_reward(self.reward_,
+                                  self.states.name(self.current_state_))
+        self.log.debug(
+            't={}, reward ({:.2f}), recorded to action \'{}\''.format(
+                self.t, self.reward_, self.states.name(self.current_state_)
+            ))
 
         self.t += 1
         if self.t >= self.max_states_:
             self.done_ = True
-            self.display.report(self.portfolio, self.t - 1, disp_footer=True)
+            self.memory.record_values(self.portfolio, self.t - 1)
             self.portfolio.reset_history()
             return self.new_state_, self.reward_, self.done_, self.t
 
         self.update_market_price()
-        self.portfolio.update_after_step(self.price_, self.forecast_)
+        if self.params.have_konkorde:
+            self.portfolio.update_after_step(self.price_, self.forecast_,
+                                             self.konkorde_)
+        else:
+            self.portfolio.update_after_step(self.price_, self.forecast_)
         self.new_state_ = self.update_state()
-        self.display.report(self.portfolio, self.t)
+        self.memory.record_values(self.portfolio, self.t)
         self.portfolio.append_to_history(self)
 
         return self.new_state_, self.reward_, self.done_, self.t
-
-    def fix_reward(self, action_name: str) -> int:
-        """
-        Reward cannot be the same under stop loss alarm.
-        :param action_name: the name of the action determined.
-        :return: the new reward value, given that we might be under stop loss
-        """
-        if self.stop_loss is not True:
-            return self.reward_
-        # Fix the reward if I try to buy and it is not a failed attempt cause
-        # I've no money to buy.
-        if action_name == 'buy' and \
-                self.portfolio.latest_price > self.portfolio.budget:
-            return self.params.environment.reward_stoploss_buy
-        # Fix the reward if I'm trying to sell and I DO have shares to sell
-        elif action_name == 'sell' and self.portfolio.shares > 0.:
-            return self.params.environment.reward_stoploss_sell
-        else:
-            return self.params.environment.reward_stoploss_donothing
-
-    @property
-    def stop_loss(self) -> bool:
-        """
-        Determine if we're under stop loss alarm condition. It is based on the
-        net value of my investment at current moment in time.
-        The parameter can be expressed as a percentage or actual value.
-        :return: True or False
-        """
-        # Quick jump-off in case I don't want to consider stop loss cases.
-        if self.params.environment.consider_stop_loss is False:
-            return False
-
-        net_value = self.portfolio.portfolio_value - self.portfolio.investment
-        stop_loss = self.portfolio.configuration.environment.stop_loss
-
-        if net_value == 0.:
-            return False
-
-        if stop_loss < 1.0:  # percentage of initial budget
-            if (net_value / self.portfolio.initial_budget) < 0.0 and \
-                    fabs(
-                        net_value / self.portfolio.initial_budget) >= stop_loss:
-                value = True
-            else:
-                value = False
-        else:  # actual value
-            if net_value < stop_loss:
-                value = True
-            else:
-                value = False
-        return value

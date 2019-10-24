@@ -8,6 +8,11 @@ from keras.callbacks import TensorBoard
 from common import Common
 from environment import Environment
 from rl_nn import RL_NN
+from rl_stats import RLStats
+
+
+# TODO Mover la memoria deque a la clase "memory"
+from spring import Spring
 
 
 class Agent(Common):
@@ -32,6 +37,13 @@ class Agent(Common):
             self.log.info('Preset reward mode {}'.format(
                 '(proport.)' if env_params.proportional_reward is True else ''
             ))
+
+        if self.params.experience_replay is True:
+            self.log.info(
+                'Experience replay mode {}'.format(self.params.exp_batch_size))
+        else:
+            self.log.info(
+                'Minibatch learning mode {}'.format(self.params.batch_size))
 
         self.callback_args = {}
         if self.params.tensorboard is True:
@@ -86,13 +98,13 @@ class Agent(Common):
         # create the Keras model and learn, or load it from disk.
         if fresh_model is True:
             self.model = self.nn.create_model()
-        avg_rewards, avg_loss, avg_mae = self.reinforce_learn(env)
+        avg_rewards, avg_loss, avg_mae, avg_value = self.reinforce_learn(env)
 
         # display anything?
         plot_metrics = self.params.what_to_do == 'learn' or \
                        self.params.what_to_do == 'retrain'
         if do_plot is True and plot_metrics is True:
-            self.display.plot_metrics(avg_loss, avg_mae, avg_rewards)
+            self.display.plot_metrics(avg_loss, avg_mae, avg_rewards, avg_value)
 
         # Extract the strategy matrix from the model.
         strategy = self.get_strategy()
@@ -112,25 +124,17 @@ class Agent(Common):
         Implements the learning loop over the states, actions and strategies
         to learn what is the sequence of actions that maximize reward.
         :param env: the environment
-        :return:
+        :return: avg_rewards, avg_loss, avg_mae, last_profit
         """
-        # now execute the q learning
-        avg_rewards = []
-        avg_loss = []
-        avg_mae = []
-        last_avg: float = 0.0
-        start = time.time()
+        rl_stats = RLStats()
         epsilon = self.params.epsilon
 
         # Loop over 'num_episodes'
         self.log.debug('Loop over {} episodes'.format(self.params.num_episodes))
-        for step_num in range(self.params.num_episodes):
+        for episode in range(self.params.num_episodes):
             state = env.reset()
-            self.display.rl_train_report(step_num, avg_rewards, last_avg, start)
             done = False
-            sum_rewards = 0
-            sum_loss = 0
-            sum_mae = 0
+            rl_stats.reset()
             episode_step = 0
             while not done:
                 # Decide whether generating random action or predict most
@@ -141,34 +145,85 @@ class Agent(Common):
                 # reward and information on whether we've finish.
                 new_state, reward, done, _ = env.step(action)
                 self.memory.append((state, action, reward, new_state, done))
+                loss, mae = self.do_learn(episode, episode_step)
 
-                # loss, mae = self.step_learn(state, action, reward, new_state)
-                if episode_step % self.params.train_steps and \
-                        episode_step > self.params.start_steps:
-                    loss, mae = self.minibatch_learn(self.params.batch_size)
-
-                    # Update states and metrics
-                    state = new_state
-                    sum_rewards += reward
-                    sum_loss += loss
-                    sum_mae += mae
-
+                # Update states and metrics
+                rl_stats.step(loss, mae, reward)
+                state = new_state
                 episode_step += 1
 
-            avg_rewards.append(sum_rewards / self.params.num_episodes)
-            avg_loss.append(sum_loss / self.params.num_episodes)
-            avg_mae.append(sum_mae / self.params.num_episodes)
+            self.display.rl_train_report(
+                episode, episode_step, rl_stats.avg_rewards,
+                rl_stats.last_avg, rl_stats.start)
 
-            # Batch Replay
-            if self.params.experience_replay is True:
-                if len(self.memory) > self.params.exp_batch_size:
-                    self.experience_replay()
+            #  Update average metrics
+            rl_stats.update(self.params.num_episodes,
+                            env.memory.results.netValue.iloc[-1])
 
             # Epsilon decays here
             if epsilon >= self.params.epsilon_min:
                 epsilon *= self.params.decay_factor
 
-        return avg_rewards, avg_loss, avg_mae
+        return rl_stats.avg_rewards, rl_stats.avg_loss, \
+               rl_stats.avg_mae, rl_stats.avg_netValue
+
+    def simulate(self, environment: Environment, strategy: list, do_plot=True):
+        """
+        Simulate over a dataset, given a strategy and an environment.
+        :param environment:
+        :param strategy:
+        :param do_plot:
+        :return:
+        """
+        done = False
+        total_reward = 0.
+        self.params.debug = True
+        state = environment.reset()
+        if self.params.stop_drop is True:
+            alert = Spring(environment.price_,
+                           self.log,
+                           self.params.stop_drop_rate)
+        while not done:
+            action = environment.decide_next_action(state, strategy)
+            if self.params.stop_drop is True:
+                action = self.check_stopdrop(action, alert, environment.price_)
+            next_state, reward, done, _ = environment.step(action)
+            total_reward += reward
+            state = next_state
+        self.params.display.summary(environment.memory.results,
+                                    environment.portfolio,
+                                    do_plot=do_plot)
+
+    def check_stopdrop(self, action, alert, price):
+        """
+        Check if the new price drops significantly, and update positions.
+        :param action: the action decided by the Deep Q-Net
+        :param alert: the Spring object that controls price drops
+        :param price: the current price.
+        :return: the action, possibly modified after check
+        """
+        if alert.breaks(price):
+            self.log.debug('>>>> BREAK <<<<')
+            action = self.params.action.index('sell')
+
+        if action == self.params.action.index('buy'):
+            alert.anchor(price)
+        elif action == self.params.action.index('sell'):
+            alert.release()
+
+        return action
+
+    def do_learn(self, episode, episode_step):
+        """ perform minibatch learning or experience replay """
+        loss = 0.
+        mae = 0.
+        if self.params.experience_replay is True:
+            loss, mae = self.experience_replay()
+        else:
+            if episode_step % self.params.train_steps == 0 and \
+                    episode > self.params.start_episodes:
+                loss, mae = self.minibatch_learn(self.params.batch_size)
+        return loss, mae
 
     def epsilon_greedy(self, epsilon, state):
         """
@@ -192,56 +247,58 @@ class Agent(Common):
         """
         mem_size = len(self.memory)
         if mem_size < batch_size:
+            self.log.debug('Not enough samples for minibatch learn, skipping')
             return 0.0, 0.0
 
+        self.log.debug('Minibatch learn')
         mini_batch = np.empty(shape=(0, 5), dtype=np.int32)
         for i in range(mem_size - batch_size - 1, mem_size - 1):
             mini_batch = np.append(
                 mini_batch,
                 np.asarray(self.memory[i]).astype(int).reshape(1, -1),
                 axis=0)
-
-        nn_input = np.empty((0, self.params.num_states), dtype=np.int32)
-        nn_output = np.empty((0, self.params.num_actions))
-        for state, action, reward, next_state, done in mini_batch:
-            target = reward
-            if not done:
-                target = reward + self.params.gamma * self.predict_value(
-                    next_state)
-            nn_input = np.append(nn_input, self.onehot(state), axis=0)
-            labeled_output = self.model.predict(self.onehot(state))[0]
-            labeled_output[action] = target
-            y = labeled_output.reshape(-1, self.params.num_actions)
-            nn_output = np.append(nn_output, y, axis=0)
-
-        # h = self.model.train_on_batch(
-        #     nn_input, nn_output)
-        # return h[0], h[1]
+        nn_input, nn_output = self.prepare_nn_data(mini_batch)
         h = self.model.fit(
             nn_input, nn_output,
             epochs=1, verbose=0, batch_size=batch_size,
             **self.callback_args)
         return h.history['loss'][0], h.history['mae'][0]
 
+    def prepare_nn_data(self, mini_batch):
+        nn_input = np.empty((0, self.params.num_states), dtype=np.int32)
+        nn_output = np.empty((0, self.params.num_actions))
+        for state, action, reward, next_state, done in mini_batch:
+            y = self.predict_output(state, action, reward, next_state, done)
+            nn_input = np.append(nn_input, self.onehot(state), axis=0)
+            nn_output = np.append(nn_output, y, axis=0)
+        return nn_input, nn_output
+
+    def predict_output(self, state, action, reward, next_state, done):
+        target = reward
+        if not done:
+            target = reward + self.params.gamma * self.predict_value(
+                next_state)
+        labeled_output = self.model.predict(self.onehot(state))[0]
+        labeled_output[action] = target
+        y = labeled_output.reshape(-1, self.params.num_actions)
+        return y
+
     def experience_replay(self):
         """
         Primarily from: https://github.com/edwardhdlu/q-trader
-        :return: None
+        :return: loss and mae.
         """
+        if len(self.memory) <= self.params.exp_batch_size:
+            return 0., 0.
+
         mini_batch = random.sample(self.memory,
                                    self.params.exp_batch_size)
-        for state, action, reward, next_state, done in mini_batch:
-            target = reward
-            if not done:
-                target = reward + self.params.gamma * self.predict_value(
-                    next_state)
-            target_vec = self.model.predict(self.onehot(state))[0]
-            target_vec[action] = target
-            self.model.fit(
-                self.onehot(state),
-                target_vec.reshape(-1, self.params.num_actions),
-                epochs=1, verbose=0,
-                **self.callback_args)
+        nn_input, nn_output = self.prepare_nn_data(mini_batch)
+        h = self.model.fit(
+            nn_input, nn_output,
+            epochs=1, verbose=0, batch_size=self.params.exp_batch_size,
+            **self.callback_args)
+        return h.history['loss'][0], h.history['mae'][0]
 
     def onehot(self, state: int) -> np.ndarray:
         return np.identity(self.params.num_states)[state:state + 1]
@@ -266,22 +323,3 @@ class Agent(Common):
             for i in range(self.params.num_states)
         ]
         return strategy
-
-    def simulate(self, environment: Environment, strategy: list, do_plot=True):
-        """
-        Simulate over a dataset, given a strategy and an environment.
-        :param environment:
-        :param strategy:
-        :param do_plot:
-        :return:
-        """
-        done = False
-        total_reward = 0.
-        self.params.debug = True
-        state = environment.reset()
-        while not done:
-            action = environment.decide_next_action(state, strategy)
-            next_state, reward, done, _ = environment.step(action)
-            total_reward += reward
-            state = next_state
-        self.params.display.summary(environment.portfolio, do_plot=do_plot)

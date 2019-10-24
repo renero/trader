@@ -2,6 +2,7 @@ from os.path import splitext, basename
 
 from keras.layers import Dense, InputLayer
 from keras.models import Sequential, model_from_json
+from keras.optimizers import Adam
 
 from common import Common
 from file_io import valid_output_name
@@ -40,8 +41,8 @@ class RL_NN(Common):
             Dense(self.params.num_actions, input_shape=(last_layer_cells,),
                   activation='linear'))
         model = self.compile_model(model)
-        if self.params.debug is True:
-            self.log.info('Model Summary')
+        if self.params.debug and self.params.log_level > 2:
+            self.log.debug('Model Summary')
             model.summary()
 
         return model
@@ -49,11 +50,12 @@ class RL_NN(Common):
     def compile_model(self, model):
         model.compile(
             loss=self.params.deep_qnet.loss,
-            optimizer=self.params.deep_qnet.optimizer,
+            # optimizer=self.params.deep_qnet.optimizer,
+            optimizer=Adam(lr=0.001),
             metrics=self.params.deep_qnet.metrics)
         return model
 
-    def save_model(self, model):
+    def save_model(self, model, results):
         self.log.info('\nSaving model, weights and results.')
 
         fname = 'rl_model_' + splitext(
@@ -73,11 +75,11 @@ class RL_NN(Common):
 
         # Save also the results table
         results_name = model_name.replace('.json', '.csv')
-        self.params.results.to_csv(results_name,
-                                   sep=',',
-                                   index=False,
-                                   header=True,
-                                   float_format='%.2f')
+        results.to_csv(results_name,
+                       sep=',',
+                       index=False,
+                       header=True,
+                       float_format='%.2f')
         self.log.info('  Results: {}'.format(results_name))
 
     def load_model(self, model_basename):

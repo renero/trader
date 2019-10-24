@@ -1,5 +1,3 @@
-from pandas import DataFrame
-
 from arguments import Arguments
 from display import Display
 from logger import Logger
@@ -19,6 +17,12 @@ class RLDictionary(Dictionary):
         # Read the arguments passed in CLI to override parameters
         arguments = Arguments(args, kwargs)
 
+        # Override other potential parameters specified in command line.
+        setattr(self, 'debug', arguments.args.debug is not None)
+        setattr(self, 'log_level',
+                arguments.args.debug[0] if arguments.args.debug is not None \
+                    else 0)
+
         # Start the logger
         if 'log_level' not in self:
             self.log_level = 3  # default value = INFO
@@ -27,15 +31,15 @@ class RLDictionary(Dictionary):
         # Define what to do
         setattr(self, 'possible_actions', arguments.possible_actions)
         setattr(self, 'what_to_do', arguments.args.action)
-        self.log.info(self.what_to_do)
+        self.log.info('{} mode'.format(self.what_to_do))
 
-        # Override other potential parameters specified in command line.
-        if arguments.args.debug is True:
-            setattr(self, 'debug', True)
+        setattr(self, 'save_model', arguments.args.save)
         if arguments.args.epochs is not None:
             setattr(self, 'num_episodes', int(arguments.args.epochs[0]))
-        if arguments.args.forecast is not None:
-            setattr(self, 'data_path', arguments.args.forecast[0])
+        else:
+            setattr(self, 'num_episodes', 1)
+        if arguments.args.file is not None:
+            setattr(self, 'data_path', arguments.args.file[0])
 
         # Build a self with a sequential number associated to each action
         setattr(self, 'action_id', MyDict())
@@ -68,11 +72,4 @@ class RLDictionary(Dictionary):
         # a single function. That way I can store it all in a single dataframe
         # for later analysis.
         setattr(self, 'display', Display)
-        self.display = Display(self)
-
-        # Create a DataFrame within the configuration to store all the values
-        # that are relevant to later perform data analysis.
-        # The YAML file contains the column names in a parameter called
-        # table_headers.
-        setattr(self, 'results', DataFrame)
-        self.results = DataFrame(columns=self.table_headers)
+        self.display: Display = Display(self)

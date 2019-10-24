@@ -1,9 +1,9 @@
 scikit-learn
-matplotlib==3.1.1
-numpy==1.17.1
-termcolor==1.1.0
-pyyaml==5.1.2
-pandas==0.25.1
-keras==2.2.5
-tensorflow==1.14.0
-tabulate==0.8.3
+matplotlib
+numpy
+termcolor
+pyyaml
+pandas
+keras
+tensorflow==1.14.1
+tabulate
