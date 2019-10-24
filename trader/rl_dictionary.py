@@ -36,6 +36,8 @@ class RLDictionary(Dictionary):
         setattr(self, 'save_model', arguments.args.save)
         if arguments.args.epochs is not None:
             setattr(self, 'num_episodes', int(arguments.args.epochs[0]))
+        else:
+            setattr(self, 'num_episodes', 1)
         if arguments.args.file is not None:
             setattr(self, 'data_path', arguments.args.forecast[0])
 

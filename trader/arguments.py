@@ -13,7 +13,7 @@ class Arguments(object):
                             choices=self.possible_actions)
         parser.add_argument('-d', '--debug', nargs=1, type=int,
                             help='Debug level (0..4), default 0.')
-        parser.add_argument('-e', '--epochs', nargs=1, type=int, required=True,
+        parser.add_argument('-e', '--epochs', nargs=1, type=int,
                             help='Number of epochs in training')
         parser.add_argument('-f', '--file', nargs=1, type=str,
                             help='Forecast file to process')
