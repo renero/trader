@@ -8,6 +8,7 @@ from keras.callbacks import TensorBoard
 from common import Common
 from environment import Environment
 from rl_nn import RL_NN
+from rl_stats import RLStats
 
 
 # TODO Mover la memoria deque a la clase "memory"
@@ -120,15 +121,9 @@ class Agent(Common):
         Implements the learning loop over the states, actions and strategies
         to learn what is the sequence of actions that maximize reward.
         :param env: the environment
-        :return:
+        :return: avg_rewards, avg_loss, avg_mae, last_profit
         """
-        # now execute the q learning
-        avg_rewards = []
-        avg_loss = []
-        avg_mae = []
-        avg_netValue = []
-        last_avg: float = 0.0
-        start = time.time()
+        rl_stats = RLStats()
         epsilon = self.params.epsilon
 
         # Loop over 'num_episodes'
@@ -136,11 +131,8 @@ class Agent(Common):
         for episode in range(self.params.num_episodes):
             state = env.reset()
             done = False
-            sum_rewards = 0
-            sum_loss = 0
-            sum_mae = 0
+            rl_stats.reset()
             episode_step = 0
-
             while not done:
                 # Decide whether generating random action or predict most
                 # likely from the give state.
@@ -153,26 +145,45 @@ class Agent(Common):
                 loss, mae = self.do_learn(episode, episode_step)
 
                 # Update states and metrics
-                sum_loss += loss
-                sum_mae += mae
+                rl_stats.step(loss, mae, reward)
                 state = new_state
-                sum_rewards += reward
                 episode_step += 1
 
             self.display.rl_train_report(
-                episode, episode_step, avg_rewards, last_avg, start)
+                episode, episode_step, rl_stats.avg_rewards,
+                rl_stats.last_avg, rl_stats.start)
 
             #  Update average metrics
-            avg_rewards.append(sum_rewards / self.params.num_episodes)
-            avg_loss.append(sum_loss / self.params.num_episodes)
-            avg_mae.append(sum_mae / self.params.num_episodes)
-            avg_netValue.append(env.memory.results.netValue.iloc[-1])
+            rl_stats.update(self.params.num_episodes,
+                            env.memory.results.netValue.iloc[-1])
 
             # Epsilon decays here
             if epsilon >= self.params.epsilon_min:
                 epsilon *= self.params.decay_factor
 
-        return avg_rewards, avg_loss, avg_mae, avg_netValue
+        return rl_stats.avg_rewards, rl_stats.avg_loss, \
+               rl_stats.avg_mae, rl_stats.avg_netValue
+
+    def simulate(self, environment: Environment, strategy: list, do_plot=True):
+        """
+        Simulate over a dataset, given a strategy and an environment.
+        :param environment:
+        :param strategy:
+        :param do_plot:
+        :return:
+        """
+        done = False
+        total_reward = 0.
+        self.params.debug = True
+        state = environment.reset()
+        while not done:
+            action = environment.decide_next_action(state, strategy)
+            next_state, reward, done, _ = environment.step(action)
+            total_reward += reward
+            state = next_state
+        self.params.display.summary(environment.memory.results,
+                                    environment.portfolio,
+                                    do_plot=do_plot)
 
     def do_learn(self, episode, episode_step):
         """ perform minibatch learning or experience replay """
@@ -284,24 +295,3 @@ class Agent(Common):
             for i in range(self.params.num_states)
         ]
         return strategy
-
-    def simulate(self, environment: Environment, strategy: list, do_plot=True):
-        """
-        Simulate over a dataset, given a strategy and an environment.
-        :param environment:
-        :param strategy:
-        :param do_plot:
-        :return:
-        """
-        done = False
-        total_reward = 0.
-        self.params.debug = True
-        state = environment.reset()
-        while not done:
-            action = environment.decide_next_action(state, strategy)
-            next_state, reward, done, _ = environment.step(action)
-            total_reward += reward
-            state = next_state
-        self.params.display.summary(environment.memory.results,
-                                    environment.portfolio,
-                                    do_plot=do_plot)

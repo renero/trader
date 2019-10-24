@@ -55,10 +55,6 @@ class Environment(Common):
         :return: The initial state.
         """
         self.update_market_price()
-        # self.portfolio = Portfolio(self.params,
-        #                            self.price_,
-        #                            self.forecast_,
-        #                            self.memory)
         self.portfolio.reset(self.price_,
                              self.forecast_,
                              self.memory)
@@ -74,7 +70,6 @@ class Environment(Common):
         self.log.debug('Resetting environment')
         self.done_ = False
         self.t = 0
-        # del self.portfolio
         self.memory.reset()
         return self.init_environment(creation_time=False)
 

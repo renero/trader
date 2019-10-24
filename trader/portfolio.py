@@ -59,8 +59,6 @@ class Portfolio(Common):
         self.reward = 0.
         self.movements = []
         self.history = []
-        # self.log.info('Portfolio reset to initial budget: {:.1f}'.format(
-        #     self.initial_budget))
 
     def update_after_step(self, price, forecast, konkorde=None):
         """
