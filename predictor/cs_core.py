@@ -11,10 +11,10 @@ from dataset import Dataset
 from file_io import valid_output_name
 
 
-class CSCore(object):
+class CSCore:
 
     def __init__(self, params):
-        super(CSCore, self).__init__()
+        # super(CSCore, self).__init__()
         self.params = params
         self.log = params.log
 
@@ -88,7 +88,8 @@ class CSCore(object):
             len(train_range), max_wsize))
 
         for from_idx in train_range:
-            prediction = single_prediction(data, from_idx, nn, encoder, self.params)
+            prediction = single_prediction(data, from_idx, nn, encoder,
+                                           self.params)
             prediction = self.add_supervised_info(
                 prediction,
                 data.iloc[from_idx]['c'], self.params)
@@ -103,7 +104,7 @@ class CSCore(object):
 
         # Take only the last window_size+1 elements, leaving
         # the last as the actual value
-        prediction = single_prediction(data, -1, nn, encoder, self)
+        prediction = single_prediction(data, -1, nn, encoder, self.params)
         predictions = ticks.scale_back(predictions.append(prediction))
 
         return predictions
@@ -122,8 +123,8 @@ class CSCore(object):
         :param params: The parameters of the whole enchilada
 
         :return: The dataframe of the predictions enriched with the actual
-        prediction, the difference between the mean and the actual, and the winner
-        network.
+        prediction, the difference between the mean and the actual, and the
+        winner network.
         """
 
         def diff_with(column_label):

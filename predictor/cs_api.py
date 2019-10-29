@@ -4,9 +4,8 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-from logger import Logger
 
-log = Logger(3)
+# log = Logger(3)
 
 
 def predict_close(ticks, encoder, nn, params):
@@ -26,7 +25,8 @@ def predict_close(ticks, encoder, nn, params):
     # the window_size attribute within the 'encoder'.
     if ticks.shape[0] != encoder.params.window_size:
         info_msg = 'Tickgroup resizing: {} -> {}'
-        log.info(info_msg.format(ticks.shape[0], encoder.params.window_size))
+        params.log.info(
+            info_msg.format(ticks.shape[0], encoder.params.window_size))
         ticks = ticks.iloc[-encoder.params.window_size():, :]
         ticks.reset_index()
 
@@ -62,7 +62,7 @@ def predict_close(ticks, encoder, nn, params):
     prediction_cs = np.concatenate((pred_body_cs, pred_move_cs), axis=0)
     this_prediction = dict(zip(params.cse_tags, prediction_cs))
     prediction_df = prediction_df.append(this_prediction, ignore_index=True)
-    log.info('Net {} ID {} -> {}:{}|{}|{}|{}'.format(
+    params.log.info('Net {} ID {} -> {}:{}|{}|{}|{}'.format(
         nn['body'].name,
         hex(id(nn)),
         prediction_df[params.cse_tags[0]].values[0],
@@ -121,7 +121,7 @@ def single_prediction(data: DataFrame, w_pos: int, nn, encoder, params):
 
     # When using ensemble, compute what the ensemble predicts, and add it.
     if params.ensemble:
-        log.info('Refining prediction with ensemble.')
+        params.log.info('Refining prediction with ensemble.')
         with open(params.ensemble_path, 'rb') as file:
             ensemble_model = pickle.load(file)
         input_df = df[

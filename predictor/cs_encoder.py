@@ -521,7 +521,7 @@ class CSEncoder:
         with open(pickle_file, 'rb') as f:
             self.__dict__.update(pickle.load(f).__dict__)
         # Overwrite log level from pickle file.
-        self.log.level = current_log_level
+        self.log.set_level(current_log_level)
         self.log.info('Loaded encoder pickle file: {}'.format(pickle_file))
         self.add_ohencoder()
 
@@ -584,9 +584,6 @@ class CSEncoder:
     def values(self):
         print('O({:.3f}), H({:.3f}), L({:.3f}), C({:.3f})'.format(
             self.open, self.high, self.low, self.close))
-
-    # def window_size(self):
-    #     return self.window_size
 
     @classmethod
     def body(self, cse):

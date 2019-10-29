@@ -12,7 +12,7 @@ from ticks import Ticks
 if __name__ == "__main__":
     np.random.seed(1)
     params = CSDictionary(args=sys.argv)
-    log = Logger(params.log_level)
+    log = params.log
     ticks = Ticks(params)
     data = ticks.read_ohlc()
     predictor = CSCore(params)
