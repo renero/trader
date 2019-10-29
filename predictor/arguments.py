@@ -3,17 +3,22 @@ import argparse
 
 class Arguments(object):
     args = None
-    possible_actions = ['train', 'predict', 'ensemble']
+    possible_actions = ['train', 'predict_training', 'predict', 'ensemble']
 
     def __init__(self, *args):
         parser = argparse.ArgumentParser()
 
         parser.add_argument('action', nargs='?', default='predict',
+                            help='what action should predictor do',
                             choices=self.possible_actions)
-        parser.add_argument('-t', '--ticks', nargs=1, type=str,
+        parser.add_argument('-t', '--ticks', nargs=1, type=str, required=True,
                             help='Ticks file to process')
+        parser.add_argument('-s', '--save', action='store_true',
+                            help='Save predictions, default OFF')
         parser.add_argument('-w', '--window', nargs=1, type=int,
                             help='Window size for the LSTM')
+        parser.add_argument('-d', '--debug', nargs=1, type=int,
+                            help='Debug level (0..4), default 0.')
 
         self.args = parser.parse_args()
         action_name = 'arg_{}'.format(self.args.action)

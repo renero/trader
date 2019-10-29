@@ -9,11 +9,11 @@ class CSDictionary(Dictionary):
         super().__init__(default_params_filename, **kwargs)
 
         arguments = Arguments(args, kwargs)
-        setattr(self, 'train', False)
-        setattr(self, 'predict', False)
+        for possible_action in arguments.possible_actions:
+            setattr(self, possible_action, False)
         setattr(self, arguments.args.action, True)
-        if arguments.args.ticks is not None:
-            setattr(self, 'ticks_file', arguments.args.ticks)
+        setattr(self, 'save_predictions', arguments.args.save)
+        setattr(self, 'ticks_file', arguments.args.ticks[0])
         if arguments.args.window is not None:
             setattr(self, 'window_size', arguments.args.window[0])
 
@@ -24,5 +24,10 @@ class CSDictionary(Dictionary):
         # Build a self with a sequential number associated to each action
         setattr(self, 'num_models', len(self.model_names.keys()))
 
-        # Start the logger
+        # Set log_level and start the logger
+        setattr(self, 'log_level',
+                arguments.args.debug[0] if arguments.args.debug is not None \
+                    else 0)
+        if 'log_level' not in self:
+            self.log_level = 2  # default value = WARNING
         self.log = Logger(self.log_level)
