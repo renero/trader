@@ -4,15 +4,16 @@ import sys
 
 import numpy as np
 
-from cs_core import CSCore
-from logger import Logger
-from cs_dictionary import CSDictionary
-from ticks import Ticks
-
 if __name__ == "__main__":
-    np.random.seed(1)
+    from cs_dictionary import CSDictionary
+
     params = CSDictionary(args=sys.argv)
+    np.random.seed(params.seed)
     log = params.log
+
+    from cs_core import CSCore
+    from ticks import Ticks
+
     ticks = Ticks(params)
     data = ticks.read_ohlc()
     predictor = CSCore(params)
