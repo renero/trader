@@ -101,7 +101,7 @@ def read_ohlc(filename: str, separator: str, csv_dict: dict) -> DataFrame:
     df.date = pd.to_datetime(df.date)
     df = df.set_index(df.iloc[:, 0].name)
 
-    info_msg = 'Read file: {}, output DF dim{}'
-    print(info_msg.format(filepath, df.shape))
+    # info_msg = 'Read file: {}, output DF dim{}'
+    # print(info_msg.format(filepath, df.shape))
 
     return df

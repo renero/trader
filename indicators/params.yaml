@@ -22,3 +22,9 @@ csv_dict:
   volume: Volume
 
 output_path: ../output
+
+# Names of columns containing the index information
+indicator_dict:
+  konkorde:
+    - verde
+    - azul
