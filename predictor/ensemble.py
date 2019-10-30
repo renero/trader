@@ -5,7 +5,7 @@ import pandas as pd
 from pandas import DataFrame, Series
 
 from cs_dictionary import CSDictionary
-from file_io import valid_output_name
+from file_io import save_dataframe
 from logger import Logger
 
 
@@ -69,13 +69,6 @@ class Ensemble:
             new_filename = current_filename.replace('pred_', 'forecast_')
         else:
             new_filename = 'forecast_' + current_filename
-        ensemble_filename = valid_output_name(
-            filename=new_filename,
-            path=self.params.predictions_path,
-            extension='csv')
-        self.log.info('Saving forecast file: {}'.format(ensemble_filename))
-        preds[['actual', 'w_avg']].to_csv(
-            ensemble_filename,
-            header=['test_y', 'forecast'],
-            index=False,
-            float_format='%.2f')
+        saved_file = save_dataframe(new_filename, preds[['actual', 'w_avg']],
+                                    self.params.predictions_path)
+        self.log.info('Saved forecast file: {}'.format(saved_file))
