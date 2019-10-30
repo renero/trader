@@ -186,7 +186,7 @@ class CSCore:
         # Find a valid filename and save everything
         filename = valid_output_name(
             filename='pred_{}_{}'.format(
-                splitext(basename(params.ticks_file))[0],
+                splitext(basename(params.input_file))[0],
                 '_'.join(params.model_names)),
             path=params.predictions_path,
             extension='csv')

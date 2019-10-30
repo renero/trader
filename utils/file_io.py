@@ -29,9 +29,14 @@ def file_exists(given_filepath: str, my_dir: str) -> str:
 
 def valid_output_name(filename: str, path: str, extension=None) -> str:
     """
-    Builds a valid name.
+    Builds a valid name. In case there's another file which already exists
+    adds a number (1, 2, ...) until finds a valid filename which does not
+    exist.
     Returns The filename if the name is valid and file does not exists,
             None otherwise.
+    :param filename: The base filename to be set.
+    :param path: The path where trying to set the filename
+    :param extension: The extension of the file, without the dot '.'
     """
     path = file_exists(path, dirname(realpath(__file__)))
     if extension:

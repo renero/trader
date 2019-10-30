@@ -2,6 +2,7 @@ from os.path import dirname, realpath
 
 import numpy as np
 import pandas as pd
+from pandas import DataFrame
 
 from utils.file_io import file_exists
 
@@ -32,8 +33,8 @@ class Ticks(object):
 
     def read_ohlc(self,
                   filepath=None,
-                  do_normalize=True):
-        _filepath = self.params.ticks_file if filepath is None else filepath
+                  do_normalize=True) -> DataFrame:
+        _filepath = self.params.input_file if filepath is None else filepath
 
         filepath = file_exists(_filepath, dirname(realpath(__file__)))
         df = pd.read_csv(filepath, delimiter=self.params.delimiter)
@@ -48,7 +49,7 @@ class Ticks(object):
             df = df.applymap(np.vectorize(self.normalize))
 
         info_msg = 'Read ticks file: {}, output DF dim{}'
-        self.log.info(info_msg.format(self.params.ticks_file, df.shape))
+        self.log.info(info_msg.format(self.params.input_file, df.shape))
         return df
 
     @staticmethod
