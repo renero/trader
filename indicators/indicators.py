@@ -4,14 +4,15 @@ import pandas as pd
 
 from dictionary import Dictionary
 from file_io import read_ohlc, save_dataframe
+from idx_dictionary import IDXDictionary
 from konkorde import Konkorde
 from logger import Logger
 
 if __name__ == "__main__":
-    params = Dictionary()
-    log = Logger(params.log_level)
+    params = IDXDictionary(args=sys.argv)
+
     input_data = read_ohlc(params.input_data, params.separator, params.csv_dict)
-    log.info('Read file: {}'.format(params.input_data))
+    params.log.info('Read file: {}'.format(params.input_data))
 
     konkorde = Konkorde(params)
     result = konkorde.compute(input_data)
@@ -21,7 +22,7 @@ if __name__ == "__main__":
         result[['open', 'high', 'low', 'close', 'volume', 'verde', 'azul']],
         params.output_path,
         cols_to_scale=['verde', 'azul'])
-    log.info('Saved index to file {}'.format(output))
+    params.log.info('Saved index to file {}'.format(output))
 
     forecast = pd.read_csv(params.forecast_file)
     kdata = pd.DataFrame()
@@ -34,4 +35,4 @@ if __name__ == "__main__":
         df,
         params.output_path,
         cols_to_scale=['verde', 'azul'])
-    log.info('Saved forecast and index FUSED: {}'.format(fused))
+    params.log.info('Saved forecast and index FUSED: {}'.format(fused))
