@@ -33,7 +33,7 @@ class CS_NN(object):
         self.params = params
         self.log = params.log
 
-        self.metadata['dataset'] = splitext(basename(self.params.ticks_file))[0]
+        self.metadata['dataset'] = splitext(basename(self.params.input_file))[0]
         self.metadata['epochs'] = self.params.epochs
         if name is not None:
             self.name = name

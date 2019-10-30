@@ -84,7 +84,7 @@ class CSEncoder:
         self.shadows_relative_diff = 0.0
 
         # Save the origin of data here.
-        self.dataset = splitext(basename(self.params.ticks_file))[0]
+        self.dataset = splitext(basename(self.params.input_file))[0]
 
         # Assign the proper values to them
         err = 'Could not find all mandatory chars (o, h, l, c) in encoding ({})'
