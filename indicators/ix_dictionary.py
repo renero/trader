@@ -41,6 +41,10 @@ class IXDictionary(Dictionary):
             setattr(self, 'merge_file', None)
             setattr(self, 'merge', False)
 
+        # This one controls whether to compute/display/append only the
+        # value for today (last in the series). Used for daily invocation
+        setattr(self, 'today', arguments.args.today is not None)
+
         if self.append and self.merge_file is not None:
             arguments.parser.error(
                 'Append option is not compatible with merge option')

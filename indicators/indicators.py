@@ -8,6 +8,7 @@ from importlib import import_module
 
 import pandas as pd
 
+from indicator import Indicator
 from ix_dictionary import IXDictionary
 from logger import Logger
 
@@ -17,13 +18,17 @@ if __name__ == "__main__":
 
     # Call the proper constructor, from the name of indicator in arguments
     module = import_module(params.indicator_name)
-    ix = getattr(module, params.indicator_class)(params)
+    ix: Indicator = getattr(module, params.indicator_class)(params)
 
     # Decide what to do with the result
     if params.append is True:
-        ix.append()
+        ix.append(params.today)
     elif params.merge:
-        ix.merge()
+        ix.merge(params.today)
     else:
-        pd.set_option('display.max_rows', -1)
-        print(ix.values[ix.final_columns].to_string())
+        if params.today:
+            print(pd.DataFrame(
+                ix.values.iloc[-1][ix.final_columns]).T.to_string())
+        else:
+            pd.set_option('display.max_rows', -1)
+            print(ix.values[ix.final_columns].to_string())

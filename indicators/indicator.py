@@ -36,21 +36,28 @@ class Indicator:
         # Initialize result, index name, and column names for this indicator
         self.values = None
 
-    def append(self):
+    def append(self, today):
+        # Decide whether to append all values, or only the last one
+        if self.params.today:
+            output_values = self.values[self.final_columns]
+        else:
+            output_values = self.values.iloc[-1][self.final_columns]
+
         output = save_dataframe(
             '{}_{}'.format(self.name,
                            splitext(basename(self.params.input_data))[0]),
-            self.values[self.final_columns],
+            output_values,
             self.params.output_path,
             cols_to_scale=self.ix_columns)
         self.log.info('Saved index to file {}'.format(output))
 
-    def merge(self):
+    def merge(self, today):
         mergeable_data = pd.read_csv(self.params.merge_file,
                                      delimiter=self.params.separator)
         indicator_data = pd.DataFrame()
         indicator_data[self.columns] = self.values[self.columns].copy(deep=True)
         indicator_data = indicator_data.reset_index(drop=True)
+
         df = pd.concat([mergeable_data, indicator_data], axis=1)
         fused = save_dataframe(
             '{}_{}'.format(
