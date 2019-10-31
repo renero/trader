@@ -194,10 +194,12 @@ class CSCore:
         log.info('predictions saved to: {}'.format(filename))
 
     def display_predictions(self, predictions):
-        print(tabulate(predictions, headers='keys',
-                       tablefmt=self.params.table_format,
-                       showindex=False,
-                       floatfmt=['.1f']))
+        if self.params.predict:
+            print(pd.DataFrame(
+                predictions.iloc[-1]).T.to_string(index=False))
+        else:
+            pd.set_option('display.max_rows', -1)
+            print(predictions.to_string(index=False))
 
     def prepare_input(self, encoder, cse, subtypes):
         """

@@ -25,7 +25,16 @@ class Ensemble:
         df = self.read_predictions_file()
         weights = self.compute_weights(df)
         ensemble_data = self.compute_weighted_prediction(df, weights)
-        self.save_ensemble(ensemble_data)
+        if self.params.save_predictions:
+            self.save_ensemble(ensemble_data)
+        else:
+            to_show = ensemble_data[['actual', 'w_avg']]
+            if self.params.predict:
+                print(pd.DataFrame(
+                    to_show.iloc[-1]).T.to_string())
+            else:
+                pd.set_option('display.max_rows', -1)
+                print(to_show.to_string())
 
     def read_predictions_file(self) -> DataFrame:
         self.log.debug(

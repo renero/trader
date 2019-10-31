@@ -36,5 +36,7 @@ if __name__ == "__main__":
                     data, nn, encoder, ticks)
 
             predictions = predictor.reorder_predictions(predictions, params)
-            predictor.save_predictions(predictions, params, log)
-            predictor.display_predictions(predictions)
+            if params.save_predictions is True:
+                predictor.save_predictions(predictions, params, log)
+            else:
+                predictor.display_predictions(predictions)
