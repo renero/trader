@@ -5,7 +5,7 @@ from dictionary import Dictionary
 from logger import Logger
 
 
-class IDXDictionary(Dictionary):
+class IXDictionary(Dictionary):
 
     def __init__(self, default_params_filename='params.yaml', *args, **kwargs):
         super().__init__(default_params_filename, **kwargs)
@@ -19,10 +19,18 @@ class IDXDictionary(Dictionary):
         for possible_action in arguments.possible_actions:
             setattr(self, possible_action, False)
         setattr(self, arguments.args.action, True)
+
+        # This is to get the name of the indicator to compute in a param
         mask[arguments.possible_actions.index(arguments.args.action)] = True
         setattr(self,
                 'indicator_name',
                 np.array(arguments.possible_actions)[mask][0])
+
+        # The name of the class implementing the indicator
+        setattr(self, 'indicator_class',
+                '{}{}'.format(
+                    self.indicator_name[0].upper(), self.indicator_name[1:])
+                )
 
         setattr(self, 'input_file', arguments.args.input[0])
         setattr(self, 'append', arguments.args.append)

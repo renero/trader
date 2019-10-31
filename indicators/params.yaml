@@ -2,17 +2,9 @@
 # Parameters for the indicators calculator.
 #
 
-# Log level
-log_level: 3
-
-# Input data
-input_data: ../data/acciona_2010_2018.csv
-separator: ','
-
-# Fuse dataframes
-forecast_file: ../output/forecast_acciona_2010_2018.csv
-
+# Parameters for reading the CSV file
 # Names of the relevant columns in the data file
+separator: ','
 csv_dict:
   date: Date
   open: Open
@@ -21,10 +13,9 @@ csv_dict:
   close: Close
   volume: Volume
 
+# Directory to be used to place the output, when generating new files.
 output_path: ../output
 
-# Names of columns containing the index information
-indicator_dict:
-  konkorde:
-    - verde
-    - azul
+# Format of the screen output for predict_training. These are values to be
+# accepted by 'tabulate'.
+table_format: simple

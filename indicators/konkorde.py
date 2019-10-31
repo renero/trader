@@ -1,52 +1,60 @@
+"""
+Compute the actual konkorde indicator.
+FIRST actionable index value after 25 observations.
+
+pvi = PositiveVolumeIndex(close)
+pvim = ExponentialAverage[m](pvi)
+pvimax = highest[90](pvim)
+pvimin = lowest[90](pvim)
+oscp = (pvi - pvim) * 100/ (pvimax - pvimin)
+nvi = NegativeVolumeIndex(close)
+nvim = ExponentialAverage[m](nvi)
+nvimax = highest[90](nvim)
+nvimin = lowest[90](nvim)
+xmf = MoneyFlowIndex[14]
+OB1 = (BollingerUp[25](TotalPrice) + BollingerDown[25](TotalPrice)) / 2
+OB2 = BollingerUp[25](TotalPrice) - BollingerDown[25](TotalPrice)
+BollOsc = ((TotalPrice - OB1) / OB2 ) * 100
+xrsi = rsi [14](TotalPrice)
+STOC = Stochastic[21,3](TotalPrice)
+
+azul = (nvi - nvim) * 100/ (nvimax - nvimin)
+marron = (xrsi + xmf + BollOsc + (STOC / 3))/2
+verde = marron + oscp
+media = ExponentialAverage[m](marron)
+bandacero= 0
+
+return
+verde COLOURED(102,255,102) as "verde",
+marron COLOURED(255,204,153) as "marron",
+marron COLOURED(51,0,0) as "lmarron",
+azul COLOURED(0,255,255) as "azul",
+verde COLOURED(0,102,0) as "lineav",
+azul COLOURED(0,0,102) as "lazul",
+media COLOURED(255,0,0) as "media",
+bandacero COLOURED(0,0,0) as "cero"
+"""
+
 from pandas import DataFrame
 
 from base_indicators import *
+from indicator import Indicator
 
 
-class Konkorde(object):
-    """
-    Compute the actual konkorde indicator.
-    FIRST actionable index value after 25 observations.
+class Konkorde(Indicator):
 
-    pvi = PositiveVolumeIndex(close)
-    pvim = ExponentialAverage[m](pvi)
-    pvimax = highest[90](pvim)
-    pvimin = lowest[90](pvim)
-    oscp = (pvi - pvim) * 100/ (pvimax - pvimin)
-    nvi = NegativeVolumeIndex(close)
-    nvim = ExponentialAverage[m](nvi)
-    nvimax = highest[90](nvim)
-    nvimin = lowest[90](nvim)
-    xmf = MoneyFlowIndex[14]
-    OB1 = (BollingerUp[25](TotalPrice) + BollingerDown[25](TotalPrice)) / 2
-    OB2 = BollingerUp[25](TotalPrice) - BollingerDown[25](TotalPrice)
-    BollOsc = ((TotalPrice - OB1) / OB2 ) * 100
-    xrsi = rsi [14](TotalPrice)
-    STOC = Stochastic[21,3](TotalPrice)
-
-    azul = (nvi - nvim) * 100/ (nvimax - nvimin)
-    marron = (xrsi + xmf + BollOsc + (STOC / 3))/2
-    verde = marron + oscp
-    media = ExponentialAverage[m](marron)
-    bandacero= 0
-
-    return
-    verde COLOURED(102,255,102) as "verde",
-    marron COLOURED(255,204,153) as "marron",
-    marron COLOURED(51,0,0) as "lmarron",
-    azul COLOURED(0,255,255) as "azul",
-    verde COLOURED(0,102,0) as "lineav",
-    azul COLOURED(0,0,102) as "lazul",
-    media COLOURED(255,0,0) as "media",
-    bandacero COLOURED(0,0,0) as "cero"
-    """
+    # The name of the signal/indicator
+    name = 'konkorde'
+    # The columns that will be generated, and that must be saved/appended
+    ix_columns = ['verde', 'azul']
 
     def __init__(self, configuration):
+        super(Konkorde, self).__init__(configuration)
         self.configuration = configuration
+        self.values = self.compute()
 
-    @staticmethod
-    def compute(input_data: DataFrame, fill_na: bool = True) -> DataFrame:
-        data = input_data.copy(deep=True)
+    def compute(self, fill_na: bool = True) -> DataFrame:
+        data = self.data.copy(deep=True)
 
         data['close_m'] = data.close.rolling(10).mean()
         data['pvi'] = positive_volume_index(data.close, data.volume)
