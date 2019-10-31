@@ -51,6 +51,9 @@ class Indicator:
             cols_to_scale=self.ix_columns)
         self.log.info('Saved index to file {}'.format(output))
 
+    # TODO: This method needs to be updated to merge only the indicator
+    #       part in the file with the ensemble and indicator, for the
+    #       new latest value
     def merge(self, today):
         mergeable_data = pd.read_csv(self.params.merge_file,
                                      delimiter=self.params.separator)
