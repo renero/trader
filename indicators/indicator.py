@@ -37,6 +37,7 @@ class Indicator:
         self.values = None
 
     def append(self, today):
+        self.log.info('Append mode')
         # Decide whether to append all values, or only the last one
         if self.params.today:
             output_values = self.values[self.final_columns]
@@ -55,6 +56,7 @@ class Indicator:
     #       part in the file with the ensemble and indicator, for the
     #       new latest value
     def merge(self, today):
+        self.log.info('Merge mode')
         mergeable_data = pd.read_csv(self.params.merge_file,
                                      delimiter=self.params.separator)
         indicator_data = pd.DataFrame()

@@ -43,7 +43,7 @@ class IXDictionary(Dictionary):
 
         # This one controls whether to compute/display/append only the
         # value for today (last in the series). Used for daily invocation
-        setattr(self, 'today', arguments.args.today is not None)
+        setattr(self, 'today', arguments.args.today)
 
         if self.append and self.merge_file is not None:
             arguments.parser.error(
@@ -54,7 +54,7 @@ class IXDictionary(Dictionary):
         #
         setattr(self, 'log_level',
                 arguments.args.debug[0] if arguments.args.debug is not None \
-                    else 0)
+                    else 3)
         if 'log_level' not in self:
-            self.log_level = 2  # default value = WARNING
+            self.log_level = 3  # default value = WARNING
         self.log = Logger(self.log_level)

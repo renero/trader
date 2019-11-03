@@ -21,7 +21,7 @@ class RLDictionary(Dictionary):
         setattr(self, 'debug', arguments.args.debug is not None)
         setattr(self, 'log_level',
                 arguments.args.debug[0] if arguments.args.debug is not None \
-                    else 0)
+                    else 3)
 
         # Start the logger
         if 'log_level' not in self:

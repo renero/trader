@@ -27,8 +27,10 @@ if __name__ == "__main__":
         ix.merge(params.today)
     else:
         if params.today:
-            print(pd.DataFrame(
-                ix.values.iloc[-1][ix.final_columns]).T.to_string())
+            ix_value = pd.DataFrame(ix.values.iloc[-1][ix.final_columns])
+            print(ix_value.T.to_string())
+            ix_value.to_json(params.json_indicator)
+            log.info('Saved indicators to: {}'.format(params.json_indicator))
         else:
             pd.set_option('display.max_rows', -1)
             print(ix.values[ix.final_columns].to_string())
