@@ -195,8 +195,10 @@ class CSCore:
 
     def display_predictions(self, predictions):
         if self.params.predict:
-            print(pd.DataFrame(
-                predictions.iloc[-1]).T.to_string(index=False))
+            last_prediction = pd.DataFrame(
+                predictions.iloc[-1])
+            print(last_prediction.T.to_string(index=False))
+            last_prediction.T.to_json(self.params.json_predict_path)
         else:
             pd.set_option('display.max_rows', -1)
             print(predictions.to_string(index=False))
