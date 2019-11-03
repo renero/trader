@@ -198,7 +198,9 @@ class CSCore:
             last_prediction = pd.DataFrame(
                 predictions.iloc[-1])
             print(last_prediction.T.to_string(index=False))
-            last_prediction.T.to_json(self.params.json_predict_path)
+            last_prediction.to_json(self.params.json_prediction)
+            self.log.info('Save json file: {}'.format(
+                self.params.json_prediction))
         else:
             pd.set_option('display.max_rows', -1)
             print(predictions.to_string(index=False))

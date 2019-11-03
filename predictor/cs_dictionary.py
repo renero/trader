@@ -37,5 +37,5 @@ class CSDictionary(Dictionary):
                 arguments.args.debug[0] if arguments.args.debug is not None \
                     else 0)
         if 'log_level' not in self:
-            self.log_level = 2  # default value = WARNING
+            self.log_level = 3  # default value = WARNING
         self.log = Logger(self.log_level)

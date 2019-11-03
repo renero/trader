@@ -43,7 +43,7 @@ class Logger:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-    _level = 0
+    _level = 3
 
     def __init__(self, level=0):
         self._level = level

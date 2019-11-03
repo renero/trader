@@ -17,7 +17,7 @@ if __name__ == "__main__":
     from cs_core import CSCore
     from ticks import Ticks
 
-    if params.ensemble:
+    if params.ensemble_predictions or params.ensemble:
         ensemble(params)
     else:
         ticks = Ticks(params)
