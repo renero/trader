@@ -33,7 +33,7 @@ class IXDictionary(Dictionary):
                 )
 
         setattr(self, 'input_file', arguments.args.input[0])
-        setattr(self, 'append', arguments.args.append)
+        setattr(self, 'save', arguments.args.save)
         if arguments.args.merge is not None:
             setattr(self, 'merge_file', arguments.args.merge[0])
             setattr(self, 'merge', True)
@@ -45,9 +45,9 @@ class IXDictionary(Dictionary):
         # value for today (last in the series). Used for daily invocation
         setattr(self, 'today', arguments.args.today)
 
-        if self.append and self.merge_file is not None:
+        if self.save and self.merge_file is not None:
             arguments.parser.error(
-                'Append option is not compatible with merge option')
+                'Save option is not compatible with merge option')
 
         #
         # Set log_level and start the logger

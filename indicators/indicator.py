@@ -8,6 +8,7 @@ internal structure
 from os.path import splitext, basename
 
 import pandas as pd
+from pandas import DataFrame
 
 from file_io import read_ohlc, save_dataframe
 
@@ -19,7 +20,7 @@ class Indicator:
     ix_columns = None
     # All the columns relevant to be saved
     final_columns = None
-    values = None
+    values: DataFrame = None
 
     def __init__(self, params):
         self.params = params
@@ -36,25 +37,16 @@ class Indicator:
         # Initialize result, index name, and column names for this indicator
         self.values = None
 
-    def append(self, today):
-        self.log.info('Append mode')
-        # Decide whether to append all values, or only the last one
-        if self.params.today:
-            output_values = self.values[self.final_columns]
-        else:
-            output_values = self.values.iloc[-1][self.final_columns]
-
+    def save(self, today):
+        output_values = self.values[self.final_columns]
         output = save_dataframe(
             '{}_{}'.format(self.name,
                            splitext(basename(self.params.input_data))[0]),
             output_values,
             self.params.output_path,
             cols_to_scale=self.ix_columns)
-        self.log.info('Saved index to file {}'.format(output))
+        self.log.info('Saved index to file: {}'.format(output))
 
-    # TODO: This method needs to be updated to merge only the indicator
-    #       part in the file with the ensemble and indicator, for the
-    #       new latest value
     def merge(self, today):
         self.log.info('Merge mode')
         mergeable_data = pd.read_csv(self.params.merge_file,

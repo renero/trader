@@ -21,13 +21,13 @@ if __name__ == "__main__":
     ix: Indicator = getattr(module, params.indicator_class)(params)
 
     # Decide what to do with the result
-    if params.append is True:
-        ix.append(params.today)
+    if params.save is True:
+        ix.save(params.today)
     elif params.merge:
-        ix.merge(params.today)
+        ix.save(params.today)
     else:
         if params.today:
-            ix_value = pd.DataFrame(ix.values.iloc[-1][ix.final_columns])
+            ix_value = ix.values.iloc[-1][ix.final_columns]
             print(ix_value.T.to_string())
             ix_value.to_json(params.json_indicator)
             log.info('Saved indicators to: {}'.format(params.json_indicator))

@@ -43,6 +43,8 @@ from indicator import Indicator
 
 class Konkorde(Indicator):
 
+    values: DataFrame = None
+
     # The name of the signal/indicator
     name = 'konkorde'
     # The columns that will be generated, and that must be saved/appended
