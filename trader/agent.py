@@ -3,6 +3,7 @@ import time
 from collections import deque
 
 import numpy as np
+import pandas as pd
 from keras.callbacks import TensorBoard
 
 from common import Common
@@ -167,7 +168,8 @@ class Agent(Common):
         return rl_stats.avg_rewards, rl_stats.avg_loss, \
                rl_stats.avg_mae, rl_stats.avg_netValue
 
-    def simulate(self, environment: Environment, strategy: list, do_plot=True):
+    def simulate(self, environment: Environment, strategy: list,
+                 last=False, do_plot=True):
         """
         Simulate over a dataset, given a strategy and an environment.
         :param environment:
@@ -183,6 +185,7 @@ class Agent(Common):
             alert = Spring(environment.price_,
                            self.log,
                            self.params.stop_drop_rate)
+        action = 0
         while not done:
             action = environment.decide_next_action(state, strategy)
             if self.params.stop_drop is True:
@@ -190,9 +193,14 @@ class Agent(Common):
             next_state, reward, done, _ = environment.step(action)
             total_reward += reward
             state = next_state
-        self.params.display.summary(environment.memory.results,
-                                    environment.portfolio,
-                                    do_plot=do_plot)
+        if last is True:
+            pd.Series({'action': self.params.action[action]}).to_json(
+                self.params.json_action)
+            self.log.info('Saved action to: {}'.format(self.params.json_action))
+        else:
+            self.params.display.summary(environment.memory.results,
+                                        environment.portfolio,
+                                        do_plot=do_plot)
 
     def check_stopdrop(self, action, alert, price):
         """
