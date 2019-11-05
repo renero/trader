@@ -28,7 +28,6 @@ if __name__ == "__main__":
     else:
         if params.today:
             ix_value = ix.values.iloc[-1][ix.final_columns]
-            print(ix_value.T.to_string())
             ix_value.to_json(params.json_indicator)
             log.info('Saved indicators to: {}'.format(params.json_indicator))
         else:
