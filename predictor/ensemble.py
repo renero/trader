@@ -26,7 +26,8 @@ class Ensemble:
         weights = self.compute_weights(df)
         if single_ensemble:
             json_predictions = pd.DataFrame(
-                pd.read_json(self.params.json_prediction)).T
+                pd.read_json(self.params.json_prediction,
+                typ='series', orient='records')).T
             ensemble_data = self.compute_weighted_prediction(
                 json_predictions,
                 weights)

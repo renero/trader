@@ -195,9 +195,8 @@ class CSCore:
 
     def display_predictions(self, predictions):
         if self.params.predict:
-            last_prediction = pd.DataFrame(
-                predictions.iloc[-1])
-            print(last_prediction.T.to_string(index=False))
+            last_prediction = predictions.iloc[-1]
+            print(pd.DataFrame(last_prediction).T.to_string(index=False))
             last_prediction.to_json(self.params.json_prediction)
             self.log.info('Save json file: {}'.format(
                 self.params.json_prediction))
