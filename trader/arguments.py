@@ -18,7 +18,7 @@ class Arguments(object):
         self.parser.add_argument('-e', '--epochs', nargs=1, type=int,
                                  help='Number of epochs in training')
         self.parser.add_argument('-f', '--file', nargs=1, type=str,
-                                 help='Forecast file to process')
+                                 required=True, help='Forecast file to process')
         self.parser.add_argument('-s', '--save', action='store_true',
                                  help='Save ON, default OFF')
 

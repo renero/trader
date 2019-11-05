@@ -33,13 +33,13 @@ class RLDictionary(Dictionary):
         setattr(self, 'what_to_do', arguments.args.action)
         self.log.info('{} mode'.format(self.what_to_do))
 
+        setattr(self, 'data_path', arguments.args.file[0])
+
         setattr(self, 'save_model', arguments.args.save)
         if arguments.args.epochs is not None:
             setattr(self, 'num_episodes', int(arguments.args.epochs[0]))
         else:
             setattr(self, 'num_episodes', 1)
-        if arguments.args.file is not None:
-            setattr(self, 'data_path', arguments.args.file[0])
 
         # Build a self with a sequential number associated to each action
         setattr(self, 'action_id', MyDict())
