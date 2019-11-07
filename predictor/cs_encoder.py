@@ -511,7 +511,10 @@ class CSEncoder:
         Loads the CS Encoder object from a pickle dump.
         :return: The objects itself
         """
+        # Keep current parameters
         current_log_level = self.params.log_level
+        current_input_file = self.params.input_file
+
         if pickle_file_path is None:
             path = self.params.pickle_filename
         else:
@@ -520,8 +523,11 @@ class CSEncoder:
         pickle_file = file_exists(pickle_file, dirname(realpath(__file__)))
         with open(pickle_file, 'rb') as f:
             self.__dict__.update(pickle.load(f).__dict__)
-        # Overwrite log level from pickle file.
+
+        # Overwrite some params from pickle file.
         self.log.set_level(current_log_level)
+        self.params.input_file = current_input_file
+
         self.log.info('Loaded encoder pickle file: {}'.format(pickle_file))
         self.add_ohencoder()
 

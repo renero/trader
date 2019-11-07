@@ -19,20 +19,46 @@ class Ensemble:
 
         self.log.info(
             'Generating ensemble with: {}'.format(self.params.input_file))
-        self.ensemble_predictions()
+        self.ensemble_predictions(single_ensemble=self.params.ensemble)
 
-    def ensemble_predictions(self):
+    def ensemble_predictions(self, single_ensemble: bool):
         df = self.read_predictions_file()
         weights = self.compute_weights(df)
-        ensemble_data = self.compute_weighted_prediction(df, weights)
-        self.save_ensemble(ensemble_data)
+        if single_ensemble:
+            json_predictions = pd.DataFrame(
+                pd.read_json(self.params.json_prediction,
+                typ='series', orient='records')).T
+            ensemble_data = self.compute_weighted_prediction(
+                json_predictions,
+                weights)
+        else:
+            ensemble_data = self.compute_weighted_prediction(df, weights)
+        if self.params.save_predictions:
+            self.save_ensemble(ensemble_data)
+        else:
+            if single_ensemble:
+                to_show = ensemble_data[['w_avg']]
+            else:
+                to_show = ensemble_data[['actual', 'w_avg']]
+            if self.params.predict:
+                print(pd.DataFrame(
+                    to_show.iloc[-1]).T.to_string())
+            else:
+                pd.set_option('display.max_rows', -1)
+                to_show.to_json(self.params.json_forecast)
+                self.log.info('Saved forecast: {}'.format(
+                    self.params.json_forecast))
+                print(to_show.to_string())
 
     def read_predictions_file(self) -> DataFrame:
         self.log.debug(
             'Reading predictions file: {}'.format(self.params.input_file))
         df = pd.read_csv(self.params.input_file,
                          delimiter=self.params.delimiter)
-        self.num_preds = df.columns.get_loc('avg') - 1
+        if 'avg' in df.columns:
+            self.num_preds = df.columns.get_loc('avg') - 1
+        else:
+            self.log.error('Column called <avg> not present in pred_ file')
         return df
 
     def compute_weights(self, preds: DataFrame) -> DataFrame:

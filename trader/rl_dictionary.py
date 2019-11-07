@@ -21,7 +21,7 @@ class RLDictionary(Dictionary):
         setattr(self, 'debug', arguments.args.debug is not None)
         setattr(self, 'log_level',
                 arguments.args.debug[0] if arguments.args.debug is not None \
-                    else 0)
+                    else 3)
 
         # Start the logger
         if 'log_level' not in self:
@@ -33,13 +33,20 @@ class RLDictionary(Dictionary):
         setattr(self, 'what_to_do', arguments.args.action)
         self.log.info('{} mode'.format(self.what_to_do))
 
+        setattr(self, 'forecast_file', arguments.args.forecast[0])
+
+        # Load the NN model file, only if the action is not "learn"
+        if arguments.args.action != 'learn':
+            setattr(self, 'model_file', arguments.args.model[0])
+        else:
+            self.log.error('Model file must be specified with -m argument')
+            raise ValueError('Model file must be specified with -m argument')
+
         setattr(self, 'save_model', arguments.args.save)
         if arguments.args.epochs is not None:
             setattr(self, 'num_episodes', int(arguments.args.epochs[0]))
         else:
             setattr(self, 'num_episodes', 1)
-        if arguments.args.file is not None:
-            setattr(self, 'data_path', arguments.args.file[0])
 
         # Build a self with a sequential number associated to each action
         setattr(self, 'action_id', MyDict())

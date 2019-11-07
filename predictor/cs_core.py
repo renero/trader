@@ -194,10 +194,15 @@ class CSCore:
         log.info('predictions saved to: {}'.format(filename))
 
     def display_predictions(self, predictions):
-        print(tabulate(predictions, headers='keys',
-                       tablefmt=self.params.table_format,
-                       showindex=False,
-                       floatfmt=['.1f']))
+        if self.params.predict:
+            last_prediction = predictions.iloc[-1]
+            print(pd.DataFrame(last_prediction).T.to_string(index=False))
+            last_prediction.to_json(self.params.json_prediction)
+            self.log.info('Save json file: {}'.format(
+                self.params.json_prediction))
+        else:
+            pd.set_option('display.max_rows', -1)
+            print(predictions.to_string(index=False))
 
     def prepare_input(self, encoder, cse, subtypes):
         """

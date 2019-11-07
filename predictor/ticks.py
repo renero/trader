@@ -7,12 +7,11 @@ from pandas import DataFrame
 from utils.file_io import file_exists
 
 
-class Ticks(object):
+class Ticks:
     min_value = 0.
     max_value = 0.
 
     def __init__(self, params):
-        super(Ticks, self).__init__()
         self.params = params
         self.log = params.log
 

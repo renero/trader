@@ -1,37 +1,35 @@
-from os.path import splitext, basename
+"""
+This module computes stock indicators like Konkorde, from an OHLC file
+(c) 2019, J. Renero
+"""
+
+import sys
+from importlib import import_module
 
 import pandas as pd
 
-from dictionary import Dictionary
-from file_io import read_ohlc, save_dataframe
-from konkorde import Konkorde
+from indicator import Indicator
+from ix_dictionary import IXDictionary
 from logger import Logger
 
 if __name__ == "__main__":
-    params = Dictionary()
-    log = Logger(params.log_level)
-    input_data = read_ohlc(params.input_data, params.separator, params.csv_dict)
-    log.info('Read file: {}'.format(params.input_data))
+    params = IXDictionary(args=sys.argv)
+    log: Logger = params.log
 
-    konkorde = Konkorde(params)
-    result = konkorde.compute(input_data)
+    # Call the proper constructor, from the name of indicator in arguments
+    module = import_module(params.indicator_name)
+    ix: Indicator = getattr(module, params.indicator_class)(params)
 
-    output = save_dataframe(
-        'konkorde_{}'.format(splitext(basename(params.input_data))[0]),
-        result[['open', 'high', 'low', 'close', 'volume', 'verde', 'azul']],
-        params.output_path,
-        cols_to_scale=['verde', 'azul'])
-    log.info('Saved index to file {}'.format(output))
-
-    forecast = pd.read_csv(params.forecast_file)
-    kdata = pd.DataFrame()
-    kdata['verde'] = result['verde']
-    kdata['azul'] = result['azul']
-    kdata = kdata.reset_index(drop=True)
-    df = pd.concat([forecast, kdata], axis=1)
-    fused = save_dataframe(
-        '{}_Konkorde'.format(splitext(basename(params.forecast_file))[0]),
-        df,
-        params.output_path,
-        cols_to_scale=['verde', 'azul'])
-    log.info('Saved forecast and index FUSED: {}'.format(fused))
+    # Decide what to do with the result
+    if params.save is True:
+        ix.save(params.today)
+    elif params.merge:
+        ix.save(params.today)
+    else:
+        if params.today:
+            ix_value = ix.values.iloc[-1][ix.final_columns]
+            ix_value.to_json(params.json_indicator)
+            log.info('Saved indicators to: {}'.format(params.json_indicator))
+        else:
+            pd.set_option('display.max_rows', -1)
+            print(ix.values[ix.final_columns].to_string())

@@ -17,8 +17,10 @@ class Arguments(object):
                                  help='Debug level (0..4), default 0.')
         self.parser.add_argument('-e', '--epochs', nargs=1, type=int,
                                  help='Number of epochs in training')
-        self.parser.add_argument('-f', '--file', nargs=1, type=str,
-                                 help='Forecast file to process')
+        self.parser.add_argument('-f', '--forecast', nargs=1, type=str,
+                                 required=True, help='Forecast file to process')
+        self.parser.add_argument('-m', '--model', nargs=1, type=str,
+                                 help='NN Model file to be loaded')
         self.parser.add_argument('-s', '--save', action='store_true',
                                  help='Save ON, default OFF')
 

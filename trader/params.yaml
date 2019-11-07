@@ -4,7 +4,6 @@
 #
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../output/forecast_acciona_konkorde_2019.csv
 delimiter: ','
 column_name:
   price: test_y
@@ -14,6 +13,7 @@ column_name:
 
 # Wanna save the model after training?
 models_dir: ../output/
+json_action: ../output/tmp_action.json
 
 # Specify here if you want to load a pre-trained model
 model_file: ../staging/rl_model_forecast_acciona_konkorde_2018b_1
