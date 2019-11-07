@@ -36,7 +36,7 @@ class RLDictionary(Dictionary):
         setattr(self, 'forecast_file', arguments.args.forecast[0])
 
         # Load the NN model file, only if the action is not "learn"
-        if arguments.args.action != 'learn':
+        if arguments.args.action != 'learn' and arguments.args.model is not None:
             setattr(self, 'model_file', arguments.args.model[0])
         else:
             self.log.error('Model file must be specified with -m argument')

@@ -16,7 +16,7 @@ models_dir: ../output/
 json_action: ../output/tmp_action.json
 
 # Specify here if you want to load a pre-trained model
-model_file: ../staging/rl_model_forecast_acciona_konkorde_2018b_1
+# model_file: ../staging/rl_model_forecast_acciona_konkorde_2018b_1
 
 # Parameters for the Q-Learning function
 gamma: 0.95
