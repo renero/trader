@@ -9,4 +9,4 @@ python predictor.py -f ../output/pred_acciona_2019_8yw20_8yw10_8yw05.csv ensembl
 cd ../indicators
 python indicators.py -i ../data/acciona_2019.csv --today
 cd ../trader
-python trader.py predict -f ../output/forecast_acciona_konkorde_2019.csv
+python trader.py predict -f ../output/forecast_acciona_konkorde_2019.csv -m ../ouput/rl_model_forecast_acciona_konkorde_2018b_1
