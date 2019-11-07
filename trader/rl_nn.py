@@ -59,7 +59,7 @@ class RL_NN(Common):
         self.log.info('\nSaving model, weights and results.')
 
         fname = 'rl_model_' + splitext(
-            basename(self.params.data_path))[0]
+            basename(self.params.forecast_file))[0]
         model_name = valid_output_name(fname, self.params.models_dir, 'json')
 
         # serialize model to JSON

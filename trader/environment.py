@@ -41,7 +41,7 @@ class Environment(Common):
             np.random.seed(1)
 
         self.states = StatesCombiner(self.params)
-        self.read_market_data(self.params.data_path)
+        self.read_market_data(self.params.forecast_file)
         self.portfolio = Portfolio(self.params,
                                    self.price_, self.forecast_, self.memory)
         self.init_environment(creation_time=True)

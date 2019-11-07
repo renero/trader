@@ -33,7 +33,14 @@ class RLDictionary(Dictionary):
         setattr(self, 'what_to_do', arguments.args.action)
         self.log.info('{} mode'.format(self.what_to_do))
 
-        setattr(self, 'data_path', arguments.args.file[0])
+        setattr(self, 'forecast_file', arguments.args.forecast[0])
+
+        # Load the NN model file, only if the action is not "learn"
+        if arguments.args.action != 'learn':
+            setattr(self, 'model_file', arguments.args.model[0])
+        else:
+            self.log.error('Model file must be specified with -m argument')
+            raise ValueError('Model file must be specified with -m argument')
 
         setattr(self, 'save_model', arguments.args.save)
         if arguments.args.epochs is not None:
