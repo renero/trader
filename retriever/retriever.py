@@ -26,11 +26,13 @@ def main(argv):
         msg += '  {} != {}'.format(stock_data['latest trading day'],
                                    last.working_day())
         raise ValueError(msg)
+    params.log.info('Retrieved data for symbol {}'.format(params.symbol))
 
     row = closing.csv_row(stock_data, params.json_columns)
     with open(params.file, 'a') as fd:
         fd.write(row)
     fd.close()
+    params.log.info('Appended as CSV row to file {}'.format(params.file))
 
 
 if __name__ == "__main__":
