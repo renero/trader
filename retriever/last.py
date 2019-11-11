@@ -72,3 +72,9 @@ class last:
         if loop_iterations < max_days_back:
             return last_day
         return 'UNKNOWN'
+
+    @staticmethod
+    def row_date_is(for_date, file):
+        existing_data = pd.read_csv(file)
+        last_date = existing_data.iloc[-1]['Date']
+        return last_date == for_date

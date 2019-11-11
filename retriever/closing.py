@@ -1,6 +1,8 @@
 import pandas as pd
 import requests
 
+from last import last
+
 
 class closing:
     """
@@ -56,10 +58,8 @@ class closing:
         return row
 
     @staticmethod
-    def append_tofile(row, file, date_to_append, log):
-        existing_data = pd.read_csv(file)
-        last_date = existing_data.iloc[-1]['Date']
-        if last_date == date_to_append:
+    def append_to_file(row, file, date_to_append, log):
+        if last.row_date_is(date_to_append, file):
             log.info('Data already appended. Doing nothing here.')
             return
         with open(file, 'a') as fd:

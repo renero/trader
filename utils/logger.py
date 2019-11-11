@@ -47,7 +47,7 @@ class Logger:
 
     def __init__(self, level=0):
         self._level = level
-        if self._level > 2:
+        if self._level > 3:
             print('Log level:', self._level)
 
     def set_level(self, level):
