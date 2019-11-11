@@ -22,4 +22,4 @@ python indicators.py -i ../data/acciona_2019.csv --today
 
 # Generate a trading recommendation
 cd ../trader
-python trader.py predict -f ../output/forecast_acciona_konkorde_2019.csv -m ../ouput/rl_model_forecast_acciona_konkorde_2018b_1
+python trader.py predict -f ../output/forecast_acciona_konkorde_2019.csv -m ../output/rl_model_forecast_acciona_konkorde_2018b_1

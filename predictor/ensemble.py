@@ -45,7 +45,7 @@ class Ensemble:
                     to_show.iloc[-1]).T.to_string())
             else:
                 pd.set_option('display.max_rows', -1)
-                to_show.to_json(self.params.json_forecast)
+                to_show.T[0].to_json(self.params.json_forecast)
                 self.log.info('Saved forecast: {}'.format(
                     self.params.json_forecast))
                 print(to_show.to_string())
