@@ -29,10 +29,7 @@ def main(argv):
     params.log.info('Retrieved data for symbol {}'.format(params.symbol))
 
     row = closing.csv_row(stock_data, params.json_columns)
-    with open(params.file, 'a') as fd:
-        fd.write(row)
-    fd.close()
-    params.log.info('Appended as CSV row to file {}'.format(params.file))
+    closing.append_tofile(row, params.file, last.working_day(), params.log)
 
 
 if __name__ == "__main__":

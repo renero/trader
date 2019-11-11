@@ -54,3 +54,16 @@ class closing:
         row = list(map(f, list(latest_ohlcv.values[0])))
         row = ','.join(map(str, row)) + '\n'
         return row
+
+    @staticmethod
+    def append_tofile(row, file, date_to_append, log):
+        existing_data = pd.read_csv(file)
+        last_date = existing_data.iloc[-1]['Date']
+        if last_date == date_to_append:
+            log.info('Data already appended. Doing nothing here.')
+            return
+        with open(file, 'a') as fd:
+            fd.write(row)
+        fd.close()
+        log.info('Appended as CSV row to file {}'.format(file))
+
