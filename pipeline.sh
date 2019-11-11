@@ -4,6 +4,7 @@ set -e
 # Get latest info from OHLC, and update file
 cd retriever
 python retriever.py --symbol ANA.MC --file ../data/acciona_2019.csv
+cd ..
 
 # Generate a small sample to run predictions on it (smaller = faster)
 head -1 data/acciona_2019.csv > /tmp/tmp_ohlcv.csv
