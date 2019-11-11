@@ -1,3 +1,5 @@
+requests
+holidays
 scikit-learn
 matplotlib
 numpy

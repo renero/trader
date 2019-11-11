@@ -1,0 +1,18 @@
+#
+# Parameters for retriever.py
+#
+
+# API Key of the service
+api_key: HF9S3IZSBKSKHPV3
+
+# Alpha Vantage API Function name
+function_name: GLOBAL_QUOTE
+
+# JSON key names to be selected once retrieved the info
+json_columns:
+  - latest trading day
+  - open
+  - high
+  - low
+  - price
+  - volume
