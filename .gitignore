@@ -10,7 +10,7 @@ output/
 data/
 
 # Project dependent ignores
-# params.yaml
+params.yaml
 
 # macOS generic defaults
 # General

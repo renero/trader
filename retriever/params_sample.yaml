@@ -3,7 +3,7 @@
 #
 
 # API Key of the service
-api_key: HF9S3IZSBKSKHPV3
+api_key: <your API key>
 
 # Alpha Vantage API Function name
 function_name: GLOBAL_QUOTE
