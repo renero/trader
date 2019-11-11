@@ -10,7 +10,7 @@ class closing:
     @staticmethod
     def alpha_vantage(url='https://www.alphavantage.co',
                       api_entry='/query?',
-                      api_key='HF9S3IZSBKSKHPV3',
+                      api_key=None,
                       **kwargs) -> dict:
         endpoint = url + api_entry
         arguments = '&'.join(
