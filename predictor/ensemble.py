@@ -27,7 +27,7 @@ class Ensemble:
         if single_ensemble:
             json_predictions = pd.DataFrame(
                 pd.read_json(self.params.json_prediction,
-                typ='series', orient='records')).T
+                             typ='series', orient='records')).T
             ensemble_data = self.compute_weighted_prediction(
                 json_predictions,
                 weights)
@@ -95,6 +95,7 @@ class Ensemble:
             new_filename = current_filename.replace('pred_', 'forecast_')
         else:
             new_filename = 'forecast_' + current_filename
-        saved_file = save_dataframe(new_filename, preds[['actual', 'w_avg']],
-                                    self.params.predictions_path)
+        saved_file, _ = save_dataframe(new_filename,
+                                       preds[['actual', 'w_avg']],
+                                       self.params.predictions_path)
         self.log.info('Saved forecast file: {}'.format(saved_file))

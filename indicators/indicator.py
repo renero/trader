@@ -7,6 +7,8 @@ internal structure
 """
 from os.path import splitext, basename
 
+import joblib
+import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
@@ -37,29 +39,36 @@ class Indicator:
         # Initialize result, index name, and column names for this indicator
         self.values = None
 
-    def save(self, today):
+    def save(self):
         output_values = self.values[self.final_columns]
-        output = save_dataframe(
-            '{}_{}'.format(self.name,
-                           splitext(basename(self.params.input_data))[0]),
+        idx_basename = '{}_{}'.format(
+            self.name,
+            splitext(basename(self.params.input_file))[0])
+        scaler_name = 'scaler_{}_{}'.format(
+            self.name,
+            splitext(basename(self.params.input_file))[0])
+        output, scaler_saved = save_dataframe(
+            idx_basename,
             output_values,
             self.params.output_path,
-            cols_to_scale=self.ix_columns)
+            cols_to_scale=self.ix_columns,
+            scaler_name=scaler_name)
+        self.log.info('Saved scaler to file: {}'.format(scaler_saved))
         self.log.info('Saved index to file: {}'.format(output))
 
-    def merge(self, today):
-        self.log.info('Merge mode')
-        mergeable_data = pd.read_csv(self.params.merge_file,
-                                     delimiter=self.params.separator)
-        indicator_data = pd.DataFrame()
-        indicator_data[self.columns] = self.values[self.columns].copy(deep=True)
-        indicator_data = indicator_data.reset_index(drop=True)
-
-        df = pd.concat([mergeable_data, indicator_data], axis=1)
-        fused = save_dataframe(
-            '{}_{}'.format(
-                splitext(basename(self.params.forecast_file))[0], self.name),
-            df,
-            self.params.output_path,
-            cols_to_scale=self.columns)
-        self.log.info('Saved forecast and index FUSED: {}'.format(fused))
+    def register(self):
+        """
+        Scales the indicator values and save them to the specified filename
+        :return: N/A
+        """
+        # ix_scaled = self.values.copy(deep=True)
+        scaler = joblib.load(self.params.scaler_name)
+        ix_scaled = scaler.transform(self.values[self.ix_columns])
+        last_row = np.array([[ix_scaled[-1, 0]], [ix_scaled[-1, 1]]])
+        ix_row = pd.DataFrame(data=last_row.T,
+                              columns=self.ix_columns,
+                              index=None)
+        ix_row.iloc[0].to_json(self.params.json_indicator.format(self.name))
+        self.log.info(
+            'Saved indicators to: {}'.format(
+                self.params.json_indicator.format(self.name)))

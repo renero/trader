@@ -22,14 +22,10 @@ if __name__ == "__main__":
 
     # Decide what to do with the result
     if params.save is True:
-        ix.save(params.today)
-    elif params.merge:
-        ix.save(params.today)
+        ix.save()
     else:
         if params.today:
-            ix_value = ix.values.iloc[-1][ix.final_columns]
-            ix_value.to_json(params.json_indicator)
-            log.info('Saved indicators to: {}'.format(params.json_indicator))
+            ix.register()
         else:
             pd.set_option('display.max_rows', -1)
             print(ix.values[ix.final_columns].to_string())

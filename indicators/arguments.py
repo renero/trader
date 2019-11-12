@@ -19,8 +19,8 @@ class Arguments(object):
                                  help='Computes only today\'s value')
         self.parser.add_argument('-s', '--save', action='store_true',
                                  help='Append index to the input file')
-        self.parser.add_argument('-m', '--merge', nargs=1, type=str,
-                                 help='Merge index into specified file')
+        # self.parser.add_argument('-m', '--merge', nargs=1, type=str,
+        #                          help='Merge index into specified file')
         self.parser.add_argument('-d', '--debug', nargs=1, type=int,
                                  help='Debug level (0..4), default 0.')
 

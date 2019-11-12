@@ -3,6 +3,7 @@ import os
 from os.path import dirname, realpath, join
 from pathlib import Path
 
+import joblib
 import pandas as pd
 from pandas import DataFrame
 from sklearn.preprocessing import MinMaxScaler
@@ -60,14 +61,18 @@ def valid_output_name(filename: str, path: str, extension=None) -> str:
 def save_dataframe(name: str,
                    df: DataFrame,
                    output_path: str,
-                   cols_to_scale: list = None):
+                   cols_to_scale: list = None,
+                   scaler_name: str = None):
     """
     Save the data frame passed, with a valid output name in the output path
     scaling the columns specified, if applicable.
+
     :param name:
     :param df:
     :param output_path:
     :param cols_to_scale: array with the names of the columns to scale
+    :param scaler_name: baseName of the file where saving the scaler used.
+
     :return: the full path of the file saved
     """
     data = df.copy()
@@ -75,9 +80,12 @@ def save_dataframe(name: str,
     if cols_to_scale is not None:
         scaler = MinMaxScaler(feature_range=(-1., 1.))
         data[cols_to_scale] = scaler.fit_transform(data[cols_to_scale])
+        # Save the scaler used
+        scaler_name = valid_output_name(scaler_name, output_path, 'pickle')
+        joblib.dump(scaler, scaler_name)
     data.to_csv(file_name)
 
-    return file_name
+    return file_name, scaler_name
 
 
 def read_ohlc(filename: str, separator: str, csv_dict: dict) -> DataFrame:

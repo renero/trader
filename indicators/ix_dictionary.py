@@ -34,16 +34,19 @@ class IXDictionary(Dictionary):
 
         setattr(self, 'input_file', arguments.args.input[0])
         setattr(self, 'save', arguments.args.save)
-        if arguments.args.merge is not None:
-            setattr(self, 'merge_file', arguments.args.merge[0])
-            setattr(self, 'merge', True)
-        else:
-            setattr(self, 'merge_file', None)
-            setattr(self, 'merge', False)
+        # if arguments.args.merge is not None:
+        #     setattr(self, 'merge_file', arguments.args.merge[0])
+        #     setattr(self, 'merge', True)
+        # else:
+        #     setattr(self, 'merge_file', None)
+        #     setattr(self, 'merge', False)
 
         # This one controls whether to compute/display/append only the
         # value for today (last in the series). Used for daily invocation
-        setattr(self, 'today', arguments.args.today)
+        if arguments.args.today is not None:
+            setattr(self, 'today', arguments.args.today)
+        else:
+            setattr(self, 'today', False)
 
         if self.save and self.merge_file is not None:
             arguments.parser.error(
