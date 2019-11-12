@@ -2,6 +2,7 @@ import pandas as pd
 import requests
 
 from last import last
+from logger import Logger
 
 
 class closing:
@@ -28,29 +29,40 @@ class closing:
     @staticmethod
     def csv_row(stock_data: dict,
                 json_columns: list,
-                ohlc_columns: list) -> str:
+                ohlc_columns: list,
+                json_file: str,
+                log: Logger) -> str:
         """
-        Copy the original response from the provider to preserve it
+        Append the OHLCV data from provider to the OHLCV file used in the
+        project.
 
-        :param stock_data:
-        :param json_columns:
-        :return:
+        :param stock_data:      the dictionary with the data retrieved from
+                                provider (Alpha Vantage)
+        :param json_columns:    the columns names that contain the info I want
+        :param ohlc_columns:    the column names ordered as in the OHLCV file
+        :param json_file:       the name of the file that will contain the data
+                                in json format
+        :param log:             the logger used to report.
+        :return:                the csv row that is inserted in the OHLCV file
         """
         sd = stock_data.copy()
         for v in sd.keys():
             sd[v] = [sd[v]]
 
         # Create a data frame from it
-        # ['latest trading day', 'open', 'high', 'low', 'price', 'volume']
         my_columns = json_columns
         latest_ohlcv = pd.DataFrame.from_dict(sd)
         latest_ohlcv = latest_ohlcv[my_columns].copy(deep=True)
         # rename columns
         latest_ohlcv.columns = ['Date', 'Open', 'High', 'Low', 'Close',
                                 'Volume']
-        # reorder columns
+        # Reorder columns
         latest_ohlcv = latest_ohlcv[ohlc_columns]
         latest_ohlcv.columns = ohlc_columns
+
+        # record the OHLCV values to a temporary json file.
+        latest_ohlcv.iloc[-1].to_json(json_file)
+        log.info('Json file saved: {}'.format(json_file))
 
         # reduce the precision to two decimals, only.
         def f(x):
@@ -72,4 +84,3 @@ class closing:
             fd.write(row)
         fd.close()
         log.info('Appended as CSV row to file {}'.format(file))
-

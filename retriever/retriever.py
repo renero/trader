@@ -48,7 +48,8 @@ def main(argv):
     else:
         params.log.info('Retrieved data for symbol {}'.format(params.symbol))
 
-    row = closing.csv_row(stock_data, params.json_columns, params.ohlc_columns)
+    row = closing.csv_row(stock_data, params.json_columns,
+                          params.ohlc_columns, params.json_file, params.log)
     closing.append_to_file(row, params.file, last.working_day(), params.log)
 
 
