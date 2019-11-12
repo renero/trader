@@ -5,6 +5,7 @@
     This module retrieves latest OHLCV info and updates corresponding file.
 
 """
+import json
 from datetime import datetime
 import sys
 
@@ -22,6 +23,9 @@ def main(argv):
     stock_data = closing.alpha_vantage(api_key=params.api_key,
                                        function=params.function_name,
                                        symbol=params.symbol)
+
+    with open('../data/ana.mc.11.11.json') as json_file:
+        stock_data = json.load(json_file)['Global Quote']
 
     # If stock data date does not match last working day, we've a problem...
     if stock_data['latest trading day'] != last.working_day() and \
@@ -44,7 +48,7 @@ def main(argv):
     else:
         params.log.info('Retrieved data for symbol {}'.format(params.symbol))
 
-    row = closing.csv_row(stock_data, params.json_columns)
+    row = closing.csv_row(stock_data, params.json_columns, params.ohlc_columns)
     closing.append_to_file(row, params.file, last.working_day(), params.log)
 
 

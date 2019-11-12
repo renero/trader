@@ -26,7 +26,9 @@ class closing:
         return stock_closing
 
     @staticmethod
-    def csv_row(stock_data: dict, json_columns: list) -> str:
+    def csv_row(stock_data: dict,
+                json_columns: list,
+                ohlc_columns: list) -> str:
         """
         Copy the original response from the provider to preserve it
 
@@ -43,8 +45,12 @@ class closing:
         my_columns = json_columns
         latest_ohlcv = pd.DataFrame.from_dict(sd)
         latest_ohlcv = latest_ohlcv[my_columns].copy(deep=True)
+        # rename columns
         latest_ohlcv.columns = ['Date', 'Open', 'High', 'Low', 'Close',
                                 'Volume']
+        # reorder columns
+        latest_ohlcv = latest_ohlcv[ohlc_columns]
+        latest_ohlcv.columns = ohlc_columns
 
         # reduce the precision to two decimals, only.
         def f(x):
