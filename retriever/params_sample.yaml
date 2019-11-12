@@ -3,7 +3,7 @@
 #
 
 # API Key of the service
-api_key: <your API key>
+api_key: <api key here>
 
 # Alpha Vantage API Function name
 function_name: GLOBAL_QUOTE
@@ -16,3 +16,14 @@ json_columns:
   - low
   - price
   - volume
+
+# The order at which appear columns in the OHLCV file where the stock price
+# is to be appended.
+ohlc_columns:
+  - Date
+  - Open
+  - Close
+  - High
+  - Low
+  - Volume
+
