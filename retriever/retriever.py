@@ -24,8 +24,8 @@ def main(argv):
                                        function=params.function_name,
                                        symbol=params.symbol)
 
-    with open('../data/ana.mc.11.11.json') as json_file:
-        stock_data = json.load(json_file)['Global Quote']
+    # with open('../data/ana.mc.11.11.json') as json_file:
+    #     stock_data = json.load(json_file)['Global Quote']
 
     # If stock data date does not match last working day, we've a problem...
     if stock_data['latest trading day'] != last.working_day() and \
