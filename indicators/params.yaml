@@ -18,7 +18,7 @@ output_path: ../output
 json_indicator: ../output/tmp_{}.json
 
 # What scaler to use to scale single predictions?
-scaler_name: ../output/scaler_konkorde_acciona_2018.pickle
+scaler_name: ../staging/scaler_konkorde_acciona_2018.pickle
 
 # Format of the screen output for predict_training. These are values to be
 # accepted by 'tabulate'.
