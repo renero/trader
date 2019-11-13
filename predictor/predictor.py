@@ -7,10 +7,11 @@ import numpy as np
 from ensemble import Ensemble as ensemble
 from logger import Logger
 
-if __name__ == "__main__":
+
+def main(argv):
     from cs_dictionary import CSDictionary
 
-    params = CSDictionary(args=sys.argv)
+    params = CSDictionary(args=argv)
     np.random.seed(params.seed)
     log: Logger = params.log
 
@@ -40,3 +41,7 @@ if __name__ == "__main__":
                 predictor.save_predictions(predictions, params, log)
             else:
                 predictor.display_predictions(predictions)
+
+
+if __name__ == "__main__":
+    main(sys.argv)

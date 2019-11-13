@@ -10,8 +10,6 @@ from common import Common
 from environment import Environment
 from rl_nn import RL_NN
 from rl_stats import RLStats
-
-
 # TODO Mover la memoria deque a la clase "memory"
 from spring import Spring
 
@@ -61,7 +59,7 @@ class Agent(Common):
         """
         Load an strategy to follow over a given environment, using RL,
         and acts following the strategy defined on it.
-        :type env: Environment
+        :param env: Environment
         :param retrain: If this flag is set to true, then compile the loaded
         model to continue learning over it.
         :param display_strategy:
@@ -172,9 +170,10 @@ class Agent(Common):
                  last=False, do_plot=True):
         """
         Simulate over a dataset, given a strategy and an environment.
-        :param environment:
-        :param strategy:
-        :param do_plot:
+        :param environment: the environment for the simulation
+        :param strategy: strategy data structure to be used in the simulat.
+        :param last: Take only the last action in the simulation?
+        :param do_plot: Plot results?
         :return:
         """
         done = False

@@ -14,9 +14,10 @@ from rl_dictionary import RLDictionary
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-if __name__ == "__main__":
+
+def main(argv):
     # Init
-    params = RLDictionary(args=sys.argv)
+    params = RLDictionary(args=argv)
     environment = Environment(params)
     agent = Agent(params)
 
@@ -25,10 +26,7 @@ if __name__ == "__main__":
             params.possible_actions}
 
     # Do something
-    if flag['simulate'] is True:
-        strategy = agent.q_load(environment)
-        agent.simulate(environment, strategy)
-    elif flag['learn'] or flag['retrain']:
+    if flag['learn'] or flag['retrain']:
         if flag['retrain']:
             agent.q_load(environment, retrain=flag['retrain'])
             params.epsilon = params.epsilon_min
@@ -40,6 +38,16 @@ if __name__ == "__main__":
             agent.nn.save_model(agent.model, environment.memory.results)
         # Simulate what has been learnt with the data.
         agent.simulate(environment, strategy)
-    else:  # predict
+    else:
+        # predict or simulate
+        last_prediction_only = (flag['predict'] == True)
+        plot_summary_results = (flag['simulate'] == True)
         strategy = agent.q_load(environment)
-        agent.simulate(environment, strategy, last=True, do_plot=False)
+        agent.simulate(environment,
+                       strategy,
+                       last=last_prediction_only,
+                       do_plot=plot_summary_results)
+
+
+if __name__ == "__main__":
+    main(sys.argv)
