@@ -12,8 +12,9 @@ from indicator import Indicator
 from ix_dictionary import IXDictionary
 from logger import Logger
 
-if __name__ == "__main__":
-    params = IXDictionary(args=sys.argv)
+
+def main(argv):
+    params = IXDictionary(args=argv)
     log: Logger = params.log
 
     # Call the proper constructor, from the name of indicator in arguments
@@ -31,3 +32,7 @@ if __name__ == "__main__":
         else:
             pd.set_option('display.max_rows', -1)
             print(ix.values[ix.final_columns].to_string())
+
+
+if __name__ == "__main__":
+    main(sys.argv)

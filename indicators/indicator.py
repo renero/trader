@@ -97,6 +97,7 @@ class Indicator:
         """
         # ix_scaled = self.values.copy(deep=True)
         scaler = joblib.load(self.params.scaler_name)
+        self.log.info('Scaler loaded: {}'.format(self.params.scaler_name))
         ix_scaled = scaler.transform(self.values[self.ix_columns])
         last_row = np.array([[ix_scaled[-1, 0]], [ix_scaled[-1, 1]]])
         ix_row = pd.DataFrame(data=last_row.T,
