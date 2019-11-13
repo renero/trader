@@ -23,6 +23,8 @@ if __name__ == "__main__":
     # Decide what to do with the result
     if params.save is True:
         ix.save()
+    elif params.merge is True:
+        ix.merge()
     else:
         if params.today:
             ix.register()

@@ -17,6 +17,8 @@ class Arguments(object):
                                  help='Input OHLCV File to process')
         self.parser.add_argument('-t', '--today', action='store_true',
                                  help='Computes only today\'s value')
+        self.parser.add_argument('-m', '--merge', nargs=1, type=str,
+                                 help='Merge index into specified file')
         self.parser.add_argument('-s', '--save', action='store_true',
                                  help='Append index to the input file')
         # self.parser.add_argument('-m', '--merge', nargs=1, type=str,

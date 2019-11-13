@@ -95,7 +95,9 @@ class Ensemble:
             new_filename = current_filename.replace('pred_', 'forecast_')
         else:
             new_filename = 'forecast_' + current_filename
+        preds.reset_index(drop=True, inplace=True)
         saved_file, _ = save_dataframe(new_filename,
                                        preds[['actual', 'w_avg']],
-                                       self.params.predictions_path)
+                                       self.params.predictions_path,
+                                       index=False)
         self.log.info('Saved forecast file: {}'.format(saved_file))

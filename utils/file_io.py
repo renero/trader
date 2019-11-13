@@ -62,7 +62,8 @@ def save_dataframe(name: str,
                    df: DataFrame,
                    output_path: str,
                    cols_to_scale: list = None,
-                   scaler_name: str = None):
+                   scaler_name: str = None,
+                   index: bool = True):
     """
     Save the data frame passed, with a valid output name in the output path
     scaling the columns specified, if applicable.
@@ -72,6 +73,7 @@ def save_dataframe(name: str,
     :param output_path:
     :param cols_to_scale: array with the names of the columns to scale
     :param scaler_name: baseName of the file where saving the scaler used.
+    :param index: save index in the csv
 
     :return: the full path of the file saved
     """
@@ -83,7 +85,7 @@ def save_dataframe(name: str,
         # Save the scaler used
         scaler_name = valid_output_name(scaler_name, output_path, 'pickle')
         joblib.dump(scaler, scaler_name)
-    data.to_csv(file_name)
+    data.to_csv(file_name, index=index)
 
     return file_name, scaler_name
 
