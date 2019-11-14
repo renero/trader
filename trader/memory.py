@@ -22,20 +22,9 @@ class Memory:
         last_index = self.results.shape[0] - 1
         self.results.loc[last_index, 'action'] = action_name
 
-    def record_reward(self, reward, current_state):
-        """
-        Display only what is the reward resulting from the action selected.
-        :param reward:
-        :param current_state:
-        :return: None
-        """
-        last_index = self.results.shape[0] - 1
-        self.results.loc[last_index, 'reward'] = reward
-        self.results.loc[last_index, 'state'] = current_state
-
     def record_values(self, portfolio, t: int):
         """
-        Displays a simple report of tha main variables in the QLearning algo
+        Records the values from portfolio in a new memory position
         :param portfolio:
         :param t: instant in time during simulation
         :return: None
@@ -43,6 +32,17 @@ class Memory:
         values = [t] + portfolio.values_to_record()
         row = Series(dict(zip(self.params.table_headers, values)))
         self.results = self.results.append(row, ignore_index=True)
+
+    def record_reward(self, reward, current_state):
+        """
+        Append reward and current state into the last line recorded.
+        :param reward:
+        :param current_state:
+        :return: None
+        """
+        last_index = self.results.shape[0] - 1
+        self.results.loc[last_index, 'reward'] = reward
+        self.results.loc[last_index, 'state'] = current_state
 
     def reset(self):
         if self.results.shape[0] > 0:

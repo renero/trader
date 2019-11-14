@@ -192,6 +192,9 @@ class Agent(Common):
             next_state, reward, done, _ = environment.step(action)
             total_reward += reward
             state = next_state
+
+        # `last` flag indicates that I'm interested only in the last value
+        # of simulation and I want to save it to json file.
         if last is True:
             pd.Series({'action': self.params.action[action]}).to_json(
                 self.params.json_action)

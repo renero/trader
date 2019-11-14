@@ -50,7 +50,7 @@ class Environment(Common):
     def init_environment(self, creation_time):
         """
         Initialize the portfolio by updating market price according to the
-        current timeslot 't', creating a new object, and updating the
+        current timeslot 't', resetting the object, and updating the
         internal state of the environment accordingly.
         :return: The initial state.
         """
