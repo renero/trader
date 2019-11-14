@@ -25,7 +25,7 @@ class Update:
             indicator[self.params.tmp_dictionary.green],
             indicator[self.params.tmp_dictionary.blue]
         ]
-        csv_row = ','.join(map(Update.round2two, forecast_items))
+        csv_row = ','.join(map(Update.round2two, forecast_items)) + '\n'
 
         # Read the forecast file to check if last line has already been updated
         forecast_data = pd.read_csv(self.params.file,
