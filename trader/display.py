@@ -170,7 +170,6 @@ class Display(Common):
                     marker='.')
         ax1.plot(data.netValue, linewidth=0.6)
         ax1.xaxis.set_ticks_position('none')
-
         #
         # Price, forecast and operations
         #
@@ -181,8 +180,9 @@ class Display(Common):
                     marker='.')
         ax2.plot(data.forecast, 'k--', linewidth=0.5)
         ax2.grid(True, which='major', axis='x')
-
+        #
         # Konkorde ?
+        #
         if have_konkorde:
             ax3 = ax2.twinx()
             ax3.set_ylim(-1.5, +15.)

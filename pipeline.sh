@@ -38,3 +38,8 @@ cd ../trader
 python trader.py predict -f ${FORECAST_FILE} --model ${RL_MODEL}
 
 echo "done."
+
+cd ..
+echo "The recommendation is..."
+cat output/tmp_action.json
+echo

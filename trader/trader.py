@@ -32,21 +32,20 @@ def main(argv):
             params.epsilon = params.epsilon_min
         strategy = agent.q_learn(environment,
                                  fresh_model=flag['train'],
-                                 do_plot=True)
+                                 do_plot=params.do_plot)
         # Save the model?
         if params.save_model is True:
             agent.nn.save_model(agent.model, environment.memory.results)
         # Simulate what has been learnt with the data.
-        agent.simulate(environment, strategy)
+        agent.simulate(environment, strategy, do_plot=params.do_plot)
     else:
         # predict or simulate
         last_prediction_only = (flag['predict'] == True)
-        plot_summary_results = (flag['simulate'] == True)
         strategy = agent.q_load(environment)
         agent.simulate(environment,
                        strategy,
                        last=last_prediction_only,
-                       do_plot=plot_summary_results)
+                       do_plot=params.do_plot)
 
 
 if __name__ == "__main__":

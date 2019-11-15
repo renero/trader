@@ -2,10 +2,10 @@ import random
 from os.path import splitext, basename
 
 import numpy as np
+from keras.callbacks import TensorBoard
 from keras.layers import Dense, InputLayer
 from keras.models import Sequential, model_from_json
 from keras.optimizers import Adam
-from keras.callbacks import TensorBoard
 
 from common import Common
 from file_io import valid_output_name
@@ -13,6 +13,7 @@ from utils.dictionary import Dictionary
 
 
 class RL_NN(Common):
+    model = None
 
     def __init__(self, configuration: Dictionary):
         self.params = configuration
@@ -45,7 +46,7 @@ class RL_NN(Common):
                 first_layer = False
             else:
                 self.model.add(Dense(num_cells,
-                                activation=self.params.deep_qnet.activation))
+                                     activation=self.params.deep_qnet.activation))
 
         # Output Layer
         last_layer_cells = self.params.deep_qnet.hidden_layers[-1]
@@ -65,6 +66,7 @@ class RL_NN(Common):
             # optimizer=self.params.deep_qnet.optimizer,
             optimizer=Adam(lr=0.001),
             metrics=self.params.deep_qnet.metrics)
+        return self.model
 
     def do_learn(self, episode, episode_step, memory) -> (float, float):
         """ perform minibatch learning or experience replay """
@@ -179,7 +181,6 @@ class RL_NN(Common):
     def predict_value(self, state):
         return np.max(self.model.predict(self.onehot(state)))
 
-
     #
     # Saving and loading the model
     #
@@ -221,10 +222,10 @@ class RL_NN(Common):
         json_file = open('{}.json'.format(model_basename), 'r')
         loaded_model_json = json_file.read()
         json_file.close()
-        loaded_model = model_from_json(loaded_model_json)
+        self.model = model_from_json(loaded_model_json)
         self.log.info("Loaded model from disk: {}.json".format(model_basename))
 
         # load weights into new model
-        loaded_model.load_weights('{}.h5'.format(model_basename))
+        self.model.load_weights('{}.h5'.format(model_basename))
         self.log.info("Loaded weights from disk: {}.h5".format(model_basename))
-        return loaded_model
+        return self.model
