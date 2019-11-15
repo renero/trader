@@ -20,8 +20,7 @@ class RLDictionary(Dictionary):
         # Override other potential parameters specified in command line.
         setattr(self, 'debug', arguments.args.debug is not None)
         setattr(self, 'log_level',
-                arguments.args.debug[0] if arguments.args.debug is not None \
-                    else 3)
+                arguments.args.debug[0] if arguments.args.debug else 3)
 
         # Start the logger
         if 'log_level' not in self:
@@ -35,16 +34,16 @@ class RLDictionary(Dictionary):
 
         setattr(self, 'forecast_file', arguments.args.forecast[0])
 
-        # Load the NN model file, only if the action is not "learn"
-        if arguments.args.action != 'learn' and arguments.args.model is not None:
+        # Load the NN model file, only if the action is not "train"
+        if arguments.args.action != 'train' and arguments.args.model:
             setattr(self, 'model_file', arguments.args.model[0])
-        else:
+        elif arguments.args.action != 'train':
             self.log.error('Model file must be specified with -m argument')
             raise ValueError('Model file must be specified with -m argument')
 
         setattr(self, 'save_model', arguments.args.save)
         if arguments.args.epochs is not None:
-            setattr(self, 'num_episodes', int(arguments.args.epochs[0]))
+            setattr(self, 'num_episodes', int(arguments.args.epochs))
         else:
             setattr(self, 'num_episodes', 1)
 
