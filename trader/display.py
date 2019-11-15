@@ -215,7 +215,7 @@ class Display(Common):
                 len(arrays), len(metric_name))
 
         # Plot every array passed
-        timestamp = Display.ts
+        timestamp = ts()
         color = ['blue', 'red', 'orange', 'green']
         fig, ax = plt.subplots()
         for index, array in enumerate(arrays):

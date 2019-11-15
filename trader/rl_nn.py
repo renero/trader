@@ -1,8 +1,11 @@
+import random
 from os.path import splitext, basename
 
+import numpy as np
 from keras.layers import Dense, InputLayer
 from keras.models import Sequential, model_from_json
 from keras.optimizers import Adam
+from keras.callbacks import TensorBoard
 
 from common import Common
 from file_io import valid_output_name
@@ -14,46 +17,172 @@ class RL_NN(Common):
     def __init__(self, configuration: Dictionary):
         self.params = configuration
         self.log = self.params.log
+        self.model = None
+
+        self.callback_args = {}
+        if self.params.tensorboard is True:
+            self.log.info('Using TensorBoard')
+            self.tensorboard = TensorBoard(
+                log_dir=self.params.tbdir,
+                histogram_freq=0, write_graph=True, write_images=False)
+            self.callback_args = {'callbacks': self.tensorboard}
 
     def create_model(self) -> Sequential:
-        model = Sequential()
+        self.model = Sequential()
 
         # Input layer
-        model.add(
+        self.model.add(
             InputLayer(batch_input_shape=(None, self.params.num_states)))
         first_layer = True
 
         # Create all the layers
         for num_cells in self.params.deep_qnet.hidden_layers:
             if first_layer:
-                model.add(Dense(
+                self.model.add(Dense(
                     num_cells,
                     input_shape=(self.params.num_states,),
                     activation=self.params.deep_qnet.activation))
                 first_layer = False
             else:
-                model.add(Dense(num_cells,
+                self.model.add(Dense(num_cells,
                                 activation=self.params.deep_qnet.activation))
 
         # Output Layer
         last_layer_cells = self.params.deep_qnet.hidden_layers[-1]
-        model.add(
+        self.model.add(
             Dense(self.params.num_actions, input_shape=(last_layer_cells,),
                   activation='linear'))
-        model = self.compile_model(model)
+        self.compile_model()
         if self.params.debug and self.params.log_level > 2:
             self.log.debug('Model Summary')
-            model.summary()
+            self.model.summary()
 
-        return model
+        return self.model
 
-    def compile_model(self, model):
-        model.compile(
+    def compile_model(self):
+        self.model.compile(
             loss=self.params.deep_qnet.loss,
             # optimizer=self.params.deep_qnet.optimizer,
             optimizer=Adam(lr=0.001),
             metrics=self.params.deep_qnet.metrics)
-        return model
+
+    def do_learn(self, episode, episode_step, memory) -> (float, float):
+        """ perform minibatch learning or experience replay """
+        loss = 0.
+        mae = 0.
+        if self.params.experience_replay is True:
+            loss, mae = self.experience_replay(memory)
+        else:
+            if episode_step % self.params.train_steps == 0 and \
+                    episode > self.params.start_episodes:
+                loss, mae = self.minibatch_learn(memory)
+        return loss, mae
+
+    def minibatch_learn(self, memory):
+        """
+        MiniBatch Learning routine.
+        :param memory:
+        :return: loss and mae
+        """
+        mem_size = len(memory)
+        if mem_size < self.params.batch_size:
+            self.log.debug('Not enough samples for minibatch learn, skipping')
+            return 0.0, 0.0
+
+        self.log.debug('Minibatch learn')
+        mini_batch = np.empty(shape=(0, 5), dtype=np.int32)
+        for i in range(mem_size - self.params.batch_size - 1, mem_size - 1):
+            mini_batch = np.append(
+                mini_batch,
+                np.asarray(memory[i]).astype(int).reshape(1, -1),
+                axis=0)
+        nn_input, nn_output = self.prepare_nn_data(mini_batch)
+        h = self.model.fit(
+            nn_input, nn_output,
+            epochs=1, verbose=0, batch_size=self.params.batch_size,
+            **self.callback_args)
+        return h.history['loss'][0], h.history['mae'][0]
+
+    def experience_replay(self, memory):
+        """
+        Primarily from: https://github.com/edwardhdlu/q-trader
+        :param memory:
+        :return: loss and mae.
+        """
+        if len(memory) <= self.params.exp_batch_size:
+            return 0., 0.
+
+        mini_batch = random.sample(memory,
+                                   self.params.exp_batch_size)
+        nn_input, nn_output = self.prepare_nn_data(mini_batch)
+        h = self.model.fit(
+            nn_input, nn_output,
+            epochs=1, verbose=0, batch_size=self.params.exp_batch_size,
+            **self.callback_args)
+        return h.history['loss'][0], h.history['mae'][0]
+
+    def prepare_nn_data(self, mini_batch):
+        """
+        Shape the input and output (supervised labels) to the network from a
+        minibatch o previous experiences.
+        :param mini_batch:  array of tuples with states, actions, rewards,
+                            next states and done values.
+        :return: input and output to the network.
+        """
+        nn_input = np.empty((0, self.params.num_states), dtype=np.int32)
+        nn_output = np.empty((0, self.params.num_actions))
+        for state, action, reward, next_state, done in mini_batch:
+            y = self.prepare_nn_output(state, action, reward, next_state, done)
+            nn_input = np.append(nn_input, self.onehot(state), axis=0)
+            nn_output = np.append(nn_output, y, axis=0)
+        return nn_input, nn_output
+
+    def prepare_nn_output(self, state, action, reward, next_state, done):
+        """
+        Feed forward the current state to the network to get the output and
+        reformat it to set the reward associated to the action taken and thus
+        learn that state -> reward association for that action.
+        :param state: the state
+        :param action: action
+        :param reward: reward
+        :param next_state: next state
+        :param done: if loop has ended
+        :return: an array of `n` values, where `n` is the nr of actions.
+        """
+        target = reward
+        if not done:
+            target = reward + self.params.gamma * self.predict_value(
+                next_state)
+        labeled_output = self.model.predict(self.onehot(state))[0]
+        labeled_output[action] = target
+        y = labeled_output.reshape(-1, self.params.num_actions)
+        return y
+
+    def infer_strategy(self) -> list:
+        """
+        Get the defined strategy from the weights of the model.
+        :return: strategy matrix
+        """
+        strategy = [
+            np.argmax(
+                self.model.predict(self.onehot(i))[0])
+            for i in range(self.params.num_states)
+        ]
+        return strategy
+
+    def onehot(self, state: int) -> np.ndarray:
+        return np.identity(self.params.num_states)[state:state + 1]
+
+    def predict(self, state) -> int:
+        return int(np.argmax(self.model.predict(self.onehot(state))))
+
+    def predict_value(self, state):
+        return np.max(self.model.predict(self.onehot(state)))
+
+
+    #
+    # Saving and loading the model
+    #
 
     def save_model(self, model, results):
         self.log.info('\nSaving model, weights and results.')

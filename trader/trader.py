@@ -26,12 +26,12 @@ def main(argv):
             params.possible_actions}
 
     # Do something
-    if flag['learn'] or flag['retrain']:
+    if flag['train'] or flag['retrain']:
         if flag['retrain']:
             agent.q_load(environment, retrain=flag['retrain'])
             params.epsilon = params.epsilon_min
         strategy = agent.q_learn(environment,
-                                 fresh_model=flag['learn'],
+                                 fresh_model=flag['train'],
                                  do_plot=True)
         # Save the model?
         if params.save_model is True:

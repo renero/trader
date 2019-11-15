@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 
 class Arguments(object):
     args = None
-    possible_actions = ['simulate', 'learn', 'retrain', 'predict']
+    possible_actions = ['simulate', 'train', 'retrain', 'predict']
     parser: ArgumentParser = None
 
     def __init__(self, *args):
@@ -15,7 +15,8 @@ class Arguments(object):
                                  choices=self.possible_actions)
         self.parser.add_argument('-d', '--debug', nargs=1, type=int,
                                  help='Debug level (0..4), default 0.')
-        self.parser.add_argument('-e', '--epochs', nargs=1, type=int,
+        self.parser.add_argument('-e', '--epochs', nargs='?', type=int,
+                                 const=20, default=20,
                                  help='Number of epochs in training')
         self.parser.add_argument('-f', '--forecast', nargs=1, type=str,
                                  required=True, help='Forecast file to process')
