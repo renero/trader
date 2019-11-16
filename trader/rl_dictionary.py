@@ -41,6 +41,7 @@ class RLDictionary(Dictionary):
             self.log.error('Model file must be specified with -m argument')
             raise ValueError('Model file must be specified with -m argument')
 
+        setattr(self, 'no_dump', arguments.args.no_dump)
         setattr(self, 'do_plot', arguments.args.plot)
         setattr(self, 'save_model', arguments.args.save)
         if arguments.args.epochs is not None:

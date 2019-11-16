@@ -27,6 +27,8 @@ class Arguments(object):
                                       'and simulate')
         self.parser.add_argument('-m', '--model', nargs=1, type=str,
                                  help='NN Model file to be loaded')
+        self.parser.add_argument('--no-dump', action='store_true',
+                                 help='Do not dump portfolio after single_step')
         self.parser.add_argument('-p', '--plot', action='store_true',
                                  help='Plot summary charts, default OFF')
         self.parser.add_argument('-s', '--save', action='store_true',

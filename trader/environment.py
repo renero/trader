@@ -240,6 +240,11 @@ class Environment(Common):
         # Set the time pointer to the last event in internal memory retrieved
         self.t = self.memory.len
 
+        # If portfolio matches data, then we cannot run. Data must always
+        # be ahead of portfolio.
+        if self.t == self.data_.shape[0]:
+            raise ValueError('Portfolio and forecast are in same state(len)')
+
         self.update_mkt_price()
         self.portfolio.latest_price = self.price_
         self.portfolio.forecast = self.forecast_

@@ -166,25 +166,22 @@ class Agent(Common):
         :param strategy: strategy data structure to be used in the simulation
         :return: None
         """
-        self.params.debug = True
         state = environment.resume()
         action = environment.decide_next_action(state, strategy)
         if self.params.stop_drop is True:
-            stop_drop = Spring(self.params, environment.price_)
-            action = stop_drop.check(action, environment.price_)
+            action = Spring(self.params, environment.price_).check(
+                action, environment.price_)
 
         next_state, reward, done, _ = environment.step(action)
-        self.params.display.summary(environment.memory.results,
-                                    environment.portfolio,
-                                    totals=False,
-                                    do_plot=self.params.do_plot)
+
         # Save the action to the tmp file.
         pd.Series({'action': self.params.action[action]}).to_json(
             self.params.json_action)
         self.log.info('Saved action to: {}'.format(self.params.json_action))
 
         # Save the updated portfolio, overwriting the file.
-        environment.dump()
+        if self.params.no_dump is not True:
+            environment.dump()
 
     def q_load(self,
                env: Environment,
