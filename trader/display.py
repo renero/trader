@@ -18,6 +18,11 @@ def ts() -> str:
 
 class Display(Common):
 
+    """
+    Consider this: https://stackoverflow.com/a/56982302
+    to make plots independent processes.
+    """
+
     def __init__(self, configuration):
         self.params = configuration
         self.log: Logger = self.params.log
@@ -46,6 +51,7 @@ class Display(Common):
     def summary(self,
                 results: DataFrame,
                 portfolio: Portfolio,
+                totals=True,
                 do_plot=False) -> None:
         df = results.copy()
         self.recolor_ref(df, 'forecast', 'price')
@@ -63,7 +69,8 @@ class Display(Common):
                        tablefmt='psql',
                        showindex=False,
                        floatfmt=['.0f'] + ['.2f' for i in range(6)]))
-        self.report_totals(portfolio)
+        if totals:
+            self.report_totals(portfolio)
         if do_plot is True:
             self.plot_results(results, self.params.have_konkorde)
 

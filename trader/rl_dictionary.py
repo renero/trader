@@ -48,6 +48,23 @@ class RLDictionary(Dictionary):
         else:
             setattr(self, 'num_episodes', 1)
 
+        # Init portfolio
+        if arguments.args.init_portfolio is not None:
+            setattr(self, 'init_portfolio', True)
+            setattr(self, 'portfolio_name', arguments.args.init_portfolio[0])
+        else:
+            setattr(self, 'init_portfolio', False)
+        # Use portfolio
+        if arguments.args.portfolio is not None:
+            setattr(self, 'use_portfolio', True)
+            setattr(self, 'portfolio_name', arguments.args.portfolio[0])
+        else:
+            setattr(self, 'use_portfolio', False)
+
+        #
+        # Extensions to the dictionary
+        #
+
         # Build a self with a sequential number associated to each action
         setattr(self, 'action_id', MyDict())
         for tup in zip(self.action, range(len(self.action))):

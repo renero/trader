@@ -59,7 +59,8 @@ class Spring:
         :return: the action, possibly modified after check
         """
         if self.breaks(price):
-            self.log.debug('>>>> BREAK <<<<')
+            self.log.debug('! STOP DROP overrides action to SELL')
+            self.log.warn('! STOP DROP overrides action to SELL')
             action = self.params.action.index('sell')
 
         if action == self.params.action.index('buy'):

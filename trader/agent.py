@@ -15,7 +15,7 @@ from spring import Spring
 class Agent(Common):
     configuration = None
     tensorboard = None
-    memory = deque(maxlen=20000)
+    experience = deque(maxlen=20000)
 
     def __init__(self, configuration):
         self.params = configuration
@@ -93,8 +93,9 @@ class Agent(Common):
                 # Send the action to the environment and get new state,
                 # reward and information on whether we've finish.
                 new_state, reward, done, _ = env.step(action)
-                self.memory.append((state, action, reward, new_state, done))
-                loss, mae = self.nn.do_learn(episode, episode_step, self.memory)
+                self.experience.append((state, action, reward, new_state, done))
+                loss, mae = self.nn.do_learn(episode, episode_step,
+                                             self.experience)
 
                 # Update states and metrics
                 rl_stats.step(loss, mae, reward)
@@ -131,7 +132,7 @@ class Agent(Common):
         return action
 
     def simulate(self, environment: Environment, strategy: list,
-                 last=False, do_plot=True):
+                 last=False):
         """
         Simulate over a dataset, given a strategy and an environment.
         :param environment: the environment for the simulation
@@ -146,6 +147,7 @@ class Agent(Common):
         state = environment.reset()
         stop_drop = Spring(self.params, environment.price_)
         action = 0
+        self.log.debug('STARTING Simulation')
         while not done:
             action = environment.decide_next_action(state, strategy)
             if self.params.stop_drop is True:
@@ -153,6 +155,9 @@ class Agent(Common):
             next_state, reward, done, _ = environment.step(action)
             total_reward += reward
             state = next_state
+
+        if self.params.init_portfolio:
+            environment.dump()
 
         # `last` flag indicates that I'm interested only in the last value
         # of simulation and I want to save it to json file.
@@ -163,7 +168,32 @@ class Agent(Common):
         else:
             self.params.display.summary(environment.memory.results,
                                         environment.portfolio,
-                                        do_plot=do_plot)
+                                        do_plot=self.params.do_plot)
+
+    def single_step(self, environment: Environment, strategy):
+        """
+        Simulate a single step, given a strategy and an environment.
+        :param environment: the environment for the simulation
+        :param strategy: strategy data structure to be used in the simulation
+        :return: None
+        """
+        self.params.debug = True
+        state = environment.resume()
+        action = environment.decide_next_action(state, strategy)
+        if self.params.stop_drop is True:
+            stop_drop = Spring(self.params, environment.price_)
+            action = stop_drop.check(action, environment.price_)
+
+        next_state, reward, done, _ = environment.step(action)
+
+        self.params.display.summary(environment.memory.results,
+                                    environment.portfolio,
+                                    totals=False,
+                                    do_plot=self.params.do_plot)
+
+        pd.Series({'action': self.params.action[action]}).to_json(
+            self.params.json_action)
+        self.log.info('Saved action to: {}'.format(self.params.json_action))
 
     def q_load(self,
                env: Environment,

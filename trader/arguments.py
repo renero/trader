@@ -20,6 +20,11 @@ class Arguments(object):
                                  help='Number of epochs in training')
         self.parser.add_argument('-f', '--forecast', nargs=1, type=str,
                                  required=True, help='Forecast file to process')
+        self.parser.add_argument('--init-portfolio', nargs=1, type=str,
+                                 help='Create a new portfolio')
+        self.parser.add_argument('--portfolio', nargs=1, type=str,
+                                 help='Use an existing portfolio in predict '
+                                      'and simulate')
         self.parser.add_argument('-m', '--model', nargs=1, type=str,
                                  help='NN Model file to be loaded')
         self.parser.add_argument('-p', '--plot', action='store_true',
