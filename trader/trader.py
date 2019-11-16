@@ -43,7 +43,7 @@ def main(argv):
         if flag['simulate']:
             last_prediction_only = (flag['predict'] == True)
             strategy = agent.q_load(environment)
-            agent.simulate(environment, strategy)  # ,last=last_prediction_only)
+            agent.simulate(environment, strategy)
         else:  # predict.
             strategy = agent.q_load(environment)
             agent.single_step(environment, strategy)

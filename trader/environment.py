@@ -188,26 +188,15 @@ class Environment(Common):
 
         return self.new_state_, self.reward_, self.done_, self.t
 
-    def dump(self):
+    def dump(self, init=False):
         """
         Save all relevant information about the environment to later
         recover the state during a simulation. This implies saving Portfolio,
         and Memory.
         :return: None
         """
-        portfolio_state_variables = [
-            'initial_budget',
-            'budget',
-            'latest_price',
-            'forecast',
-            'investment',
-            'portfolio_value',
-            'net_value',
-            'shares',
-            'konkorde'
-        ]
         portfolio_state = dict()
-        for local_state_var in portfolio_state_variables:
+        for local_state_var in self.portfolio.state_variables:
             portfolio_state[local_state_var] = self.portfolio.__dict__[
                 local_state_var]
         memory_state = self.memory.results.to_dict(orient='index')
@@ -216,13 +205,18 @@ class Environment(Common):
         merged_dict = {'portfolio': portfolio_state,
                        'memory': memory_state}
 
-        # Get a valid filename and save the JSON into it.
-        json_filename = valid_output_name(filename=self.params.portfolio_name,
-                                          path='../output/',
-                                          extension='json')
+        # Get a valid filename and save the JSON into it, if it is being
+        # initialized, otherwise it will be replaced.
+        if init is True:
+            json_filename = valid_output_name(self.params.portfolio_name,
+                                              path='../output/',
+                                              extension='json')
+        else:
+            json_filename = self.params.portfolio_name
+
         with open(json_filename, "w") as outfile:
             json.dump(merged_dict, outfile)
-        self.log.info('Saved portfolio and memory to: {}'.format(json_filename))
+        self.log.info('Saved portfolio to: {}'.format(json_filename))
 
     def resume(self) -> int:
         """

@@ -16,9 +16,13 @@ class Portfolio(Common):
     forecast: float = 0.
     konkorde = 0.
     reward = 0.
-    movements = []
-
     failed_actions = ['f.buy', 'f.sell']
+    # These are the variables that MUST be saved by the `dump()` method
+    # in `environment`, in order to be able to resume the state.
+    state_variables = ['initial_budget', 'budget', 'latest_price',
+                       'forecast', 'investment',
+                       'portfolio_value', 'net_value',
+                       'shares', 'konkorde']
 
     # Constants
     BUY = +1
@@ -56,7 +60,6 @@ class Portfolio(Common):
         self.shares: float = 0.
         self.konkorde = 0.
         self.reward = 0.
-        self.movements = []
 
     def update(self, price, forecast, konkorde=None):
         """
@@ -115,7 +118,6 @@ class Portfolio(Common):
         self.investment += buy_price
         self.shares += num_shares
         self.portfolio_value += buy_price
-        self.movements.append((self.BUY, num_shares, self.latest_price))
         # what is the value of my investment after selling?
         self.net_value = self.portfolio_value - self.investment
 
@@ -153,7 +155,6 @@ class Portfolio(Common):
         self.investment -= sell_price
         self.shares -= num_shares
         self.portfolio_value -= sell_price
-        self.movements.append((self.SELL, num_shares, self.latest_price))
 
         # what is the value of my investment after selling?
         self.net_value = self.portfolio_value - self.investment

@@ -61,6 +61,14 @@ class RLDictionary(Dictionary):
         else:
             setattr(self, 'use_portfolio', False)
 
+        # Check that if I want to predict, portfolio needs to be specified
+        if self.what_to_do == 'predict' and 'portfolio_name' not in self:
+            self.log.error(
+                'When calling `predict`, provide a portfolio filename.')
+            self.log.error(
+                'To generate a portfolio, `simulate` with `--init-portfolio`')
+            raise ValueError('wrong parameters')
+
         #
         # Extensions to the dictionary
         #

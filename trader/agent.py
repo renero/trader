@@ -131,14 +131,11 @@ class Agent(Common):
             action = self.nn.predict(state)
         return action
 
-    def simulate(self, environment: Environment, strategy: list,
-                 last=False):
+    def simulate(self, environment: Environment, strategy: list):
         """
         Simulate over a dataset, given a strategy and an environment.
         :param environment: the environment for the simulation
         :param strategy: strategy data structure to be used in the simulat.
-        :param last: Take only the last action in the simulation?
-        :param do_plot: Plot results?
         :return:
         """
         done = False
@@ -146,7 +143,6 @@ class Agent(Common):
         self.params.debug = True
         state = environment.reset()
         stop_drop = Spring(self.params, environment.price_)
-        action = 0
         self.log.debug('STARTING Simulation')
         while not done:
             action = environment.decide_next_action(state, strategy)
@@ -155,20 +151,13 @@ class Agent(Common):
             next_state, reward, done, _ = environment.step(action)
             total_reward += reward
             state = next_state
-
+        # Do I need to init a portfolio, after a simulation
         if self.params.init_portfolio:
-            environment.dump()
-
-        # `last` flag indicates that I'm interested only in the last value
-        # of simulation and I want to save it to json file.
-        if last is True:
-            pd.Series({'action': self.params.action[action]}).to_json(
-                self.params.json_action)
-            self.log.info('Saved action to: {}'.format(self.params.json_action))
-        else:
-            self.params.display.summary(environment.memory.results,
-                                        environment.portfolio,
-                                        do_plot=self.params.do_plot)
+            environment.dump(init=True)
+        # display the result of the simulation
+        self.params.display.summary(environment.memory.results,
+                                    environment.portfolio,
+                                    do_plot=self.params.do_plot)
 
     def single_step(self, environment: Environment, strategy):
         """
@@ -185,15 +174,17 @@ class Agent(Common):
             action = stop_drop.check(action, environment.price_)
 
         next_state, reward, done, _ = environment.step(action)
-
         self.params.display.summary(environment.memory.results,
                                     environment.portfolio,
                                     totals=False,
                                     do_plot=self.params.do_plot)
-
+        # Save the action to the tmp file.
         pd.Series({'action': self.params.action[action]}).to_json(
             self.params.json_action)
         self.log.info('Saved action to: {}'.format(self.params.json_action))
+
+        # Save the updated portfolio, overwriting the file.
+        environment.dump()
 
     def q_load(self,
                env: Environment,

@@ -6,7 +6,8 @@ OHLC_FILE="../data/acciona_2019.csv"
 TMP_OHLC="/tmp/tmp_ohlc.csv"
 PREDS_FILE="../output/pred_acciona_2019_8yw20_8yw10_8yw05.csv"
 FORECAST_FILE="../output/forecast_nov19.csv"
-RL_MODEL="../output/rl_model_forecast_acciona_konkorde_2018b_1"
+RL_MODEL="../staging/rl_model_acciona_2018b"
+PORTFOLIO="../staging/portfolio_acciona_nov19b.json"
 
 # Get latest info from OHLC, and update file
 cd retriever
@@ -35,11 +36,11 @@ python updater.py --file ${FORECAST_FILE}
 
 # Generate a trading recommendation
 cd ../trader
-python trader.py predict -f ${FORECAST_FILE} --model ${RL_MODEL}
+python trader.py predict -f ${FORECAST_FILE} --model ${RL_MODEL} --portfolio ${PORTFOLIO}
 
 echo "done."
 
 cd ..
-echo "The recommendation is..."
-cat output/tmp_action.json
+echo -n "The recommendation is... "
+cat output/tmp_action.json| tr -d "}"|awk -F ':' '{print $2}'|tr -d '"'
 echo
