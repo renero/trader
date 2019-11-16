@@ -242,7 +242,7 @@ class Environment(Common):
 
         # If portfolio matches data, then we cannot run. Data must always
         # be ahead of portfolio.
-        if self.t == self.data_.shape[0]:
+        if self.t >= self.data_.shape[0]:
             raise ValueError('Portfolio and forecast are in same state(len)')
 
         self.update_mkt_price()
