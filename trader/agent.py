@@ -15,7 +15,7 @@ from spring import Spring
 class Agent(Common):
     configuration = None
     tensorboard = None
-    memory = deque(maxlen=20000)
+    experience = deque(maxlen=20000)
 
     def __init__(self, configuration):
         self.params = configuration
@@ -93,8 +93,9 @@ class Agent(Common):
                 # Send the action to the environment and get new state,
                 # reward and information on whether we've finish.
                 new_state, reward, done, _ = env.step(action)
-                self.memory.append((state, action, reward, new_state, done))
-                loss, mae = self.nn.do_learn(episode, episode_step, self.memory)
+                self.experience.append((state, action, reward, new_state, done))
+                loss, mae = self.nn.do_learn(episode, episode_step,
+                                             self.experience)
 
                 # Update states and metrics
                 rl_stats.step(loss, mae, reward)
@@ -130,14 +131,11 @@ class Agent(Common):
             action = self.nn.predict(state)
         return action
 
-    def simulate(self, environment: Environment, strategy: list,
-                 last=False, do_plot=True):
+    def simulate(self, environment: Environment, strategy: list):
         """
         Simulate over a dataset, given a strategy and an environment.
         :param environment: the environment for the simulation
         :param strategy: strategy data structure to be used in the simulat.
-        :param last: Take only the last action in the simulation?
-        :param do_plot: Plot results?
         :return:
         """
         done = False
@@ -145,7 +143,7 @@ class Agent(Common):
         self.params.debug = True
         state = environment.reset()
         stop_drop = Spring(self.params, environment.price_)
-        action = 0
+        self.log.debug('STARTING Simulation')
         while not done:
             action = environment.decide_next_action(state, strategy)
             if self.params.stop_drop is True:
@@ -153,17 +151,37 @@ class Agent(Common):
             next_state, reward, done, _ = environment.step(action)
             total_reward += reward
             state = next_state
+        # Do I need to init a portfolio, after a simulation
+        if self.params.init_portfolio:
+            environment.dump(init=True)
+        # display the result of the simulation
+        self.params.display.summary(environment.memory.results,
+                                    environment.portfolio,
+                                    do_plot=self.params.do_plot)
 
-        # `last` flag indicates that I'm interested only in the last value
-        # of simulation and I want to save it to json file.
-        if last is True:
-            pd.Series({'action': self.params.action[action]}).to_json(
-                self.params.json_action)
-            self.log.info('Saved action to: {}'.format(self.params.json_action))
-        else:
-            self.params.display.summary(environment.memory.results,
-                                        environment.portfolio,
-                                        do_plot=do_plot)
+    def single_step(self, environment: Environment, strategy):
+        """
+        Simulate a single step, given a strategy and an environment.
+        :param environment: the environment for the simulation
+        :param strategy: strategy data structure to be used in the simulation
+        :return: None
+        """
+        state = environment.resume()
+        action = environment.decide_next_action(state, strategy)
+        if self.params.stop_drop is True:
+            action = Spring(self.params, environment.price_).check(
+                action, environment.price_)
+
+        next_state, reward, done, _ = environment.step(action)
+
+        # Save the action to the tmp file.
+        pd.Series({'action': self.params.action[action]}).to_json(
+            self.params.json_action)
+        self.log.info('Saved action to: {}'.format(self.params.json_action))
+
+        # Save the updated portfolio, overwriting the file.
+        if self.params.no_dump is not True:
+            environment.dump()
 
     def q_load(self,
                env: Environment,

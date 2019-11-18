@@ -132,6 +132,7 @@ table_headers:
   - action
   - reward
   - state
+  - state_desc
 
 # Seed to be used
 seed: 25

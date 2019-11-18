@@ -1,9 +1,11 @@
 import importlib
+import json
 
 import numpy as np
 import pandas as pd
 
 from common import Common
+from file_io import valid_output_name
 from memory import Memory
 from portfolio import Portfolio
 from states_combiner import StatesCombiner
@@ -54,7 +56,7 @@ class Environment(Common):
         internal state of the environment accordingly.
         :return: The initial state.
         """
-        self.update_market_price()
+        self.update_mkt_price()
         self.portfolio.reset(self.price_,
                              self.forecast_,
                              self.memory)
@@ -95,7 +97,7 @@ class Environment(Common):
             self.params.have_konkorde = True
             self.log.info('Konkorde index present!')
 
-    def update_market_price(self):
+    def update_mkt_price(self):
         """
         Set the price to the current time slot,
         reading column 0 from DF
@@ -107,6 +109,8 @@ class Environment(Common):
             self.t, col_names.index(self.params.column_name['price'])]
         self.forecast_ = self.data_.iloc[
             self.t, col_names.index(self.params.column_name['forecast'])]
+        self.log.debug('t={}, updated market price/forecast ({}/{})'.format(
+            self.t, self.price_, self.forecast_))
 
         # If I do have konkorde indicators, I also read them.
         if self.params.have_konkorde:
@@ -115,6 +119,8 @@ class Environment(Common):
             self.blue_ = self.data_.iloc[
                 self.t, col_names.index(self.params.column_name['blue'])]
             self.konkorde_ = self.green_ + self.blue_
+            self.log.debug('  konkorde ({}/{})'.format(
+                self.green_, self.blue_))
 
     @staticmethod
     def decide_next_action(state, strategy):
@@ -139,8 +145,8 @@ class Environment(Common):
 
         # Get the ID resulting from the combination of the sub-states
         self.current_state_ = self.states.get_id(*new_substates)
-        self.log.debug('t={}, state updated to: {}'.format(
-            self.t, self.states.name(self.current_state_)))
+        self.log.debug('t={}, state updated to: {} ({})'.format(
+            self.t, self.current_state_, self.states.name(self.current_state_)))
         return self.current_state_
 
     def step(self, action):
@@ -155,32 +161,97 @@ class Environment(Common):
 
         # Call to the proper portfolio method, based on the action number
         # passed to this argument.
-        self.log.debug('t={}, price={}, action decided {}={}'.format(
+        self.log.debug('STEP ITERATION - t={} -'.format(self.t))
+        self.log.debug('t={}, price={}, action decided={} ({})'.format(
             self.t, self.price_, action, self.params.action_name[action]))
         self.reward_ = getattr(self.portfolio,
                                self.params.action_name[action])()
         self.memory.record_reward(self.reward_,
+                                  self.current_state_,
                                   self.states.name(self.current_state_))
         self.log.debug(
-            't={}, reward ({:.2f}), recorded to action \'{}\''.format(
-                self.t, self.reward_, self.states.name(self.current_state_)
-            ))
+            't={}, reward ({:.2f}), recorded to action {} in state {}'.format(
+                self.t, self.reward_, action, self.current_state_))
 
+        # Increase `time pointer`
         self.t += 1
         if self.t >= self.max_states_:
+            self.log.debug('End of step (t({}) >= max_states({}))'.format(
+                self.t, self.max_states_))
             self.done_ = True
-            self.memory.record_values(self.portfolio, self.t - 1)
-            self.portfolio.reset_history()
             return self.new_state_, self.reward_, self.done_, self.t
 
-        self.update_market_price()
-        if self.params.have_konkorde:
-            self.portfolio.update_after_step(self.price_, self.forecast_,
-                                             self.konkorde_)
-        else:
-            self.portfolio.update_after_step(self.price_, self.forecast_)
+        self.update_mkt_price()
+        self.portfolio.update(self.price_, self.forecast_, self.konkorde_)
         self.new_state_ = self.update_state()
         self.memory.record_values(self.portfolio, self.t)
-        self.portfolio.append_to_history(self)
 
         return self.new_state_, self.reward_, self.done_, self.t
+
+    def dump(self, init=False):
+        """
+        Save all relevant information about the environment to later
+        recover the state during a simulation. This implies saving Portfolio,
+        and Memory.
+        :return: None
+        """
+        portfolio_state = dict()
+        for local_state_var in self.portfolio.state_variables:
+            portfolio_state[local_state_var] = self.portfolio.__dict__[
+                local_state_var]
+        memory_state = self.memory.results.to_dict(orient='index')
+
+        # Combine the two dicts
+        merged_dict = {'portfolio': portfolio_state,
+                       'memory': memory_state}
+
+        # Get a valid filename and save the JSON into it, if it is being
+        # initialized, otherwise it will be replaced.
+        if init is True:
+            json_filename = valid_output_name(self.params.portfolio_name,
+                                              path='../output/',
+                                              extension='json')
+        else:
+            json_filename = self.params.portfolio_name
+
+        with open(json_filename, "w") as outfile:
+            json.dump(merged_dict, outfile)
+        self.log.info('Saved portfolio to: {}'.format(json_filename))
+
+    def resume(self) -> int:
+        """
+        Retrieve the internal state of portfolio and memory from a JSON file,
+        an perform all actions that would have been performed if the last
+        step saved would not have been the last.
+        :return: The latest known state retrieved from memory.
+        """
+        with open(self.params.portfolio_name) as data_file:
+            merged_dict = json.load(data_file)
+
+        # Reconstruct internal portfolio variables
+        for portfolio_local in merged_dict['portfolio'].keys():
+            self.portfolio.__dict__[portfolio_local] = merged_dict['portfolio'][
+                portfolio_local]
+        self.memory.results = pd.DataFrame.from_dict(merged_dict['memory'],
+                                                     orient='index')
+        self.log.info('Retrieved portfolio and memory from: {}'.format(
+            self.params.portfolio_name))
+
+        # Set the time pointer to the last event in internal memory retrieved
+        self.t = self.memory.len
+
+        # If portfolio matches data, then we cannot run. Data must always
+        # be ahead of portfolio.
+        if self.t >= self.data_.shape[0]:
+            raise ValueError('Portfolio and forecast are in same state(len)')
+
+        self.update_mkt_price()
+        self.portfolio.latest_price = self.price_
+        self.portfolio.forecast = self.forecast_
+        self.portfolio.memory = self.memory
+        self.portfolio.update(self.price_, self.forecast_, self.konkorde_)
+        self.update_state()
+        self.memory.record_values(self.portfolio, self.t)
+
+        # latest state is the previous to the last int the table.
+        return self.current_state_

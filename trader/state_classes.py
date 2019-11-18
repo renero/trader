@@ -31,7 +31,12 @@ class StateCanSell(RL_State):
 class StatePredUpward(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
-        return 'UPW' if portfolio.prediction_upward else 'DWN'
+        if portfolio.prediction_upward:
+            portfolio.log.debug('  ↗︎ prediction trends price raise')
+            return 'UPW'
+        else:
+            portfolio.log.debug('  ↘︎ prediction trends price down')
+            return 'DWN'
 
 
 class StateKonkorde(RL_State):
@@ -44,47 +49,60 @@ class StateKonkorde(RL_State):
 class StateLastPredOk(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
+        log = portfolio.log
         sign = lambda x: copysign(1, x)
-        if len(portfolio.history) < 1:
+        if portfolio.memory.len < 1:
+            log.debug('  Not enough history to check last prediction')
             return 'LNOK'
         prediction_sign = sign(portfolio.last_forecast - portfolio.last_price)
         actual_sign = sign(portfolio.latest_price - portfolio.last_price)
         # guess what the state, given the forecast
         if prediction_sign == actual_sign:
+            log.debug(' ✓ Last prediction was OK')
             return 'LOK'
         else:
+            log.debug(' ✕ Last prediction was NOT OK')
             return 'LNOK'
 
 
 class StatePrevLastPredOk(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
+        log = portfolio.log
         sign = lambda x: copysign(1, x)
-        if len(portfolio.history) < 2:
+        if portfolio.memory.len < 2:
+            log.debug('  Not enough history to check prev. last prediction')
             return 'PLNOK'
+
         prediction_sign = sign(
             portfolio.prevlast_forecast - portfolio.prevlast_price)
         actual_sign = sign(portfolio.last_price - portfolio.prevlast_price)
         # guess what the state, given the forecast
         if prediction_sign == actual_sign:
+            log.debug(' ✓ Prev. last prediction was OK')
             return 'PLOK'
         else:
+            log.debug(' ✕ Prev. last prediction was NOT OK')
             return 'PLNOK'
 
 
 class StatePrevPrevLastPredOk(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
+        log = portfolio.log
         sign = lambda x: copysign(1, x)
-        if len(portfolio.history) < 3:
+        if portfolio.memory.len < 3:
+            log.debug('  Not enough history to check prev.prev.last prediction')
             return 'PPLNOK'
-        pplast_forecast = portfolio.history[-2]['forecast_']
-        pplast_price = portfolio.history[-2]['price_']
+
         prediction_sign = sign(
-            pplast_forecast - pplast_price)
-        actual_sign = sign(portfolio.prevlast_price - pplast_price)
+            portfolio.prevprevlast_forecast - portfolio.prevprevlast_price)
+        actual_sign = sign(
+            portfolio.prevlast_price - portfolio.prevprevlast_price)
         # guess what the state, given the forecast
         if prediction_sign == actual_sign:
+            log.debug(' ✓ Prev. prev. last prediction was OK')
             return 'PPLOK'
         else:
+            log.debug(' ✕ Prev. prev. last prediction was NOT OK')
             return 'PPLNOK'

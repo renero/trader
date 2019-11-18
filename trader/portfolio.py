@@ -16,10 +16,13 @@ class Portfolio(Common):
     forecast: float = 0.
     konkorde = 0.
     reward = 0.
-    movements = []
-    history = []
-
     failed_actions = ['f.buy', 'f.sell']
+    # These are the variables that MUST be saved by the `dump()` method
+    # in `environment`, in order to be able to resume the state.
+    state_variables = ['initial_budget', 'budget', 'latest_price',
+                       'forecast', 'investment',
+                       'portfolio_value', 'net_value',
+                       'shares', 'konkorde']
 
     # Constants
     BUY = +1
@@ -57,10 +60,8 @@ class Portfolio(Common):
         self.shares: float = 0.
         self.konkorde = 0.
         self.reward = 0.
-        self.movements = []
-        self.history = []
 
-    def update_after_step(self, price, forecast, konkorde=None):
+    def update(self, price, forecast, konkorde=None):
         """
         Updates portfolio after an interation step.
         :param price: new price registered
@@ -74,6 +75,10 @@ class Portfolio(Common):
         self.forecast = forecast
         if konkorde is not None:
             self.konkorde = konkorde
+        self.log.debug('Updating portfolio after STEP.')
+        self.log.debug(
+            '  > portfolio_value={}, latest_price={}, forecast={}'.format(
+                self.portfolio_value, self.latest_price, self.forecast))
         return self
 
     def wait(self):
@@ -113,7 +118,6 @@ class Portfolio(Common):
         self.investment += buy_price
         self.shares += num_shares
         self.portfolio_value += buy_price
-        self.movements.append((self.BUY, num_shares, self.latest_price))
         # what is the value of my investment after selling?
         self.net_value = self.portfolio_value - self.investment
 
@@ -128,7 +132,7 @@ class Portfolio(Common):
             action_name = 'f.sell'
             self.reward = self.decide_reward(action_name, num_shares)
             self.memory.record_action(action_name)
-            self.log.debug('  {} action recorded. Reward={}'.format(
+            self.log.debug('  {} action recorded. Reward={:.2f}'.format(
                 action_name, self.reward))
             return self.reward
 
@@ -136,7 +140,7 @@ class Portfolio(Common):
         self.update_after_sell(num_shares, sell_price)
         self.reward = self.decide_reward(action_name, num_shares)
         self.memory.record_action(action_name)
-        self.log.debug('  {} action recorded. Reward={}'.format(
+        self.log.debug('  {} action recorded. Reward={:.2f}'.format(
             action_name, self.reward))
         return self.reward
 
@@ -151,7 +155,6 @@ class Portfolio(Common):
         self.investment -= sell_price
         self.shares -= num_shares
         self.portfolio_value -= sell_price
-        self.movements.append((self.SELL, num_shares, self.latest_price))
 
         # what is the value of my investment after selling?
         self.net_value = self.portfolio_value - self.investment
@@ -215,16 +218,6 @@ class Portfolio(Common):
             reward = self.environment.reward_failed_sell
         return reward
 
-    def reset_history(self):
-        del self.history[:]
-
-    def append_to_history(self, environment):
-        # Stack the current state into the history
-        self.history.append({'price_': environment.price_,
-                             'forecast_': environment.forecast_})
-        if len(self.history) > self.params.stack_size:
-            self.history.pop(0)
-
     def values_to_record(self):
         net_value = self.portfolio_value - self.investment
         values = [
@@ -258,26 +251,48 @@ class Portfolio(Common):
 
     @property
     def prediction_upward(self):
-        return self.latest_price <= self.last_forecast
+        self.log.debug(
+            '  Pred sign ({}) latest price({}) vs. last_forecast({})'.format(
+               '↑' if self.latest_price <= self.forecast else '↓',
+                self.latest_price, self.forecast))
+        return self.latest_price <= self.forecast
 
     @property
     def last_forecast(self):
-        if len(self.history) > 0:
-            return self.history[-1]['forecast_']
-        return 0.
-
-    @property
-    def prevlast_forecast(self):
-        return self.history[-2]['forecast_']
+        self.log.debug('    Last forecast in MEM = {}'.format(
+            self.memory.last('forecast')))
+        return self.memory.last('forecast')
 
     @property
     def last_price(self):
-        return self.history[-1]['price_']
+        self.log.debug(
+            '    Last price in MEM = {}'.format(self.memory.last('price')))
+        return self.memory.last('price')
+
+    @property
+    def prevlast_forecast(self):
+        self.log.debug(
+            '    PrevLast forecast in MEM = {}'.format(
+                self.memory.prevlast('forecast')))
+        return self.memory.prevlast('forecast')
 
     @property
     def prevlast_price(self):
-        return self.history[-2]['price_']
+        self.log.debug(
+            '    PrevLast price in MEM = {}'.format(
+                self.memory.prevlast('price')))
+        return self.memory.prevlast('price')
 
     @property
-    def can_buy(self) -> bool:
-        return self.budget >= self.latest_price
+    def prevprevlast_forecast(self):
+        self.log.debug(
+            '    PrevPrevLast forecast in MEM = {}'.format(
+                self.memory.prevprevlast('forecast')))
+        return self.memory.prevprevlast('forecast')
+
+    @property
+    def prevprevlast_price(self):
+        self.log.debug(
+            '    PrevPrevLast price in MEM = {}'.format(
+                self.memory.prevprevlast('price')))
+        return self.memory.prevprevlast('price')

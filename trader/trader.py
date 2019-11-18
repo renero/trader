@@ -37,15 +37,16 @@ def main(argv):
         if params.save_model is True:
             agent.nn.save_model(agent.model, environment.memory.results)
         # Simulate what has been learnt with the data.
-        agent.simulate(environment, strategy, do_plot=params.do_plot)
+        agent.simulate(environment, strategy)
     else:
-        # predict or simulate
-        last_prediction_only = (flag['predict'] == True)
-        strategy = agent.q_load(environment)
-        agent.simulate(environment,
-                       strategy,
-                       last=last_prediction_only,
-                       do_plot=params.do_plot)
+        # simulate or predict
+        if flag['simulate']:
+            last_prediction_only = (flag['predict'] == True)
+            strategy = agent.q_load(environment)
+            agent.simulate(environment, strategy)
+        else:  # predict.
+            strategy = agent.q_load(environment)
+            agent.single_step(environment, strategy)
 
 
 if __name__ == "__main__":

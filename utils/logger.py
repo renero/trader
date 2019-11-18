@@ -58,12 +58,12 @@ class Logger:
         if self._level < self._DEBUG:
             return
         when = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
-        print('{} - {}DEBUG - {:<30} - {}{}'.format(
+        print('{} - {}DEBUG - {:<31} - {}{}'.format(
             when, self.OKBLUE, who(1), what, self.ENDC, **kwargs))
 
     def highlight(self, what):
         now = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
-        print('{} - INFO  - {:<30} - {}{}{}'.format(
+        print('{} - INFO  - {:<31} - {}{}{}'.format(
             now,
             who(1),
             self.INFOGREY, what, self.ENDC))
@@ -72,13 +72,15 @@ class Logger:
         if self._level < self._INFO:
             return
         when = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
-        print('{} - INFO  - {:<30} - {}'.format(
+        print('{} - INFO  - {:<31} - {}'.format(
             when, who(1), what, **kwargs))
 
-    def warn(self, what):
+    def warn(self, what, **kwargs):
         if self._level < self._WARN:
             return
-        print('{}WARN: {}{}'.format(self.WARNING, what, self.ENDC))
+        when = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
+        print('{} - {}WARN  - {:<31} - {}{}'.format(
+            when, self.WARNING, who(1), what, self.ENDC, **kwargs))
 
     def error(self, what):
         if self._level < self._ERROR:

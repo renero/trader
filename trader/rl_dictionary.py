@@ -41,12 +41,38 @@ class RLDictionary(Dictionary):
             self.log.error('Model file must be specified with -m argument')
             raise ValueError('Model file must be specified with -m argument')
 
+        setattr(self, 'no_dump', arguments.args.no_dump)
         setattr(self, 'do_plot', arguments.args.plot)
         setattr(self, 'save_model', arguments.args.save)
         if arguments.args.epochs is not None:
             setattr(self, 'num_episodes', int(arguments.args.epochs))
         else:
             setattr(self, 'num_episodes', 1)
+
+        # Init portfolio
+        if arguments.args.init_portfolio is not None:
+            setattr(self, 'init_portfolio', True)
+            setattr(self, 'portfolio_name', arguments.args.init_portfolio[0])
+        else:
+            setattr(self, 'init_portfolio', False)
+        # Use portfolio
+        if arguments.args.portfolio is not None:
+            setattr(self, 'use_portfolio', True)
+            setattr(self, 'portfolio_name', arguments.args.portfolio[0])
+        else:
+            setattr(self, 'use_portfolio', False)
+
+        # Check that if I want to predict, portfolio needs to be specified
+        if self.what_to_do == 'predict' and 'portfolio_name' not in self:
+            self.log.error(
+                'When calling `predict`, provide a portfolio filename.')
+            self.log.error(
+                'To generate a portfolio, `simulate` with `--init-portfolio`')
+            raise ValueError('wrong parameters')
+
+        #
+        # Extensions to the dictionary
+        #
 
         # Build a self with a sequential number associated to each action
         setattr(self, 'action_id', MyDict())
