@@ -38,9 +38,18 @@ python updater.py --file ${FORECAST_FILE}
 cd ../trader
 python trader.py predict -f ${FORECAST_FILE} --model ${RL_MODEL} --portfolio ${PORTFOLIO}
 
-echo "done."
-
+# Extract the action to be taken and base price to send it over.
 cd ..
+LATEST_ACTION="output/tmp_action.json"
+LATEST_OHLC="output/tmp_ohlcv.json"
+BASEPRICE=`cat ${LATEST_OHLC}|cut -d ',' -f 3|cut -d ':' -f2|tr -d '"'`
+ACTION=`cat ${LATEST_ACTION}|tr -d "}"|awk -F ':' '{print $2}'|tr -d '"'`
+if [ "$ACTION" == "sell" ]; then
+    REFERENCE="minimum at ${BASEPRICE}"
+elif [ "$ACTION" == "buy" ]; then
+    REFERENCE="maximum at ${BASEPRICE}"
+else
+    REFERENCE=""
+fi
 echo -n "The recommendation is... "
-cat output/tmp_action.json| tr -d "}"|awk -F ':' '{print $2}'|tr -d '"'
-echo
+echo "${ACTION} ${REFERENCE}"
