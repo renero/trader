@@ -1,5 +1,6 @@
 # Base image Debian stretch python 3.6
-FROM python:3.6-stretch
+# FROM python:3.6-stretch
+FROM python:3.7.4-slim-buster
 
 # Upgrade pip
 RUN pip install --upgrade pip
@@ -19,4 +20,5 @@ WORKDIR /trader/trader
 VOLUME /trader
 
 # Run the application with unbuffered output to see it on real time
-CMD python3 -u trader.py
+ENV PYTHONPATH "${PYTHONPATH}:/trader/:/trader/utils/:/trader/predictor:/trader/trader:/trader/indicators:/trader/retriever:/trader/updater"
+CMD python3 -u trader.py --help
