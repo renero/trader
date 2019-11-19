@@ -2,6 +2,6 @@ version: '3'
 services:
   trader:
     build: .
-    image: trader:0.1
+    image: trader:0.9.0
     volumes:
         - ./:/trader
