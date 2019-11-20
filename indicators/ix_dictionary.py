@@ -50,9 +50,17 @@ class IXDictionary(Dictionary):
         else:
             setattr(self, 'today', False)
 
+        # Extract the scaler name, if any.
+        if arguments.args.today is not None:
+            setattr(self, 'scaler_name', arguments.args.scaler)
+
+        # Check that all parameters needed are in place.
         if self.save and self.merge_file is not None:
             arguments.parser.error(
                 'Save option is not compatible with merge option')
+        if self.today and 'scaler_name' not in arguments.args:
+            arguments.parser.error(
+                'When generating index for a single day, a scaler must be set')
 
         #
         # Set log_level and start the logger

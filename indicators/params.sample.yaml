@@ -1,18 +1,25 @@
-# Input data
-input_data: ../data/acciona_2018.csv
+#
+# Parameters for the indicators calculator.
+#
+
+# Parameters for reading the CSV file
+# Names of the relevant columns in the data file
 separator: ','
-
-# Dictionary to understand CSV columns
 csv_dict:
-  date: 'Date'
-  open: 'Open'
-  high: 'High'
-  low: 'Low'
-  close: 'Close'
-  volume: 'Volume'
+  date: Date
+  open: Open
+  high: High
+  low: Low
+  close: Close
+  volume: Volume
 
-# Where to save the indicator(s)
+# Directory to be used to place the output, when generating new files.
 output_path: ../output
+json_indicator: ../output/tmp_{}.json
 
-# Log level
-log_level: 3
+# What scaler to use to scale single predictions?
+scaler_name: ../staging/scaler_konkorde_acciona_2018.pickle
+
+# Format of the screen output for predict_training. These are values to be
+# accepted by 'tabulate'.
+table_format: simple

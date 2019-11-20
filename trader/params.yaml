@@ -36,7 +36,7 @@ exp_batch_size: 16
 k_threshold: 0.15
 
 # Do I want to hijack actions when price drops?
-stop_drop: false
+stop_drop: true
 stop_drop_rate: 0.02
 
 # TensorBoard?
@@ -103,7 +103,7 @@ action:
 
 # Environment variables
 environment:
-  initial_budget: 100.
+  initial_budget: 13000.
   consider_stop_loss: false
   stop_loss: .05
   direct_reward: true         # If True, reward is always netValue, not

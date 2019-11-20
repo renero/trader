@@ -24,24 +24,21 @@ json_forecast: ../output/tmp_forecast.json
 table_format: simple
 
 # Files, Networks, Names...
-models_dir: ../staging
+models_dir: ../output
 subtypes: ['body', 'move']
 model_names:
-  8yw20:
-    body: body_acciona_2010_2018_w20_e100
-    move: move_acciona_2010_2018_w20_e100
-    encoder: encoder_acciona_2010_2018_w20
-  8yw10:
-    body: body_acciona_2010_2018_w10_e100
-    move: move_acciona_2010_2018_w10_e100
-    encoder: encoder_acciona_2010_2018_w10
-  8yw05:
-    body: body_acciona_2010_2018_w5_e100
-    move: move_acciona_2010_2018_w5_e100
-    encoder: encoder_acciona_2010_2018_w5
-
-# Do I want the plots with the history of training?
-# plot: false
+  4yw30:
+    body: body_DAX_2015_2019_w30_e100
+    move: move_DAX_2015_2019_w30_e100
+    encoder: encoder_DAX_2015_2019_w30
+  4yw20:
+    body: body_DAX_2015_2019_w20_e100
+    move: move_DAX_2015_2019_w20_e100
+    encoder: encoder_DAX_2015_2019_w20
+  4yw10:
+    body: body_DAX_2015_2019_w10_e100
+    move: move_DAX_2015_2019_w10_e100
+    encoder: encoder_DAX_2015_2019_w10
 
 # Seed to be used to initialize the whole system.
 seed: 1
@@ -50,7 +47,6 @@ seed: 1
 loss: mean_squared_error
 optimizer: adam
 metrics: ['accuracy']
-# epochs: 100
 batch_size: 10
 window_size: 1
 validation_split: 0.1
