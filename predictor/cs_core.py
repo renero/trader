@@ -18,14 +18,17 @@ class CSCore:
         self.params = params
         self.log = params.log
 
-    def train(self, data):
+    def train(self, data: DataFrame):
         """
         Train networks to the data (OHLC) passed
         :param data: Data in OHLC format from the ticks module.
         :return: the NN trained, and the encoder used
         """
-        encoder = CSEncoder(self.params).fit(data)
-        cse = encoder.ticks2cse(data)
+        # Remove the "Date" Column
+        ticks = data.copy(deep=True).drop([self.params.csv_dict['d']], axis=1)
+        # Train
+        encoder = CSEncoder(self.params).fit(ticks)
+        cse = encoder.ticks2cse(ticks)
         dataset = self.prepare_input(encoder, cse, self.params.subtypes)
         nn = self.train_nn(dataset, self.params.subtypes)
         encoder.save()
@@ -76,6 +79,7 @@ class CSCore:
     def predict_training(self, data, nn, encoder, ticks) -> DataFrame:
         self.log.info('Performing prediction over TRAINING set')
         predictions = pd.DataFrame([])
+        date_column = self.params.csv_dict['d']
 
         num_ticks = data.shape[0]
         max_wsize = max(
@@ -93,8 +97,15 @@ class CSCore:
             prediction = self.add_supervised_info(
                 prediction,
                 data.iloc[from_idx]['c'], self.params)
+            prediction.insert(loc=0,
+                              column=date_column,
+                              value=data.iloc[from_idx]['Date'])
             predictions = predictions.append(prediction)
-        predictions = ticks.scale_back(predictions)
+        predictions = pd.concat((
+            predictions[date_column],
+            ticks.scale_back(
+                predictions.loc[:, predictions.columns != date_column])),
+            axis=1)
 
         return predictions
 
@@ -169,10 +180,11 @@ class CSCore:
             predictions = predictions.drop(cols_to_drop, axis=1)
         else:
             # Reorder columns to set 'actual' in first position
+            date_column = params.csv_dict['d']
             actual_position = list(predictions.columns).index('actual')
             num_cols = len(predictions.columns)
-            columns = [actual_position] + \
-                      [i for i in range(actual_position)] + \
+            columns = [0, actual_position] + \
+                      [i + 1 for i in range(actual_position - 1)] + \
                       [j for j in range(actual_position + 1, num_cols)]
             predictions = predictions.iloc[:, columns]
 
@@ -190,7 +202,7 @@ class CSCore:
                 '_'.join(params.model_names)),
             path=params.predictions_path,
             extension='csv')
-        predictions.to_csv(filename, index=False)
+        predictions.round(2).to_csv(filename, index=False)
         log.info('predictions saved to: {}'.format(filename))
 
     def display_predictions(self, predictions):

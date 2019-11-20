@@ -6,6 +6,7 @@
 # and dictionary to understand CSV columns
 delimiter: ','
 csv_dict:
+  d: 'Date'
   o: 'Open'
   h: 'High'
   l: 'Low'
