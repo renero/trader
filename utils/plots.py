@@ -93,8 +93,9 @@ def plot_move_prediction(y, Y_pred, pred_move_cs, num_predictions,
 
 def plot_history(history):
     # summarize history for accuracy
-    plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
+    print(history.history.keys())
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
     plt.title('model accuracy')
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
