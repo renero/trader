@@ -126,7 +126,7 @@ table_headers:
   - budget
   - investment
   - value
-  - netValue
+  - profit
   - shares
   - konkorde
   - action

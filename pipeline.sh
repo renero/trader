@@ -53,3 +53,10 @@ else
 fi
 echo -n "The recommendation is... "
 echo "${ACTION} ${REFERENCE}"
+
+# Simulate the portfolio so far, to check how it goes.
+echo "Simulation for existing portfolio ${PORTFOLIO}"
+cd trader
+python trader.py simulate --no-dump -f ${FORECAST_FILE} --model ${RL_MODEL} --debug 0
+cd ..
+

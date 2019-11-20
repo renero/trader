@@ -108,14 +108,14 @@ class Agent(Common):
 
             #  Update average metrics
             rl_stats.update(self.params.num_episodes,
-                            env.memory.results.netValue.iloc[-1])
+                            env.memory.results.profit.iloc[-1])
 
             # Epsilon decays here
             if epsilon >= self.params.epsilon_min:
                 epsilon *= self.params.decay_factor
 
         return rl_stats.avg_rewards, rl_stats.avg_loss, \
-               rl_stats.avg_mae, rl_stats.avg_netValue
+               rl_stats.avg_mae, rl_stats.avg_profit
 
     def epsilon_greedy(self, epsilon, state):
         """

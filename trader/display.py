@@ -59,7 +59,7 @@ class Display(Common):
         self.reformat(df, 'value')
         self.reformat(df, 'shares')
         self.recolor(df, 'budget')
-        self.recolor(df, 'netValue')
+        self.recolor(df, 'profit')
         self.recolor(df, 'investment')
         self.recolor(df, 'reward')
         if self.params.have_konkorde:
@@ -81,16 +81,16 @@ class Display(Common):
         else:
             total = portfolio.budget
         percentage = 100. * ((total / portfolio.initial_budget) - 1.0)
-        self.log.info('Final....: € {:.2f} [{} %]'.format(
+        print('Final....: € {:.2f} [{} %]'.format(
             total, self.color(percentage)))
-        self.log.info('Budget...: € {:.1f} [{} %]'.format(
+        print('Budget...: € {:.1f} [{} %]'.format(
             portfolio.budget,
             self.color((portfolio.budget / portfolio.initial_budget) * 100.)))
-        self.log.info('Cash Flow: {}'.format(
+        print('Cash Flow: {}'.format(
             self.color(portfolio.investment * -1.)))
-        self.log.info('Shares...: {:d}'.format(int(portfolio.shares)))
-        self.log.info('Sh.Value.: {:.1f}'.format(portfolio.portfolio_value))
-        self.log.info('P/L......: € {}'.format(
+        print('Shares...: {:d}'.format(int(portfolio.shares)))
+        print('Sh.Value.: {:.1f}'.format(portfolio.portfolio_value))
+        print('P/L......: € {}'.format(
             self.color(portfolio.portfolio_value - portfolio.investment)))
 
     def progress(self, i, num_episodes, last_avg, start, end):
@@ -172,10 +172,10 @@ class Display(Common):
         # Portfolio Value
         #
         ax1.axhline(y=0, color='red', alpha=0.4, linewidth=0.4)
-        ax1.scatter(range(len(data.price)), data.netValue,
+        ax1.scatter(range(len(data.price)), data.profit,
                     c=data.action_id.apply(lambda x: colors[x]),
                     marker='.')
-        ax1.plot(data.netValue, linewidth=0.6)
+        ax1.plot(data.profit, linewidth=0.6)
         ax1.xaxis.set_ticks_position('none')
         #
         # Price, forecast and operations
