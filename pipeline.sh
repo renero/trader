@@ -8,6 +8,7 @@ PREDS_FILE="../output/pred_acciona_2019_8yw20_8yw10_8yw05.csv"
 FORECAST_FILE="../output/forecast_nov19.csv"
 RL_MODEL="../staging/rl_model_acciona_2018b"
 PORTFOLIO="../staging/portfolio_acciona_nov19b.json"
+SCALER="../staging/scaler_konkorde_acciona_2018.pickle"
 
 # Get latest info from OHLC, and update file
 cd retriever
@@ -25,7 +26,7 @@ python predictor.py --file ${PREDS_FILE} ensemble
 
 # Generate Konkorde index for the latest addition to the OHLC file
 cd ../indicators
-python indicators.py -i ${OHLC_FILE} --today
+python indicators.py -i ${OHLC_FILE} --today --scaler ${SCALER}
 
 # Update the forecast file with 
 # - the closing for yesterday, 
