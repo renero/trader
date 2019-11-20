@@ -16,14 +16,17 @@ class CSDictionary(Dictionary):
             setattr(self, possible_action, False)
         setattr(self, arguments.args.action, True)
 
-        # This one controls whether to compute/display/append only the
-        # value for today (last in the series). Used for daily invocation
-        # setattr(self, 'today', arguments.args.today is not None)
-
+        setattr(self, 'do_plot', arguments.args.plot)
         setattr(self, 'save_predictions', arguments.args.save)
         setattr(self, 'input_file', arguments.args.file[0])
         if arguments.args.window is not None:
             setattr(self, 'window_size', arguments.args.window[0])
+        else:
+            setattr(self, 'window_size', 10)
+        if arguments.args.epochs is not None:
+            setattr(self, 'epochs', arguments.args.epochs[0])
+        else:
+            setattr(self, 'epochs', 1)
 
         #
         # Extend the dictionary with custom meta-parameters

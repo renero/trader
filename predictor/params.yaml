@@ -41,7 +41,7 @@ model_names:
     encoder: encoder_acciona_2010_2018_w5
 
 # Do I want the plots with the history of training?
-plot: false
+# plot: false
 
 # Seed to be used to initialize the whole system.
 seed: 1
@@ -50,7 +50,7 @@ seed: 1
 loss: mean_squared_error
 optimizer: adam
 metrics: ['accuracy']
-epochs: 100
+# epochs: 100
 batch_size: 10
 window_size: 1
 validation_split: 0.1

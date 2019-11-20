@@ -93,9 +93,9 @@ class CS_NN(object):
             batch_size=self.params.batch_size,
             verbose=self.params.verbose,
             validation_split=self.params.validation_split)
-        self.metadata[self.params.metrics[0]] = self.history.history['acc']
+        self.metadata[self.params.metrics[0]] = self.history.history['accuracy']
 
-        if self.params.plot is True:
+        if self.params.do_plot is True:
             plot_history(self.history)
 
         return self
