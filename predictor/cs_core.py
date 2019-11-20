@@ -2,7 +2,6 @@ from os.path import splitext, basename
 
 import pandas as pd
 from pandas import DataFrame
-from tabulate import tabulate
 
 from cs_api import single_prediction
 from cs_encoder import CSEncoder
