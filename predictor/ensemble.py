@@ -76,7 +76,7 @@ class Ensemble:
         preds = df.copy(deep=True)
 
         def weighted_prediction(x: Series):  # , weights: DataFrame):
-            w = weights.loc[list(x.index)].weight
+            w = weights.reindex(list(x.index)).weight
             x_w = x * w
             self.log.debug(
                 'Weighting X·W = {}·{} = {}'.format(
@@ -96,8 +96,9 @@ class Ensemble:
         else:
             new_filename = 'forecast_' + current_filename
         preds.reset_index(drop=True, inplace=True)
-        saved_file, _ = save_dataframe(new_filename,
-                                       preds[['actual', 'w_avg']],
-                                       self.params.predictions_path,
-                                       index=False)
+        saved_file, _ = save_dataframe(
+            new_filename,
+            preds[[self.params.csv_dict['d'], 'actual', 'w_avg']].round(2),
+            self.params.predictions_path,
+            index=False)
         self.log.info('Saved forecast file: {}'.format(saved_file))
