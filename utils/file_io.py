@@ -85,22 +85,21 @@ def save_dataframe(name: str,
         # Save the scaler used
         scaler_name = valid_output_name(scaler_name, output_path, 'pickle')
         joblib.dump(scaler, scaler_name)
-    data.to_csv(file_name, index=index)
+    data.round(2).to_csv(file_name, index=index)
 
     return file_name, scaler_name
 
 
-def read_ohlc(filename: str, separator: str, csv_dict: dict) -> DataFrame:
+def read_ohlc(filename: str, csv_dict: dict, **kwargs) -> DataFrame:
     """
     Reads a filename passed as CSV, renaming columns according to the
     dictionary passed.
-    :param filename:
-    :param separator:
-    :param csv_dict:
-    :return:
+    :param filename: the file with the ohlcv columns
+    :param csv_dict: the dict with the names of the columns
+    :return: the dataframe
     """
     filepath = file_exists(filename, dirname(realpath(__file__)))
-    df = pd.read_csv(filepath, delimiter=separator)
+    df = pd.read_csv(filepath, **kwargs)
 
     # Reorder and rename
     columns_order = [csv_dict[colname] for colname in csv_dict]
@@ -108,10 +107,6 @@ def read_ohlc(filename: str, separator: str, csv_dict: dict) -> DataFrame:
     df.columns = csv_dict.keys()
 
     # Set index to date field
-    df.date = pd.to_datetime(df.date)
-    df = df.set_index(df.iloc[:, 0].name)
-
-    # info_msg = 'Read file: {}, output DF dim{}'
-    # print(info_msg.format(filepath, df.shape))
-
+    # df.date = pd.to_datetime(df.date)
+    # df = df.set_index(df.iloc[:, 0].name)
     return df

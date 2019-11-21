@@ -14,7 +14,7 @@ class Arguments(object):
             help='what indicator to compute',
             choices=self.possible_actions)
         self.parser.add_argument(
-            '-i', '--input', nargs=1, type=str,
+            '-f', '--file', nargs=1, type=str,
             required=True,
             help='Input OHLCV File to process')
         self.parser.add_argument(

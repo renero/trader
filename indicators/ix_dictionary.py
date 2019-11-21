@@ -32,7 +32,7 @@ class IXDictionary(Dictionary):
                     self.indicator_name[0].upper(), self.indicator_name[1:])
                 )
 
-        setattr(self, 'input_file', arguments.args.input[0])
+        setattr(self, 'input_file', arguments.args.file[0])
         setattr(self, 'save', arguments.args.save)
 
         # Do I merge files indicator to original OHLC file?
@@ -52,13 +52,13 @@ class IXDictionary(Dictionary):
 
         # Extract the scaler name, if any.
         if arguments.args.today is not None:
-            setattr(self, 'scaler_name', arguments.args.scaler)
+            setattr(self, 'scaler_name', arguments.args.scaler[0])
 
         # Check that all parameters needed are in place.
         if self.save and self.merge_file is not None:
             arguments.parser.error(
                 'Save option is not compatible with merge option')
-        if self.today and 'scaler_name' not in arguments.args:
+        if self.today and 'scaler' not in arguments.args:
             arguments.parser.error(
                 'When generating index for a single day, a scaler must be set')
 

@@ -28,8 +28,10 @@ class Indicator:
         self.log = params.log
 
         # Read the input file specified in arguments (params)
-        self.data = read_ohlc(params.input_file, params.separator,
-                              params.csv_dict)
+        self.data = read_ohlc(params.input_file, params.csv_dict,
+                              delimiter=params.delimiter,
+                              parse_dates=False, index_col=False)
+        # self.data.reset_index(level='date', inplace=True)
         self.log.info('Read file: {}, {} rows, {} cols.'.format(
             params.input_file, self.data.shape[0], self.data.shape[1]))
 

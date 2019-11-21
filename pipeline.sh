@@ -26,7 +26,7 @@ python predictor.py --file ${PREDS_FILE} ensemble
 
 # Generate Konkorde index for the latest addition to the OHLC file
 cd ../indicators
-python indicators.py -i ${OHLC_FILE} --today --scaler ${SCALER}
+python indicators.py -f ${OHLC_FILE} --today --scaler ${SCALER}
 
 # Update the forecast file with 
 # - the closing for yesterday, 

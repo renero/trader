@@ -4,7 +4,7 @@
 
 # Parameters for reading the CSV file
 # Names of the relevant columns in the data file
-separator: ','
+delimiter: ','
 csv_dict:
   date: Date
   open: Open
