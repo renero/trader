@@ -186,7 +186,7 @@ class RL_NN(Common):
     #
 
     def save_model(self, model, results):
-        self.log.info('\nSaving model, weights and results.')
+        self.log.info('Saving model, weights and results.')
 
         fname = 'rl_model_' + splitext(
             basename(self.params.forecast_file))[0]
