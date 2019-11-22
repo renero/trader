@@ -25,21 +25,36 @@ json_forecast: ../output/tmp_forecast.json
 table_format: simple
 
 # Files, Networks, Names...
-models_dir: ../output
+models_dir: ../staging
 subtypes: ['body', 'move']
 model_names:
-  4yw30:
-    body: body_DAX_2015_2019_w30_e100
-    move: move_DAX_2015_2019_w30_e100
-    encoder: encoder_DAX_2015_2019_w30
-  4yw20:
-    body: body_DAX_2015_2019_w20_e100
-    move: move_DAX_2015_2019_w20_e100
-    encoder: encoder_DAX_2015_2019_w20
-  4yw10:
-    body: body_DAX_2015_2019_w10_e100
-    move: move_DAX_2015_2019_w10_e100
-    encoder: encoder_DAX_2015_2019_w10
+  8yw20:
+    body: body_acciona_2010_2018_w20_e100
+    move: move_acciona_2010_2018_w20_e100
+    encoder: encoder_acciona_2010_2018_w20
+  8yw10:
+    body: body_acciona_2010_2018_w10_e100
+    move: move_acciona_2010_2018_w10_e100
+    encoder: encoder_acciona_2010_2018_w10
+  8yw05:
+    body: body_acciona_2010_2018_w5_e100
+    move: move_acciona_2010_2018_w5_e100
+    encoder: encoder_acciona_2010_2018_w5
+#
+# DAX
+#
+#  4yw30:
+#    body: body_DAX_2015_2019_w30_e100
+#    move: move_DAX_2015_2019_w30_e100
+#    encoder: encoder_DAX_2015_2019_w30
+#  4yw20:
+#    body: body_DAX_2015_2019_w20_e100
+#    move: move_DAX_2015_2019_w20_e100
+#    encoder: encoder_DAX_2015_2019_w20
+#  4yw10:
+#    body: body_DAX_2015_2019_w10_e100
+#    move: move_DAX_2015_2019_w10_e100
+#    encoder: encoder_DAX_2015_2019_w10
 
 # Seed to be used to initialize the whole system.
 seed: 1
@@ -60,7 +75,3 @@ l1units: 128
 l2units: 128
 activation: tanh
 dropout: 0.1
-
-# Do I use the ensemble part?
-ensemble: false
-ensemble_path: ../output/ridge_l2_model.pkl

@@ -60,7 +60,7 @@ class Indicator:
         :return: None
         """
         mergeable_data = pd.read_csv(self.params.merge_file,
-                                     delimiter=self.params.separator)
+                                     delimiter=self.params.delimiter)
         ix_data = pd.DataFrame()
         ix_data[self.ix_columns] = self.values[self.ix_columns].copy(deep=True)
         ix_data = ix_data.reset_index(drop=True)
@@ -97,7 +97,6 @@ class Indicator:
         Scales the indicator values and save them to the specified filename
         :return: N/A
         """
-        # ix_scaled = self.values.copy(deep=True)
         scaler = joblib.load(self.params.scaler_name)
         self.log.info('Scaler loaded: {}'.format(self.params.scaler_name))
         ix_scaled = scaler.transform(self.values[self.ix_columns])

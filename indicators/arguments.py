@@ -21,10 +21,10 @@ class Arguments(object):
             '-t', '--today', action='store_true',
             help='Computes only today\'s value')
         self.parser.add_argument(
-            '--scaler', nargs=1, type=str,
+            '--scaler-file', nargs=1, type=str,
             help='What scaler to use for single index computation')
         self.parser.add_argument(
-            '-m', '--merge', nargs=1, type=str,
+            '-m', '--merge-to-file', nargs=1, type=str,
             help='Merge index into specified file')
         self.parser.add_argument(
             '-s', '--save', action='store_true',
