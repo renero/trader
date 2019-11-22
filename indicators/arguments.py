@@ -14,17 +14,20 @@ class Arguments(object):
             help='what indicator to compute',
             choices=self.possible_actions)
         self.parser.add_argument(
-            '-i', '--input', nargs=1, type=str,
+            '-c', '--config-file', nargs=1, type=str,
+            help='Relative path to configuration file to be used (YAML).')
+        self.parser.add_argument(
+            '-f', '--file', nargs=1, type=str,
             required=True,
             help='Input OHLCV File to process')
         self.parser.add_argument(
             '-t', '--today', action='store_true',
             help='Computes only today\'s value')
         self.parser.add_argument(
-            '--scaler', nargs=1, type=str,
+            '--scaler-file', nargs=1, type=str,
             help='What scaler to use for single index computation')
         self.parser.add_argument(
-            '-m', '--merge', nargs=1, type=str,
+            '-m', '--merge-to-file', nargs=1, type=str,
             help='Merge index into specified file')
         self.parser.add_argument(
             '-s', '--save', action='store_true',

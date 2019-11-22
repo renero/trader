@@ -1,5 +1,3 @@
-import pickle
-
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
@@ -98,16 +96,14 @@ def single_prediction(data: DataFrame, w_pos: int, nn, encoder, params):
             tick_group = data.tail(w_size + 1).iloc[-w_size - 1:-1]
         else:
             tick_group = data.iloc[w_pos - w_size:w_pos]
-        next_close = predict_close(tick_group, encoder[name], nn[name], params)
+        next_close = predict_close(tick_group[['o', 'h', 'l', 'c']],
+                                   encoder[name], nn[name], params)
         predictions = np.append(predictions, [next_close])
 
     # If the number of models is greater than 1, I also add statistics about
     # their result.
     if len(model_names) > 1:
         new_cols = ['actual', 'avg', 'avg_diff', 'median', 'med_diff', 'winner']
-        # If I decide to use ensembles, I must add two new columns
-        if params.ensemble is True:
-            new_cols = new_cols + ['ensemble', 'ens_diff']
     else:
         new_cols = []
 
@@ -118,15 +114,5 @@ def single_prediction(data: DataFrame, w_pos: int, nn, encoder, params):
     if len(model_names) > 1:
         df['avg'] = df.mean(axis=1)
         df['median'] = df.median(axis=1)
-
-    # When using ensemble, compute what the ensemble predicts, and add it.
-    if params.ensemble:
-        params.log.info('Refining prediction with ensemble.')
-        with open(params.ensemble_path, 'rb') as file:
-            ensemble_model = pickle.load(file)
-        input_df = df[
-            [u'10yw7', u'1yw7', u'1yw3', u'1yw10', u'median',
-             u'5yw10', u'10yw3', u'5yw3', u'avg', u'5yw7']]
-        df['ensemble'] = ensemble_model.predict(input_df)[0]
 
     return df

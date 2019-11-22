@@ -1,7 +1,9 @@
-version: '3'
+version: '3.7'
 services:
   trader:
     build: .
-    image: trader:0.9.0
+    image: trader:0.9.1
+    container_name: trader-container
     volumes:
-        - ./:/trader
+        - ./data:/trader/data
+        - ./staging:/trader/staging

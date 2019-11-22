@@ -1,10 +1,3 @@
-#
-# Largely based on:
-# https://adventuresinmachinelearning.com/reinforcement-learning-tutorial-python-keras/
-#
-# Forecast for GoldPrice comes from the code in DeepLearninginFinance:
-#   https://github.com/sonaam1234/DeepLearningInFinance
-#
 import sys
 import warnings
 
@@ -41,7 +34,6 @@ def main(argv):
     else:
         # simulate or predict
         if flag['simulate']:
-            last_prediction_only = (flag['predict'] == True)
             strategy = agent.q_load(environment)
             agent.simulate(environment, strategy)
         else:  # predict.

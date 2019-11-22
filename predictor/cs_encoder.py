@@ -117,11 +117,10 @@ class CSEncoder:
 
     def fit(self, ticks):
         self.log.info('Fitting CS encoder to ticks read.')
-        col_names = list(self.params.csv_dict.keys())
-        self.cse_zero_open = ticks.loc[ticks.index[0], col_names[0]]
-        self.cse_zero_high = ticks.loc[ticks.index[0], col_names[1]]
-        self.cse_zero_low = ticks.loc[ticks.index[0], col_names[2]]
-        self.cse_zero_close = ticks.loc[ticks.index[0], col_names[3]]
+        self.cse_zero_open = ticks.loc[ticks.index[0], 'o']
+        self.cse_zero_high = ticks.loc[ticks.index[0], 'h']
+        self.cse_zero_low = ticks.loc[ticks.index[0], 'l']
+        self.cse_zero_close = ticks.loc[ticks.index[0], 'c']
         self.fitted = True
         self.add_ohencoder()
         return self

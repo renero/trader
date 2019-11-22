@@ -8,7 +8,6 @@ from common import Common
 from environment import Environment
 from rl_nn import RL_NN
 from rl_stats import RLStats
-# TODO Mover la memoria deque a la clase "memory"
 from spring import Spring
 
 

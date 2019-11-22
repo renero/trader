@@ -37,6 +37,7 @@ class Ticks:
 
         filepath = file_exists(_filepath, dirname(realpath(__file__)))
         df = pd.read_csv(filepath, delimiter=self.params.delimiter)
+        date_column = df[self.params.csv_dict['d']]
         # Reorder and rename
         df = df[[self.params.csv_dict['o'], self.params.csv_dict['h'],
                  self.params.csv_dict['l'], self.params.csv_dict['c']]]
@@ -49,7 +50,7 @@ class Ticks:
 
         info_msg = 'Read ticks file: {}, output DF dim{}'
         self.log.info(info_msg.format(self.params.input_file, df.shape))
-        return df
+        return pd.concat((date_column, df), axis=1)
 
     @staticmethod
     def new_ohlc(values):
