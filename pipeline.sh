@@ -50,9 +50,7 @@ if [[ "$SYMBOL" == "" ]]; then
   exit 1
 fi
 
-echo "CONFIG FILE: $CONFIG_FILE"
-echo "SYMBOL.....: $SYMBOL"
-
+# Set environment
 OHLC_FILE="../data/acciona_2019.csv"
 TMP_OHLC="/tmp/tmp_ohlc.csv"
 PREDS_FILE="../staging/acc.0.9.0/pred_acciona_2019_8yw20_8yw10_8yw05.csv"
