@@ -173,5 +173,4 @@ dmypy.json
 /resources/Bitacora.md
 tmp
 Untitled.ipynb
-/trader/params_acciona.yaml
-/trader/params_dax.yaml
+params.???.yaml

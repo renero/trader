@@ -12,7 +12,7 @@ class RLDictionary(Dictionary):
         # Extend the dictionary with the values passed in arguments.
         # Call the Dictionary constructor once the parameters file is set.
         arguments = Arguments(args, kwargs)
-        if 'config_file' in arguments.args:
+        if arguments.args.config_file is not None:
             parameters_file = arguments.args.config_file[0]
         else:
             parameters_file = default_params_filename
