@@ -6,12 +6,16 @@ from logger import Logger
 class CSDictionary(Dictionary):
 
     def __init__(self, default_params_filename='params.yaml', *args, **kwargs):
-        super().__init__(default_params_filename, **kwargs)
 
-        #
         # Extend the dictionary with the values passed in arguments.
-        #
+        # Call the Dictionary constructor once the parameters file is set.
         arguments = Arguments(args, kwargs)
+        if 'config_file' in arguments.args:
+            parameters_file = arguments.args.config_file[0]
+        else:
+            parameters_file = default_params_filename
+        super().__init__(parameters_file, **kwargs)
+
         for possible_action in arguments.possible_actions:
             setattr(self, possible_action, False)
         setattr(self, arguments.args.action, True)
@@ -42,3 +46,6 @@ class CSDictionary(Dictionary):
         if 'log_level' not in self:
             self.log_level = 3  # default value = WARNING
         self.log = Logger(self.log_level)
+
+        self.log.info(
+            'Using configuration parameters from: {}'.format(parameters_file))

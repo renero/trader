@@ -14,6 +14,9 @@ class Arguments(object):
             help='what indicator to compute',
             choices=self.possible_actions)
         self.parser.add_argument(
+            '-c', '--config-file', nargs=1, type=str,
+            help='Relative path to configuration file to be used (YAML).')
+        self.parser.add_argument(
             '-f', '--file', nargs=1, type=str,
             required=True,
             help='Input OHLCV File to process')

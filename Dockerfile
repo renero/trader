@@ -18,10 +18,9 @@ RUN pip3 install -r requirements.txt
 
 # Add code and update the working directory
 ADD . /trader
-WORKDIR /trader/trader
-
+WORKDIR /trader
 VOLUME /trader
 
 # Run the application with unbuffered output to see it on real time
 ENV PYTHONPATH "${PYTHONPATH}:/trader:/trader/utils:/trader/predictor:/trader/trader:/trader/indicators:/trader/retriever:/trader/updater"
-CMD python3 -u trader.py --help
+CMD /trader/pipeline.sh

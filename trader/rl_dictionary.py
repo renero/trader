@@ -9,13 +9,18 @@ class RLDictionary(Dictionary):
 
     def __init__(self, default_params_filename='params.yaml', *args, **kwargs):
 
-        super().__init__(default_params_filename, **kwargs)
+        # Extend the dictionary with the values passed in arguments.
+        # Call the Dictionary constructor once the parameters file is set.
+        arguments = Arguments(args, kwargs)
+        if 'config_file' in arguments.args:
+            parameters_file = arguments.args.config_file[0]
+        else:
+            parameters_file = default_params_filename
+        super().__init__(parameters_file, **kwargs)
+
         # Check that I've states and actions to start playing with.
         if not (self.action and self.state):
             raise AssertionError('No states or actions defined in config file.')
-
-        # Read the arguments passed in CLI to override parameters
-        arguments = Arguments(args, kwargs)
 
         # Override other potential parameters specified in command line.
         setattr(self, 'debug', arguments.args.debug is not None)
@@ -26,6 +31,9 @@ class RLDictionary(Dictionary):
         if 'log_level' not in self:
             self.log_level = 3  # default value = INFO
         self.log = Logger(self.log_level)
+
+        self.log.info(
+            'Using configuration parameters from: {}'.format(parameters_file))
 
         # Define what to do
         setattr(self, 'possible_actions', arguments.possible_actions)
