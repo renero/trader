@@ -87,7 +87,7 @@ class Environment(Common):
             delimiter = self.params.delimiter
         self.data_ = pd.read_csv(path, delimiter)
         self.max_states_ = self.data_.shape[0]
-        self.log.info('Read trader file: {}'.format(path))
+        self.log.info('Read trader forecast file: {}'.format(path))
 
         # Do i have konkorde?
         setattr(self.params, 'have_konkorde', bool)

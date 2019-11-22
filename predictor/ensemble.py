@@ -95,10 +95,14 @@ class Ensemble:
             new_filename = current_filename.replace('pred_', 'forecast_')
         else:
             new_filename = 'forecast_' + current_filename
+
+        # Prepare the data frame to be saved.
+        date_column = self.params.csv_dict['d']
         preds.reset_index(drop=True, inplace=True)
+        preds.rename(columns={'w_avg': 'forecast'}, inplace=True)
         saved_file, _ = save_dataframe(
             new_filename,
-            preds[[self.params.csv_dict['d'], 'actual', 'w_avg']].round(2),
+            preds[[date_column, 'actual', 'forecast']].round(2),
             self.params.predictions_path,
             index=False)
         self.log.info('Saved forecast file: {}'.format(saved_file))
