@@ -1,7 +1,14 @@
+import os
 import random
 from os.path import splitext, basename
 
 import numpy as np
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+import tensorflow as tf
+
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
 from keras.callbacks import TensorBoard
 from keras.layers import Dense, InputLayer
 from keras.models import Sequential, model_from_json

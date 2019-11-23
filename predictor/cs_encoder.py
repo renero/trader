@@ -387,14 +387,15 @@ class CSEncoder:
         self.log.debug('Decoding <{}> with value: {:.2f}'.format(code, value))
         return value
 
-    def decode_cse(self, this_cse, prev_cse):
+    def decode_cse(self, this_cse, prev_cse, col_names):
         """
         From a CSE numpy array and its previous CSE numpy array in the
         time series, returns the reconstructed tick (OHLC).
         """
         mm = prev_cse.hl_interval_width
+        # Set the columns names that contain the values in my date
         amount_shift = [(self.decode_movement_code(this_cse[column]) * mm)
-                        for column in list(self.params.csv_dict.keys())]
+                        for column in col_names]
         self.log.debug(
             'Amount of movement: {:.04f}|{:.04f}|{:.04f}|{:.04f}'.format(
                 amount_shift[0], amount_shift[1], amount_shift[2],
@@ -434,6 +435,7 @@ class CSEncoder:
         assert self.fitted, "The encoder has not been fit with data yet!"
         if col_names is None:
             col_names = list(self.params.csv_dict.keys())
+            col_names.remove('d')
         cse_decoded = [first_cse]
         self.log.debug('Zero CS created: {:.2f}|{:.2f}|{:.2f}|{:.2f}'.format(
             self.cse_zero_open, self.cse_zero_high, self.cse_zero_low,
@@ -446,7 +448,7 @@ class CSEncoder:
             self.log.debug('Decoding: {}|{}|{}|{}|{}'.format(
                 this_cse['b'], this_cse['o'], this_cse['h'], this_cse['l'],
                 this_cse['c']))
-            this_tick = self.decode_cse(this_cse, cse_decoded[-1])
+            this_tick = self.decode_cse(this_cse, cse_decoded[-1], col_names)
             cse_decoded.append(self.build_new(self.params, this_tick))
             this_tick = self.adjust_body(this_cse['b'][1], this_tick)
             self.log.debug(
