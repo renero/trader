@@ -51,15 +51,15 @@ if [[ "$SYMBOL" == "" ]]; then
 fi
 
 # Set environment
-OHLC_FILE="../data/acciona_2019.csv"
-TMP_OHLC="/tmp/tmp_ohlc.csv"
-PREDS_FILE="../staging/acc.0.9.0/pred_acciona_2019_8yw20_8yw10_8yw05.csv"
-FORECAST_FILE="../staging/acc.0.9.0/forecast_nov19.csv"
-RL_MODEL="../staging/acc.0.9.0/rl_model_acciona_2018b"
-PORTFOLIO="../staging/acc.0.9.0/portfolio_acciona_nov19b.json"
-SCALER="../staging/acc.0.9.0/scaler_konkorde_acciona_2018.pickle"
-LATEST_ACTION="output/tmp_action.json"
-LATEST_OHLC="output/tmp_ohlcv.json"
+OHLC_FILE="../data/${SYMBOL}/acciona_2019.csv"
+TMP_OHLC="/tmp/${SYMBOL}/tmp_ohlc.csv"
+PREDS_FILE="../staging/${SYMBOL}/pred_acciona_2019_8yw20_8yw10_8yw05.csv"
+FORECAST_FILE="../staging/${SYMBOL}/forecast_nov19.csv"
+RL_MODEL="../staging/${SYMBOL}/rl_model_acciona_2018b"
+PORTFOLIO="../staging/${SYMBOL}/portfolio_acciona_nov19b.json"
+SCALER="../staging/${SYMBOL}/scaler_konkorde_acciona_2018.pickle"
+LATEST_ACTION="output/${SYMBOL}/tmp_action.json"
+LATEST_OHLC="output/${SYMBOL}/tmp_ohlcv.json"
 
 
 # Get latest info from OHLC, and update file

@@ -8,6 +8,8 @@ resources/LSTM-Neural-Network-for-Time-Series-Prediction/
 staging/
 output/
 data/
+data/*
+log/
 
 # Project dependent ignores
 params.yaml

@@ -419,6 +419,7 @@ class CSEncoder:
                 reconstructed_tick[2], reconstructed_tick[3]))
         return reconstructed_tick
 
+    # TODO: Clarify when 'd' is present in
     def cse2ticks(self, cse_codes, first_cse, col_names=None):
         """Reconstruct CSE codes read from a CSE file into ticks
         Arguments
@@ -435,7 +436,9 @@ class CSEncoder:
         assert self.fitted, "The encoder has not been fit with data yet!"
         if col_names is None:
             col_names = list(self.params.csv_dict.keys())
-            col_names.remove('d')
+            # Remove date column if present.
+            if 'd' in col_names:
+                col_names.remove('d')
         cse_decoded = [first_cse]
         self.log.debug('Zero CS created: {:.2f}|{:.2f}|{:.2f}|{:.2f}'.format(
             self.cse_zero_open, self.cse_zero_high, self.cse_zero_low,
