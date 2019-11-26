@@ -52,7 +52,7 @@ fi
 
 # Set environment
 OHLC_FILE="../data/${SYMBOL}/acciona_2019.csv"
-TMP_OHLC="/tmp/${SYMBOL}/tmp_ohlc.csv"
+TMP_OHLC="../output/${SYMBOL}/tail_ohlc.csv"
 PREDS_FILE="../staging/${SYMBOL}/pred_acciona_2019_8yw20_8yw10_8yw05.csv"
 FORECAST_FILE="../staging/${SYMBOL}/forecast_nov19.csv"
 RL_MODEL="../staging/${SYMBOL}/rl_model_acciona_2018b"
@@ -64,7 +64,7 @@ LATEST_OHLC="output/${SYMBOL}/tmp_ohlcv.json"
 
 # Get latest info from OHLC, and update file
 cd retriever
-python retriever.py --symbol ${SYMBOL} --file ${OHLC_FILE}
+python retriever.py --config ${CONFIG_FILE} --symbol ${SYMBOL} --file ${OHLC_FILE}
 
 # Generate a small sample to run predictions on it (smaller = faster)
 head -1 ${OHLC_FILE} > ${TMP_OHLC}
@@ -72,20 +72,20 @@ tail -50 ${OHLC_FILE} >> ${TMP_OHLC}
 
 # Predict What will be the next value for stock, from each network trained.
 cd ../predictor
-python predictor.py --config ${CONFIG_FILE} --file ${TMP_OHLC} predict
+python predictor.py predict --config ${CONFIG_FILE} --file ${TMP_OHLC}
 # Produce the ensemble from all predictions from all networks
-python predictor.py --config ${CONFIG_FILE} --file ${PREDS_FILE} ensemble
+python predictor.py ensemble --config ${CONFIG_FILE} --file ${PREDS_FILE}
 
 # Generate Konkorde index for the latest addition to the OHLC file
 cd ../indicators
-python indicators.py -f ${OHLC_FILE} --today --scaler-file ${SCALER}
+python indicators.py --today --config ${CONFIG_FILE} -f ${OHLC_FILE} --scaler-file ${SCALER}
 
 # Update the forecast file with
 # - the closing for yesterday,
 # - the forecast for today
 # - the values of the indicator (konkorde) for yesterday closing
 cd ../updater
-python updater.py --file ${FORECAST_FILE}
+python updater.py --config ${CONFIG_FILE} --file ${FORECAST_FILE}
 
 # Generate a trading recommendation
 cd ../trader
