@@ -17,7 +17,7 @@ class Arguments(object):
             help='Debug level (0..4), default 3.')
         self.parser.add_argument(
             '-f', '--file', nargs=1, type=str,
-            required=True, help='OHLCV file to append')
+            help='OHLCV file to append')
         self.parser.add_argument(
             '-s', '--symbol', nargs=1, type=str,
             required=True, help='Stock symbol to retrieve')

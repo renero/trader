@@ -19,10 +19,14 @@ def main(argv):
     """
     params = RTDictionary(args=argv)
     log = params.log
-    stock_data = closing.alpha_vantage(api_key=params.api_key,
-                                       function=params.function_name,
-                                       symbol=params.symbol)
-    stock_date = stock_data['latest trading day']
+
+    # Call the proper service to retrieve stock info.
+    stock_data, stock_date = getattr(closing, params.service, )(
+        api_key=params.api_key,
+        log=log,
+        function=params.function_name,
+        symbol=params.symbol)
+    # stock_date = stock_data['latest trading day']
     today = datetime.today().strftime('%Y-%m-%d')
     last_date_in_file = last.row_date(params.file)
     log.info('Retrieved data for {} by <{}>'.format(params.symbol, stock_date))
@@ -49,7 +53,10 @@ def main(argv):
 
     row = closing.csv_row(stock_data, params.json_columns,
                           params.ohlc_columns, params.json_file, params.log)
-    closing.append_to_file(row, params.file, last.working_day(), params.log)
+    if params.file is not None:
+        closing.append_to_file(row, params.file, last.working_day(), params.log)
+    else:
+        print(row)
 
 
 if __name__ == "__main__":

@@ -14,15 +14,47 @@ class closing:
     def alpha_vantage(url='https://www.alphavantage.co',
                       api_entry='/query?',
                       api_key=None,
+                      log=None,
                       **kwargs) -> dict:
         endpoint = url + api_entry
         arguments = '&'.join(
             '{}={}'.format(key, value) for key, value in kwargs.items())
         arguments += '&apikey={}'.format(api_key)
         endpoint = endpoint + arguments
+        if log is not None:
+            log.debug('Request: <{}>'.format(endpoint))
+
         response = requests.get(endpoint).json()
+        if log is not None:
+            log.debug('Response: \n{}'.format(response))
+
         stock_closing = dict()
         for old_key in response['Global Quote'].keys():
+            stock_closing[old_key[4:]] = response['Global Quote'][old_key]
+
+        return stock_closing, stock_closing['latest trading day']
+
+    @staticmethod
+    def world_trading_data(
+            url='https://api.worldtradingdata.com/',
+            api_entry='api/v1/stock?',
+            api_key=None,
+            log=None,
+            **kwargs) -> dict:
+        endpoint = url + api_entry
+        arguments = '&'.join(
+            '{}={}'.format(key, value) for key, value in kwargs.items())
+        arguments += '&api_token={}'.format(api_key)
+        endpoint = endpoint + arguments
+        if log is not None:
+            log.debug('Request: <{}>'.format(endpoint))
+
+        response = requests.get(endpoint).json()
+        if log is not None:
+            log.debug('Response: \n{}'.format(response))
+
+        stock_closing = dict()
+        for old_key in response['data'][0].keys():
             stock_closing[old_key[4:]] = response['Global Quote'][old_key]
         return stock_closing
 
