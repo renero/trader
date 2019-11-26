@@ -21,11 +21,6 @@ def main(argv):
     log = params.log
 
     # Call the proper service to retrieve stock info.
-    # stock_data, stock_date = getattr(closing, params.service)(
-    #     api_key=params.api_key,
-    #     dictionary=params.json_columns,
-    #     log=log,
-    #     symbol=params.symbol)
     stock_data, stock_date = closing.retrieve_stock_data(params)
 
     if params.file is None:
@@ -37,12 +32,6 @@ def main(argv):
     log.info('Retrieved data for {} by <{}>'.format(params.symbol, stock_date))
     log.info('Last date in file <{}>'.format(last_date_in_file))
 
-    #
-    # Testing purposes.
-    # with open('../data/ana.mc.11.11.json') as json_file:
-    #     stock_data = json.load(json_file)['Global Quote']
-    #
-
     # If stock data date does not match last working day, we've a problem...
     if stock_date != last.working_day() and stock_date != today:
         msg = 'Latest stock DATE does not match last working day\n'
@@ -52,7 +41,8 @@ def main(argv):
     # If data coming in is from today, stop.
     elif stock_date == today and last_date_in_file != last.working_day():
         msg = 'Stock data from API is TODAY\'s data. Stopping.\n'
-        msg += 'Latest row in OHLC file is not last working day\'s date.'
+        msg += 'Latest row in OHLC file is not last working day\'s {}.'.format(
+            last.working_day())
         raise ValueError(msg)
     elif stock_date == today and last_date_in_file == last.working_day():
         log.info('Data already in file for date <{}>. Doing nothing'.format(
