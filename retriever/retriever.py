@@ -21,19 +21,27 @@ def main(argv):
     log = params.log
 
     # Call the proper service to retrieve stock info.
-    stock_data, stock_date = getattr(closing, params.service, )(
-        api_key=params.api_key,
-        log=log,
-        function=params.function_name,
-        symbol=params.symbol)
-    # stock_date = stock_data['latest trading day']
+    # stock_data, stock_date = getattr(closing, params.service)(
+    #     api_key=params.api_key,
+    #     dictionary=params.json_columns,
+    #     log=log,
+    #     symbol=params.symbol)
+    stock_data, stock_date = closing.retrieve_stock_data(params)
+
+    if params.file is None:
+        print(stock_data)
+        return
+
     today = datetime.today().strftime('%Y-%m-%d')
     last_date_in_file = last.row_date(params.file)
     log.info('Retrieved data for {} by <{}>'.format(params.symbol, stock_date))
     log.info('Last date in file <{}>'.format(last_date_in_file))
 
+    #
+    # Testing purposes.
     # with open('../data/ana.mc.11.11.json') as json_file:
     #     stock_data = json.load(json_file)['Global Quote']
+    #
 
     # If stock data date does not match last working day, we've a problem...
     if stock_date != last.working_day() and stock_date != today:
@@ -51,12 +59,14 @@ def main(argv):
             last_date_in_file))
         return
 
+    # Determine the name of the temporary JSON file, from the stock symbol
+    json_file = params.json_file.format(params.symbol)
+
+    # Build the CSV row to be added to the OHLC file, with latest info.
     row = closing.csv_row(stock_data, params.json_columns,
-                          params.ohlc_columns, params.json_file, params.log)
-    if params.file is not None:
-        closing.append_to_file(row, params.file, last.working_day(), params.log)
-    else:
-        print(row)
+                          params.ohlc_columns, json_file, params.log)
+    # Append that CSV row.
+    closing.append_to_file(row, params.file, last.working_day(), params.log)
 
 
 if __name__ == "__main__":

@@ -6,57 +6,27 @@ from logger import Logger
 
 
 class closing:
-    """
-    Get the last closing values from the specified stock provider
-    """
 
     @staticmethod
-    def alpha_vantage(url='https://www.alphavantage.co',
-                      api_entry='/query?',
-                      api_key=None,
-                      log=None,
-                      **kwargs) -> dict:
-        endpoint = url + api_entry
-        arguments = '&'.join(
-            '{}={}'.format(key, value) for key, value in kwargs.items())
-        arguments += '&apikey={}'.format(api_key)
-        endpoint = endpoint + arguments
-        if log is not None:
-            log.debug('Request: <{}>'.format(endpoint))
+    def retrieve_stock_data(params) -> (dict, str):
+        endpoint = params.url + params.api_entry
+        endpoint = endpoint + '&symbol={}'.format(params.symbol)
+        endpoint = endpoint + '&{}={}'.format(params.api_key_name, params.api_key)
+        params.log.debug('Request: <{}>'.format(endpoint))
 
         response = requests.get(endpoint).json()
-        if log is not None:
-            log.debug('Response: \n{}'.format(response))
+        params.log.debug('Response: \n{}'.format(response))
 
         stock_closing = dict()
-        for old_key in response['Global Quote'].keys():
-            stock_closing[old_key[4:]] = response['Global Quote'][old_key]
-
-        return stock_closing, stock_closing['latest trading day']
-
-    @staticmethod
-    def world_trading_data(
-            url='https://api.worldtradingdata.com/',
-            api_entry='api/v1/stock?',
-            api_key=None,
-            log=None,
-            **kwargs) -> dict:
-        endpoint = url + api_entry
-        arguments = '&'.join(
-            '{}={}'.format(key, value) for key, value in kwargs.items())
-        arguments += '&api_token={}'.format(api_key)
-        endpoint = endpoint + arguments
-        if log is not None:
-            log.debug('Request: <{}>'.format(endpoint))
-
-        response = requests.get(endpoint).json()
-        if log is not None:
-            log.debug('Response: \n{}'.format(response))
-
-        stock_closing = dict()
-        for old_key in response['data'][0].keys():
-            stock_closing[old_key[4:]] = response['Global Quote'][old_key]
-        return stock_closing
+        data_chunk = response[params.json_chunk_key]
+        if params.chunk_is_array:
+            data_chunk = data_chunk[0]
+        for json_key in params.json_columns.keys():
+            stock_closing[json_key] = data_chunk[
+                params.json_columns[json_key]]
+        if ' ' in stock_closing['date']:
+            stock_closing['date'] = stock_closing['date'].split(' ')[0]
+        return stock_closing, stock_closing['date']
 
     @staticmethod
     def csv_row(stock_data: dict,
