@@ -9,15 +9,15 @@ set -e
 usage()
 {
     cat <<EOF
-    usage: $0 -s SYMBOL [-h] [-c CONFIG_FILE]
+usage: $0 -s SYMBOL [-h] [-c CONFIG_FILE]
 
-    optional arguments:
-      -h, --help      show this help message and exit
-      -c CONFIG_FILE, --config CONFIG_FILE
-                      Relative path to configuration file to be used (YAML)
-                      by predictor and trader (same name).
-      -s SYMBOL       The acronym of the symbol to be retrieved from the
-                      stock information provider.
+optional arguments:
+  -h, --help      show this help message and exit
+  -c CONFIG_FILE, --config CONFIG_FILE
+                  Relative path to configuration file to be used (YAML)
+                  by predictor and trader (same name).
+  -s SYMBOL       The acronym of the symbol to be retrieved from the
+                  stock information provider.
 EOF
 }
 
@@ -50,16 +50,18 @@ if [[ "$SYMBOL" == "" ]]; then
   exit 1
 fi
 
-# Set environment
-OHLC_FILE="../data/${SYMBOL}/acciona_2019.csv"
+# Input files
+OHLC_FILE="../staging/${SYMBOL}/ohlcv.csv"
+PREDS_FILE="../staging/${SYMBOL}/predictions.csv"
+FORECAST_FILE="../staging/${SYMBOL}/forecast.csv"
+RL_MODEL="../staging/${SYMBOL}/rl_model"
+PORTFOLIO="../staging/${SYMBOL}/portfolio.json"
+SCALER="../staging/${SYMBOL}/scaler.pickle"
+
+# Temporary files
 TMP_OHLC="../output/${SYMBOL}/tail_ohlc.csv"
-PREDS_FILE="../staging/${SYMBOL}/pred_acciona_2019_8yw20_8yw10_8yw05.csv"
-FORECAST_FILE="../staging/${SYMBOL}/forecast_nov19.csv"
-RL_MODEL="../staging/${SYMBOL}/rl_model_acciona_2018b"
-PORTFOLIO="../staging/${SYMBOL}/portfolio_acciona_nov19b.json"
-SCALER="../staging/${SYMBOL}/scaler_konkorde_acciona_2018.pickle"
 LATEST_ACTION="output/${SYMBOL}/tmp_action.json"
-LATEST_OHLC="output/${SYMBOL}/tmp_ohlcv.json"
+LATEST_OHLC="output/${SYMBOL}/tmp_ohlc.json"
 
 
 # Get latest info from OHLC, and update file
