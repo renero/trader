@@ -44,15 +44,17 @@ class Update:
             return [abs(array[i] - value) for i in range(len(array))]
 
         # Method to compute the closest value in array to a given value
-        def find_nearest(array, value: float):
+        def whois_nearest(array, value: float):
             array = np.asarray(array).astype(np.float32)
             idx = (np.abs(array - value)).argmin()
-            return array[idx]
+            return idx
 
-        # Build the csv row to be added
+        # Preparation to determine who is the winner network
         close_colname = self.params.tmp_dictionary['close']
+        pred_keys = list(preds.keys())
         pred_values = np.around(np.array([preds[k] for k in preds.keys()]),
                                 decimals=2)
+        # Build the csv row to be added
         csv_row = '{},{}'.format(
             last_ohlc_date, ','.join(map(str, pred_values)))
         csv_row = csv_row + ',{},{},{},{},{}'.format(
@@ -60,7 +62,7 @@ class Update:
             np.mean(diff_with(pred_values, np.mean(pred_values))),
             np.median(pred_values),
             np.mean(diff_with(pred_values, np.median(pred_values))),
-            preds.keys()[find_nearest(pred_values, ohlc[close_colname])]
+            pred_keys[whois_nearest(pred_values, ohlc[close_colname])]
         )
 
         # Append the row at the end of the file
