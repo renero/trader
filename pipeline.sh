@@ -65,7 +65,7 @@ LATEST_OHLC="output/${SYMBOL}/tmp_ohlc.json"
 
 # Commands
 DATE=`date '+%F %T'`
-LOGHEADER="$DATE - INFO  - pipeline:stage                  -"
+LOGHEADER="$DATE - INFO  -"
 
 # Get latest info from OHLC, and update file
 echo "$LOGHEADER Retrieving latest OHLC data"
@@ -74,9 +74,9 @@ python retriever.py --config "${CONFIG_FILE}" --symbol "${SYMBOL}" --file "${OHL
 
 # Update the predictions file with yesterday's closing (just retrieved) and
 # the latest forecast made (tmp_predictions)
-echo "$LOGHEADER Updating predictions file"
+echo "$LOGHEADER Update predictions"
 cd ../updater
-python updater.py predictions --config ${CONFIG_FILE} --file ${FORECAST_FILE}
+python updater.py predictions --config ${CONFIG_FILE} --file ${PREDS_FILE}
 
 # Generate a small sample to run predictions on it (smaller = faster)
 echo "$LOGHEADER Generating tmp OHLC file"

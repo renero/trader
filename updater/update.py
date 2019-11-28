@@ -23,7 +23,7 @@ class Update:
         - check that latest date doesn't match the one from last working day
         - append a row with the predictions from each network, and the stats
         """
-        self.log.info('Updating predictions file')
+        self.log.info('Updating predictions file: {}'.format(self.params.file))
         preds = self.read_json(self.params.tmp_predictions)
         ohlc = self.read_json(self.params.tmp_ohlc)
         if preds is None or ohlc is None:
@@ -57,12 +57,12 @@ class Update:
         # Build the csv row to be added
         csv_row = '{},{}'.format(
             last_ohlc_date, ','.join(map(str, pred_values)))
-        csv_row = csv_row + ',{},{},{},{},{}'.format(
+        csv_row = csv_row + ',{:.2f},{:.2f},{:.2f},{:.2f},{}'.format(
             np.mean(pred_values),
             np.mean(diff_with(pred_values, np.mean(pred_values))),
             np.median(pred_values),
             np.mean(diff_with(pred_values, np.median(pred_values))),
-            pred_keys[whois_nearest(pred_values, ohlc[close_colname])]
+            pred_keys[whois_nearest(pred_values, float(ohlc[close_colname]))]
         )
 
         # Append the row at the end of the file
@@ -73,7 +73,7 @@ class Update:
         return True
 
     def forecast(self):
-        self.log.info('Updating forecast file')
+        self.log.info('Updating forecast file: {}'.format(self.params.file))
         # Read the temporary files
         ohlc = self.read_json(self.params.tmp_ohlc)
         ensemble = self.read_json(self.params.tmp_forecast)
@@ -111,7 +111,20 @@ class Update:
 
     def last_date_is(self, df, this_date):
         """ Checks if last row's date matches the one passed. """
-        date_column = self.params.forecast_column_names[0]
+        # determine what is the column for date in the data frame
+        if 'forecast_column_names' in self.params:
+            date_column = self.params.forecast_column_names[0].lower()
+        else:
+            self.log.debug('No dictionary for preds file columns. Using `date`')
+            date_column = 'date'
+        df_columns = list(map(lambda s: s.lower(), df.columns))
+        try:
+            idx = df_columns.index(date_column)
+        except ValueError:
+            self.log.error('No date column found in {}'.format(
+                self.params.file))
+            raise
+        date_column = list(df.columns)[idx]
         last_date_in_file = df.iloc[-1][date_column]
         return last_date_in_file == this_date
 
