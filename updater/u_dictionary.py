@@ -15,7 +15,7 @@ class UDictionary(Dictionary):
         else:
             parameters_file = default_params_filename
         super().__init__(parameters_file, **kwargs)
-
+        setattr(self, 'action', arguments.args.action)
         setattr(self, 'file', arguments.args.file[0])
 
         #

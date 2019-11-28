@@ -1,0 +1,37 @@
+#
+# Parameters for retriever.py
+#
+
+# What stock brokering service to use?
+service: alpha_vantage
+url: https://www.alphavantage.co
+api_entry: '/query?function=GLOBAL_QUOTE'
+api_key: <place your api key here>
+api_key_name: apikey
+
+# Under which key is located the data in the dictionary returned by provider?
+json_chunk_key: Global Quote
+# Set to True if the response contains an array, from which we must extract
+# the stock data.
+chunk_is_array: False
+
+# tmp json file
+json_file: ../output/ANA.MC/tmp_ohlc.csv
+
+# JSON key names to be selected once retrieved the info
+json_columns:
+  date: 07. latest trading day
+  open: 02. open
+  high: 03. high
+  low: 04. low
+  close: 05. price
+  volume: 06. volume
+
+# Names of the columns in the OHLC file where the retrieved entry will be appended.
+ohlc_columns:
+  - Date
+  - Open
+  - Close
+  - High
+  - Low
+  - Volume

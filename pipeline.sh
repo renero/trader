@@ -9,15 +9,15 @@ set -e
 usage()
 {
     cat <<EOF
-    usage: $0 -s SYMBOL [-h] [-c CONFIG_FILE]
+usage: $0 -s SYMBOL [-h] [-c CONFIG_FILE]
 
-    optional arguments:
-      -h, --help      show this help message and exit
-      -c CONFIG_FILE, --config CONFIG_FILE
-                      Relative path to configuration file to be used (YAML)
-                      by predictor and trader (same name).
-      -s SYMBOL       The acronym of the symbol to be retrieved from the
-                      stock information provider.
+optional arguments:
+  -h, --help      show this help message and exit
+  -c CONFIG_FILE, --config CONFIG_FILE
+                  Relative path to configuration file to be used (YAML)
+                  by predictor and trader (same name).
+  -s SYMBOL       The acronym of the symbol to be retrieved from the
+                  stock information provider.
 EOF
 }
 
@@ -50,33 +50,50 @@ if [[ "$SYMBOL" == "" ]]; then
   exit 1
 fi
 
-# Set environment
-OHLC_FILE="../data/${SYMBOL}/acciona_2019.csv"
-TMP_OHLC="../output/${SYMBOL}/tail_ohlc.csv"
-PREDS_FILE="../staging/${SYMBOL}/pred_acciona_2019_8yw20_8yw10_8yw05.csv"
-FORECAST_FILE="../staging/${SYMBOL}/forecast_nov19.csv"
-RL_MODEL="../staging/${SYMBOL}/rl_model_acciona_2018b"
-PORTFOLIO="../staging/${SYMBOL}/portfolio_acciona_nov19b.json"
-SCALER="../staging/${SYMBOL}/scaler_konkorde_acciona_2018.pickle"
-LATEST_ACTION="output/${SYMBOL}/tmp_action.json"
-LATEST_OHLC="output/${SYMBOL}/tmp_ohlcv.json"
+# Input files
+OHLC_FILE="../staging/${SYMBOL}/ohlcv.csv"
+PREDS_FILE="../staging/${SYMBOL}/predictions.csv"
+FORECAST_FILE="../staging/${SYMBOL}/forecast.csv"
+RL_MODEL="../staging/${SYMBOL}/rl_model"
+PORTFOLIO="../staging/${SYMBOL}/portfolio.json"
+SCALER="../staging/${SYMBOL}/scaler.pickle"
 
+# Temporary files
+TMP_OHLC="../output/${SYMBOL}/tail_ohlc.csv"
+LATEST_ACTION="output/${SYMBOL}/tmp_action.json"
+LATEST_OHLC="output/${SYMBOL}/tmp_ohlc.json"
+
+# Commands
+DATE=`date '+%F %T'`
+LOGHEADER="$DATE - INFO  -"
 
 # Get latest info from OHLC, and update file
+echo "$LOGHEADER Retrieving latest OHLC data"
 cd retriever
-python retriever.py --config ${CONFIG_FILE} --symbol ${SYMBOL} --file ${OHLC_FILE}
+python retriever.py --config "${CONFIG_FILE}" --symbol "${SYMBOL}" --file "${OHLC_FILE}"
+
+# Update the predictions file with yesterday's closing (just retrieved) and
+# the latest forecast made (tmp_predictions)
+echo "$LOGHEADER Update predictions"
+cd ../updater
+python updater.py predictions --config ${CONFIG_FILE} --file ${PREDS_FILE}
 
 # Generate a small sample to run predictions on it (smaller = faster)
+echo "$LOGHEADER Generating tmp OHLC file"
 head -1 ${OHLC_FILE} > ${TMP_OHLC}
 tail -50 ${OHLC_FILE} >> ${TMP_OHLC}
 
 # Predict What will be the next value for stock, from each network trained.
+echo "$LOGHEADER Predicting closing values"
 cd ../predictor
 python predictor.py predict --config ${CONFIG_FILE} --file ${TMP_OHLC}
+
 # Produce the ensemble from all predictions from all networks
+echo "$LOGHEADER Computing ensemble"
 python predictor.py ensemble --config ${CONFIG_FILE} --file ${PREDS_FILE}
 
 # Generate Konkorde index for the latest addition to the OHLC file
+echo "$LOGHEADER Computing technical indicators"
 cd ../indicators
 python indicators.py --today --config ${CONFIG_FILE} -f ${OHLC_FILE} --scaler-file ${SCALER}
 
@@ -84,10 +101,12 @@ python indicators.py --today --config ${CONFIG_FILE} -f ${OHLC_FILE} --scaler-fi
 # - the closing for yesterday,
 # - the forecast for today
 # - the values of the indicator (konkorde) for yesterday closing
+echo "$LOGHEADER Updating forecast file"
 cd ../updater
-python updater.py --config ${CONFIG_FILE} --file ${FORECAST_FILE}
+python updater.py forecast --config ${CONFIG_FILE} --file ${FORECAST_FILE}
 
 # Generate a trading recommendation
+echo "$LOGHEADER Running trader"
 cd ../trader
 python trader.py predict --config ${CONFIG_FILE} -f ${FORECAST_FILE} --model ${RL_MODEL} --portfolio ${PORTFOLIO}
 
@@ -102,8 +121,7 @@ elif [ "$ACTION" == "buy" ]; then
 else
     REFERENCE=""
 fi
-echo -n "The recommendation is... "
-echo "${ACTION} ${REFERENCE}"
+echo "${LOGHEADER} The recommendation is ${ACTION} ${REFERENCE}"
 
 # Simulate the portfolio so far, to check how it goes.
 echo "Simulation for existing portfolio ${PORTFOLIO}"

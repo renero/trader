@@ -15,7 +15,10 @@ class RTDictionary(Dictionary):
             parameters_file = default_params_filename
         super().__init__(parameters_file, **kwargs)
 
-        setattr(self, 'file', arguments.args.file[0])
+        if arguments.args.file is not None:
+            setattr(self, 'file', arguments.args.file[0])
+        else:
+            setattr(self, 'file', None)
         setattr(self, 'symbol', arguments.args.symbol[0])
 
         #

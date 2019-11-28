@@ -63,8 +63,11 @@ class Ensemble:
 
     def compute_weights(self, preds: DataFrame) -> DataFrame:
         self.log.debug('Computing weights from different networks')
-        self.net_names = preds.columns[1:self.num_preds + 1]
+        # Take only the names of the networks
+        from_position = list(preds.columns).index('actual') + 1
+        self.net_names = preds.columns[from_position:self.num_preds + 1]
         self.log.debug('Network names: {}'.format(self.net_names))
+        # Compute proportions
         proportions = preds.winner.value_counts()
         weights = pd.DataFrame({'proportion': proportions,
                                 'weight': pd.Series(index=proportions.index)})
