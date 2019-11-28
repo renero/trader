@@ -6,9 +6,7 @@ from update import Update as update
 
 def main(argv):
     params = UDictionary(args=argv)
-    log = params.log
-    log.info('Updating reference files.')
-    update(params)
+    update(params, params.action)
 
 
 if __name__ == "__main__":
