@@ -4,13 +4,18 @@ FROM python:3.7.4-slim-buster
 # Update Ubuntu Software repository
 RUN apt-get update
 RUN apt-get install -y vim
+RUN apt-get install -y patch
 
 # Upgrade pip
 RUN pip install --upgrade pip
 
 # Create folder structure and install requirements
 RUN mkdir -p /trader
-# RUN mkdir -p /trader/output
+
+# Patch tensorflow
+RUN patch /usr/local/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py < output/tf_patch1.patch
+RUN patch /usr/local/lib/python3.7/site-packages/tensorboard/compat/tensorflow_stub/dtypes.py < output/tf_patch2.patch
+RUN patch /usr/local/lib/python3.7/site-packages/tensorflow/python/framework/dtypes.py < output/tf_patch3.patch
 
 ADD ./requirements.txt /trader
 WORKDIR /trader
