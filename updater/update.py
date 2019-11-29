@@ -57,7 +57,7 @@ class Update:
         # Build the csv row to be added
         csv_row = '{},{}'.format(
             last_ohlc_date, ','.join(map(str, pred_values)))
-        csv_row = csv_row + ',{:.2f},{:.2f},{:.2f},{:.2f},{}'.format(
+        csv_row = csv_row + ',{:.2f},{:.2f},{:.2f},{:.2f},{}\n'.format(
             np.mean(pred_values),
             np.mean(diff_with(pred_values, np.mean(pred_values))),
             np.median(pred_values),
