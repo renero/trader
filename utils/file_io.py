@@ -1,4 +1,5 @@
 import errno
+import json
 import os
 from os.path import dirname, realpath, join
 from pathlib import Path
@@ -106,7 +107,15 @@ def read_ohlc(filename: str, csv_dict: dict, **kwargs) -> DataFrame:
     df = df[columns_order]
     df.columns = csv_dict.keys()
 
-    # Set index to date field
-    # df.date = pd.to_datetime(df.date)
-    # df = df.set_index(df.iloc[:, 0].name)
     return df
+
+
+def read_json(filename):
+    """ Reads a JSON file, returns a dict. If file does not exists
+    returns None """
+    if os.path.exists(filename):
+        with open(filename) as json_file:
+            data = json.load(json_file)
+        return data
+    else:
+        return None

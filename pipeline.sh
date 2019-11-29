@@ -29,17 +29,17 @@ SYMBOL=""
 CONFIG_FILE=params.yaml
 while [ "$1" != "" ]; do
     case $1 in
-        -c | --config )         shift
-                                CONFIG_FILE=$1
-                                ;;
-        -s | --symbol )         shift
-                                SYMBOL=$1
-                                ;;
-        -h | --help )           usage
-                                exit
-                                ;;
-        * )                     usage
-                                exit 1
+        -c | --config )  shift
+                         CONFIG_FILE=$1
+                         ;;
+        -s | --symbol )  shift
+                         SYMBOL=$1
+                         ;;
+        -h | --help )    usage
+                         exit
+                         ;;
+        * )              usage
+                         exit 1
     esac
     shift
 done
@@ -64,8 +64,8 @@ LATEST_ACTION="output/${SYMBOL}/tmp_action.json"
 LATEST_OHLC="output/${SYMBOL}/tmp_ohlc.json"
 
 # Commands
-DATE=`date '+%F %T'`
-LOGHEADER="$DATE - INFO  -"
+DATE=$(date '+%F %T')
+LOGHEADER="$DATE ---------"
 
 # Get latest info from OHLC, and update file
 echo "$LOGHEADER Retrieving latest OHLC data"
@@ -76,26 +76,26 @@ python retriever.py --config "${CONFIG_FILE}" --symbol "${SYMBOL}" --file "${OHL
 # the latest forecast made (tmp_predictions)
 echo "$LOGHEADER Update predictions"
 cd ../updater
-python updater.py predictions --config ${CONFIG_FILE} --file ${PREDS_FILE}
+python updater.py predictions --config "${CONFIG_FILE}" --file "${PREDS_FILE}"
 
 # Generate a small sample to run predictions on it (smaller = faster)
 echo "$LOGHEADER Generating tmp OHLC file"
-head -1 ${OHLC_FILE} > ${TMP_OHLC}
-tail -50 ${OHLC_FILE} >> ${TMP_OHLC}
+head -1 "${OHLC_FILE}" > "${TMP_OHLC}"
+tail -50 "${OHLC_FILE}" >> "${TMP_OHLC}"
 
 # Predict What will be the next value for stock, from each network trained.
 echo "$LOGHEADER Predicting closing values"
 cd ../predictor
-python predictor.py predict --config ${CONFIG_FILE} --file ${TMP_OHLC}
+python predictor.py predict --config "${CONFIG_FILE}" --file "${TMP_OHLC}"
 
 # Produce the ensemble from all predictions from all networks
 echo "$LOGHEADER Computing ensemble"
-python predictor.py ensemble --config ${CONFIG_FILE} --file ${PREDS_FILE}
+python predictor.py ensemble --config "${CONFIG_FILE}" --file "${PREDS_FILE}"
 
 # Generate Konkorde index for the latest addition to the OHLC file
 echo "$LOGHEADER Computing technical indicators"
 cd ../indicators
-python indicators.py --today --config ${CONFIG_FILE} -f ${OHLC_FILE} --scaler-file ${SCALER}
+python indicators.py --today --config "${CONFIG_FILE}" -f "${OHLC_FILE}" --scaler-file "${SCALER}"
 
 # Update the forecast file with
 # - the closing for yesterday,
@@ -103,12 +103,12 @@ python indicators.py --today --config ${CONFIG_FILE} -f ${OHLC_FILE} --scaler-fi
 # - the values of the indicator (konkorde) for yesterday closing
 echo "$LOGHEADER Updating forecast file"
 cd ../updater
-python updater.py forecast --config ${CONFIG_FILE} --file ${FORECAST_FILE}
+python updater.py forecast --config "${CONFIG_FILE}" --file "${FORECAST_FILE}"
 
 # Generate a trading recommendation
 echo "$LOGHEADER Running trader"
 cd ../trader
-python trader.py predict --config ${CONFIG_FILE} -f ${FORECAST_FILE} --model ${RL_MODEL} --portfolio ${PORTFOLIO}
+python trader.py predict --config "${CONFIG_FILE}" -f "${FORECAST_FILE}" --model "${RL_MODEL}" --portfolio "${PORTFOLIO}"
 
 # Extract the action to be taken and base price to send it over.
 cd ..
@@ -126,5 +126,5 @@ echo "${LOGHEADER} The recommendation is ${ACTION} ${REFERENCE}"
 # Simulate the portfolio so far, to check how it goes.
 echo "Simulation for existing portfolio ${PORTFOLIO}"
 cd trader
-python trader.py simulate --config ${CONFIG_FILE} --no-dump -f ${FORECAST_FILE} --model ${RL_MODEL} --debug 0
+python trader.py simulate --config "${CONFIG_FILE}" --no-dump -f "${FORECAST_FILE}" --model "${RL_MODEL}" --debug 0
 cd ..

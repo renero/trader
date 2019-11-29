@@ -1,9 +1,7 @@
-import json
-import os
-import sys
-
 import numpy as np
 import pandas as pd
+
+from file_io import read_json
 
 
 class Update:
@@ -24,8 +22,8 @@ class Update:
         - append a row with the predictions from each network, and the stats
         """
         self.log.info('Updating predictions file: {}'.format(self.params.file))
-        preds = self.read_json(self.params.tmp_predictions)
-        ohlc = self.read_json(self.params.tmp_ohlc)
+        preds = read_json(self.params.tmp_predictions)
+        ohlc = read_json(self.params.tmp_ohlc)
         if preds is None or ohlc is None:
             self.log.info('No temporary files to be used to update preds.')
             return False
@@ -75,9 +73,9 @@ class Update:
     def forecast(self):
         self.log.info('Updating forecast file: {}'.format(self.params.file))
         # Read the temporary files
-        ohlc = self.read_json(self.params.tmp_ohlc)
-        ensemble = self.read_json(self.params.tmp_forecast)
-        indicator = self.read_json(self.params.tmp_indicator)
+        ohlc = read_json(self.params.tmp_ohlc)
+        ensemble = read_json(self.params.tmp_forecast)
+        indicator = read_json(self.params.tmp_indicator)
         self.log.info('Read temporary files')
 
         # flesh out the CSV row
@@ -109,8 +107,9 @@ class Update:
 
         return True
 
+    # TODO: Move this method to `last.py` and rework.
     def last_date_is(self, df, this_date):
-        """ Checks if last row's date matches the one passed. """
+        """ Checks if last row's date in the file, matches the one passed. """
         # determine what is the column for date in the data frame
         if 'forecast_column_names' in self.params:
             date_column = self.params.forecast_column_names[0].lower()
@@ -127,22 +126,6 @@ class Update:
         date_column = list(df.columns)[idx]
         last_date_in_file = df.iloc[-1][date_column]
         return last_date_in_file == this_date
-
-    def read_json(self, filename):
-        """ Reads a JSON file, returns a dict. If file does not exists
-        returns None """
-        if os.path.exists(filename):
-            with open(filename) as json_file:
-                try:
-                    data = json.load(json_file)
-                except:
-                    self.log.error(
-                        'Unexpected error, reading JSON File ({}): {}'.format(
-                            filename, sys.exc_info()[0]))
-                    raise
-            return data
-        else:
-            return None
 
     @staticmethod
     def round2two(x):
