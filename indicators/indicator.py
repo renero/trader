@@ -51,7 +51,6 @@ class Indicator:
         self.log.info('Saved scaler to file: {}'.format(scaler_saved))
         self.log.info('Saved index to file: {}'.format(ix_saved))
 
-    # TODO mergeable data is one row shorter than index_data (wrong!)
     def merge(self):
         """
         Merges the indicator columns at the end of each row of a file
@@ -66,8 +65,10 @@ class Indicator:
         # I must merge only rows starting at the same date as initial date
         # in the forecast file
         first_date = mergeable_data.iloc[0, 0]
+        last_date = mergeable_data.iloc[-1, 0]
         first_row = self.values.index[self.values.date == first_date][0]
-        index_data = self.values.iloc[first_row:, :]
+        last_row = self.values.index[self.values.date == last_date][0]
+        index_data = self.values.iloc[first_row:last_row+1, :]
 
         ix_data = pd.DataFrame()
         ix_data[self.ix_columns] = index_data[self.ix_columns].copy(deep=True)

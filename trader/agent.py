@@ -152,7 +152,7 @@ class Agent(Common):
             state = next_state
         # Do I need to init a portfolio, after a simulation
         if self.params.init_portfolio:
-            environment.dump(init=True)
+            environment.save_portfolio(init=True)
         # display the result of the simulation
         self.params.display.summary(environment.memory.results,
                                     environment.portfolio,
@@ -180,7 +180,7 @@ class Agent(Common):
 
         # Save the updated portfolio, overwriting the file.
         if self.params.no_dump is not True:
-            environment.dump()
+            environment.save_portfolio()
 
     def q_load(self,
                env: Environment,

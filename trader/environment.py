@@ -188,7 +188,7 @@ class Environment(Common):
 
         return self.new_state_, self.reward_, self.done_, self.t
 
-    def dump(self, init=False):
+    def save_portfolio(self, init=False):
         """
         Save all relevant information about the environment to later
         recover the state during a simulation. This implies saving Portfolio,
@@ -209,7 +209,7 @@ class Environment(Common):
         # initialized, otherwise it will be replaced.
         if init is True:
             json_filename = valid_output_name(self.params.portfolio_name,
-                                              path='../output/',
+                                              path=self.params.models_dir,
                                               extension='json')
         else:
             json_filename = self.params.portfolio_name
