@@ -20,7 +20,6 @@ RUN pip3 install -r requirements.txt
 ADD . /trader
 WORKDIR /trader
 VOLUME /trader
-VOLUME /Users/renero/trader/data:/trader/data
 VOLUME /Users/renero/trader/output:/trader/output
 VOLUME /Users/renero/trader/staging:/trader/staging
 

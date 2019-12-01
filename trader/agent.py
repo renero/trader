@@ -174,7 +174,8 @@ class Agent(Common):
         next_state, reward, done, _ = environment.step(action)
 
         # Save the action to the tmp file.
-        pd.Series({'action': self.params.action[action]}).to_json(
+        last_action = environment.memory.results.iloc[-1]['action']
+        pd.Series({'action': last_action}).to_json(
             self.params.json_action)
         self.log.info('Saved action to: {}'.format(self.params.json_action))
 
