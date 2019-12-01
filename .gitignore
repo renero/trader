@@ -176,3 +176,5 @@ dmypy.json
 tmp
 Untitled.ipynb
 params.???.yaml
+init_symbol.sh
+resources/slack/
