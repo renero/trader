@@ -2,7 +2,7 @@ numpy==1.17
 pandas==0.25
 requests==2.22
 scikit-learn==0.21.3
-tabulate==0.8
+tabulate==0.8.5
 tensorflow==1.14
 termcolor==1.1
 holidays
