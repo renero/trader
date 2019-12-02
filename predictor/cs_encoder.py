@@ -501,7 +501,7 @@ class CSEncoder:
         """
         encoder_filename = valid_output_name(
             'encoder_{}_w{}'.format(self.dataset, self.params.window_size),
-            path=self.params.predictions_path,
+            path=self.params.models_dir,
             extension='pickle'
         )
         with open(encoder_filename, 'wb') as f:
