@@ -89,6 +89,8 @@ class Portfolio(Common):
             action_name, self.reward))
         return self.reward
 
+    # TODO: memory.record_action should be in AGENT, not here.
+    #       same for sell action, below.
     def buy(self, num_shares: float = 1.0) -> object:
         buy_price = num_shares * self.latest_price
         if buy_price > self.budget:
@@ -177,7 +179,7 @@ class Portfolio(Common):
             return 0.0
         else:
             if action_name == 'wait' and self.shares == 0.:
-                self.log.debug('  direct reward: wait & shares>0 => -.05')
+                self.log.debug('  direct reward: wait & shares=0 => -.05')
                 return -0.05
             net_value = self.portfolio_value - self.investment
             # Check if this is a failed situation 'f.buy' or 'f.sell',
