@@ -92,6 +92,9 @@ class Agent(Common):
                 # Send the action to the environment and get new state,
                 # reward and information on whether we've finish.
                 new_state, reward, done, _ = env.step(action)
+                # Experimental BEARish mode
+                if self.params.mode == 'bear':
+                    reward *= -1.
                 self.experience.append((state, action, reward, new_state, done))
                 loss, mae = self.nn.do_learn(episode, episode_step,
                                              self.experience)
@@ -175,8 +178,8 @@ class Agent(Common):
 
         # Save the action to the tmp file.
         last_action = environment.memory.results.iloc[-1]['action']
-        pd.Series({'action': last_action}).to_json(
-            self.params.json_action)
+        self.log.info('Last action is: {}'.format(last_action))
+        pd.Series({'action': last_action}).to_json(self.params.json_action)
         self.log.info('Saved action to: {}'.format(self.params.json_action))
 
         # Save the updated portfolio, overwriting the file.

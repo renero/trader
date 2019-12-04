@@ -164,8 +164,10 @@ class Environment(Common):
         self.log.debug('STEP ITERATION - t={} -'.format(self.t))
         self.log.debug('t={}, price={}, action decided={} ({})'.format(
             self.t, self.price_, action, self.params.action_name[action]))
-        self.reward_ = getattr(self.portfolio,
-                               self.params.action_name[action])()
+
+        # Compute reward by calling action and record experience.
+        action_name = self.params.action_name[action]
+        self.reward_ = getattr(self.portfolio, action_name)()
         self.memory.record_reward(self.reward_,
                                   self.current_state_,
                                   self.states.name(self.current_state_))
