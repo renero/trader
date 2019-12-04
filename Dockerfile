@@ -22,6 +22,7 @@ WORKDIR /trader
 VOLUME /trader
 VOLUME /Users/renero/trader/output:/trader/output
 VOLUME /Users/renero/trader/staging:/trader/staging
+VOLUME /tmp:/tmp
 
 # Patch tensorflow
 RUN patch /usr/local/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py < /trader/output/tf_patch1.patch

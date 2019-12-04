@@ -170,6 +170,7 @@ class Agent(Common):
         """
         state = environment.resume()
         action = environment.decide_next_action(state, strategy)
+        self.log.info('Decided action is: {}'.format(action))
         if self.params.stop_drop is True:
             action = Spring(self.params, environment.price_).check(
                 action, environment.price_)
