@@ -32,7 +32,7 @@ class Update:
         existing_preds = pd.read_csv(self.params.file, self.params.delimiter)
         last_ohlc_date = ohlc[self.params.tmp_dictionary.date]
         if self.last_date_is(existing_preds, last_ohlc_date):
-            self.log.info(
+            self.log.warn(
                 'Predictions file already contains entry for date: {}'.format(
                     last_ohlc_date))
             return False
@@ -97,7 +97,7 @@ class Update:
         date_column = self.params.forecast_column_names[0]
         last_date_in_file = forecast_data.iloc[-1][date_column]
         if last_date_in_file == ohlc[self.params.tmp_dictionary.date]:
-            self.log.info(
+            self.log.warn(
                 'Forecast file already contains entry for date: {}'.format(
                     ohlc[self.params.tmp_dictionary.date]))
             return False

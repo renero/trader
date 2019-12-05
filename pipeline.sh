@@ -60,7 +60,7 @@ SCALER="../staging/${SYMBOL}/scaler.pickle"
 
 # Temporary files
 TMP_DIR="/tmp/trader"
-TMP_OHLC="../output/${SYMBOL}/tail_ohlc.csv"
+TMP_OHLC="${TMP_DIR}/${SYMBOL}/tail_ohlc.csv"
 LATEST_ACTION="${TMP_DIR}/${SYMBOL}/tmp_action.json"
 LATEST_OHLC="${TMP_DIR}/${SYMBOL}/tmp_ohlc.json"
 
@@ -82,7 +82,7 @@ python updater.py predictions --config "${CONFIG_FILE}" --file "${PREDS_FILE}"
 # Generate a small sample to run predictions on it (smaller = faster)
 echo "$LOGHEADER Generating tmp OHLC file"
 head -1 "${OHLC_FILE}" > "${TMP_OHLC}"
-tail -50 "${OHLC_FILE}" >> "${TMP_OHLC}"
+tail -90 "${OHLC_FILE}" >> "${TMP_OHLC}"
 
 # Predict What will be the next value for stock, from each network trained.
 echo "$LOGHEADER Predicting closing values"

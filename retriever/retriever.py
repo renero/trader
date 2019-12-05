@@ -45,7 +45,7 @@ def main(argv):
             last.working_day())
         raise ValueError(msg)
     elif stock_date == today and last_date_in_file == last.working_day():
-        log.info('Data already in file for date <{}>. Doing nothing'.format(
+        log.warn('Data already in file for date <{}>. Doing nothing'.format(
             last_date_in_file))
         return
 
