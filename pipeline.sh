@@ -59,9 +59,10 @@ PORTFOLIO="../staging/${SYMBOL}/portfolio.json"
 SCALER="../staging/${SYMBOL}/scaler.pickle"
 
 # Temporary files
+TMP_DIR="/tmp/trader"
 TMP_OHLC="../output/${SYMBOL}/tail_ohlc.csv"
-LATEST_ACTION="output/${SYMBOL}/tmp_action.json"
-LATEST_OHLC="output/${SYMBOL}/tmp_ohlc.json"
+LATEST_ACTION="${TMP_DIR}/${SYMBOL}/tmp_action.json"
+LATEST_OHLC="${TMP_DIR}/${SYMBOL}/tmp_ohlc.json"
 
 # Commands
 DATE=$(date '+%F %T')
@@ -109,6 +110,8 @@ python updater.py forecast --config "${CONFIG_FILE}" --file "${FORECAST_FILE}"
 echo "$LOGHEADER Running trader"
 cd ../trader
 python trader.py predict --config "${CONFIG_FILE}" -f "${FORECAST_FILE}" --model "${RL_MODEL}" --portfolio "${PORTFOLIO}"
+rv=$?
+echo "$LOGHEADER trader returned: ${rv}"
 
 # Extract the action to be taken and base price to send it over.
 cd ..
