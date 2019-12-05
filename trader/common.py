@@ -47,6 +47,8 @@ class Common:
             return self.white(string)
 
     def recolor(self, df, column_name):
+        if column_name not in df.columns:
+            return
         df[column_name] = df[column_name].apply(
             lambda x: '{}'.format(self.color(x)))
 

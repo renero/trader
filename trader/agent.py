@@ -92,6 +92,9 @@ class Agent(Common):
                 # Send the action to the environment and get new state,
                 # reward and information on whether we've finish.
                 new_state, reward, done, _ = env.step(action)
+                # Experimental BEARish mode
+                if self.params.mode == 'bear':
+                    reward *= -1.
                 self.experience.append((state, action, reward, new_state, done))
                 loss, mae = self.nn.do_learn(episode, episode_step,
                                              self.experience)
@@ -130,11 +133,12 @@ class Agent(Common):
             action = self.nn.predict(state)
         return action
 
-    def simulate(self, environment: Environment, strategy: list):
+    def simulate(self, environment: Environment, strategy: list, short=False):
         """
         Simulate over a dataset, given a strategy and an environment.
         :param environment: the environment for the simulation
         :param strategy: strategy data structure to be used in the simulat.
+        :param short: Only printout relevant columns (remove reward, state...)
         :return:
         """
         done = False
@@ -154,9 +158,14 @@ class Agent(Common):
         if self.params.init_portfolio:
             environment.save_portfolio(init=True)
         # display the result of the simulation
-        self.params.display.summary(environment.memory.results,
+        if short:
+            to_remove = {'reward', 'state', 'state_desc'}
+            to_display = list(
+                set(environment.memory.results.columns) - to_remove)
+        self.params.display.summary(environment.memory.results[to_display],
                                     environment.portfolio,
                                     do_plot=self.params.do_plot)
+        return 0
 
     def single_step(self, environment: Environment, strategy):
         """
@@ -166,7 +175,15 @@ class Agent(Common):
         :return: None
         """
         state = environment.resume()
+        if state == -1:
+            self.log.warn(
+                'Portfolio({}) and forecast({}) are in same state(len)'.format(
+                    self.params.portfolio_name, self.params.forecast_file))
+            self.log.warn('No action/recommendation produced by environment')
+            return -1
+
         action = environment.decide_next_action(state, strategy)
+        self.log.info('Decided action is: {}'.format(action))
         if self.params.stop_drop is True:
             action = Spring(self.params, environment.price_).check(
                 action, environment.price_)
@@ -175,13 +192,14 @@ class Agent(Common):
 
         # Save the action to the tmp file.
         last_action = environment.memory.results.iloc[-1]['action']
-        pd.Series({'action': last_action}).to_json(
-            self.params.json_action)
+        self.log.info('Last action is: {}'.format(last_action))
+        pd.Series({'action': last_action}).to_json(self.params.json_action)
         self.log.info('Saved action to: {}'.format(self.params.json_action))
 
         # Save the updated portfolio, overwriting the file.
         if self.params.no_dump is not True:
             environment.save_portfolio()
+        return 0
 
     def q_load(self,
                env: Environment,

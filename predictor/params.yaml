@@ -17,8 +17,8 @@ cse_tags: ['b', 'o', 'h', 'l', 'c']
 # predict_training. The second one (json_predict_path) is the name of the
 # json file used during the pipeline execution (highly ephemeral)
 predictions_path: ../output
-json_prediction: ../output/tmp_prediction.json
-json_forecast: ../output/tmp_forecast.json
+json_prediction: /tmp/trader/tmp_prediction.json
+json_forecast: /tmp/trader/tmp_forecast.json
 
 # Format of the screen output for predict_training. These are values to be
 # accepted by 'tabulate'.

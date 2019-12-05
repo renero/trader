@@ -76,6 +76,9 @@ class Update:
         ohlc = read_json(self.params.tmp_ohlc)
         ensemble = read_json(self.params.tmp_forecast)
         indicator = read_json(self.params.tmp_indicator)
+        if ohlc is None or ensemble is None or indicator is None:
+            self.log.info('NOT updating forecast. Missing files.')
+            return False
         self.log.info('Read temporary files')
 
         # flesh out the CSV row

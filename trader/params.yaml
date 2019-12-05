@@ -13,7 +13,7 @@ column_name:
 
 # Wanna save the model after training?
 models_dir: ../output/
-json_action: ../output/tmp_action.json
+json_action: /tmp/trader/tmp_action.json
 
 # Parameters for the Q-Learning function
 gamma: 0.95

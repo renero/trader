@@ -8,8 +8,9 @@ from rl_dictionary import RLDictionary
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
-def main(argv):
+def main(argv) -> int:
     # Init
+    return_value = 0
     params = RLDictionary(args=argv)
     environment = Environment(params)
     agent = Agent(params)
@@ -35,11 +36,13 @@ def main(argv):
         # simulate or predict
         if flag['simulate']:
             strategy = agent.q_load(environment)
-            agent.simulate(environment, strategy)
+            return_value = agent.simulate(environment, strategy, short=True)
         else:  # predict.
             strategy = agent.q_load(environment)
-            agent.single_step(environment, strategy)
+            return_value = agent.single_step(environment, strategy)
+
+    return return_value
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    sys.exit(main(sys.argv))
