@@ -5,6 +5,7 @@
 env.*
 README.md
 Dockerfile
+notneeded*
 
 # directories
 data/*
