@@ -1,5 +1,5 @@
-from datetime import datetime
 import time
+from datetime import datetime
 from math import log10, pow, floor
 
 import matplotlib.pyplot as plt
@@ -17,7 +17,6 @@ def ts() -> str:
 
 
 class Display(Common):
-
     """
     Consider this: https://stackoverflow.com/a/56982302
     to make plots independent processes.
@@ -64,11 +63,22 @@ class Display(Common):
         self.recolor(df, 'reward')
         if self.params.have_konkorde:
             self.recolor(df, 'konkorde')
+
+        # Reorder columns
+        df_cols = list(df.columns)
+        predef_cols = self.params.table_headers.copy()
+        reordered_cols = list(
+            filter(lambda x: x is not None,
+                   map(lambda x: x if x in df_cols else predef_cols.remove(x),
+                       predef_cols)))
+        df = df[reordered_cols]
+
         print(tabulate(df,
                        headers='keys',
                        tablefmt='psql',
                        showindex=False,
                        floatfmt=['.0f'] + ['.2f' for i in range(6)]))
+
         if totals:
             self.report_totals(portfolio)
         if do_plot is True:
@@ -289,4 +299,3 @@ class Display(Common):
             self.log.debug(
                 'Finished episode {} after {} steps]'.format(
                     episode, episode_step))
-
