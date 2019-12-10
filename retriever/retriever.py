@@ -33,18 +33,19 @@ def main(argv):
     log.info('Last date in file <{}>'.format(last_date_in_file))
 
     # If stock data date does not match last working day, we've a problem...
-    if stock_date != last.working_day() and stock_date != today:
+    last_working_day = last.working_day(country=params.country)
+    if stock_date != last_working_day and stock_date != today:
         msg = 'Latest stock DATE does not match last working day\n'
-        msg += '  {} != {}'.format(stock_date, last.working_day())
+        msg += '  {} != {}'.format(stock_date, last_working_day)
         raise ValueError(msg)
 
     # If data coming in is from today, stop.
-    elif stock_date == today and last_date_in_file != last.working_day():
+    elif stock_date == today and last_date_in_file != last_working_day:
         msg = 'Stock data from API is TODAY\'s data. Stopping.\n'
         msg += 'Latest row in OHLC file is not last working day\'s {}.'.format(
-            last.working_day())
+            last_working_day)
         raise ValueError(msg)
-    elif stock_date == today and last_date_in_file == last.working_day():
+    elif stock_date == today and last_date_in_file == last_working_day:
         log.warn('Data already in file for date <{}>. Doing nothing'.format(
             last_date_in_file))
         return
@@ -56,7 +57,7 @@ def main(argv):
     row = closing.csv_row(stock_data, params.json_columns,
                           params.ohlc_columns, json_file, params.log)
     # Append that CSV row.
-    closing.append_to_file(row, params.file, last.working_day(), params.log)
+    closing.append_to_file(row, params.file, last_working_day, params.log)
 
 
 if __name__ == "__main__":
