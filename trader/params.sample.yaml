@@ -4,80 +4,100 @@
 #
 
 # Data Path. Where is the data from which l#earning how to invest?
-data_path: ../data/forecast100.csv
+delimiter: ','
+column_name:
+  date: date
+  price: actual
+  forecast: forecast
+  green: verde
+  blue: azul
 
 # Wanna save the model after training?
-save_model: true
-models_dir: /Users/renero/Code/trader/output/
+models_dir: ../output/^GDAXI/
+json_action: /tmp/trader/^GDAXI/tmp_action.json
 
-# Specify here if you want to load a pre-trained model
-load_model: false
-model_file: ../output/model2.json
-weights_file: ../output/model2.h5
+# Mode (experimental) 'bear' or 'bull'. Default = 'bull'
+mode: bull
 
 # Parameters for the Q-Learning function
 gamma: 0.95
 epsilon: 1.0
-epsilon_min: 0.02
+epsilon_min: 0.01
 decay_factor: 0.995
 
+# 'train_steps' specify after how many steps call the 'fit' method
+# 'batch_size' indicates how many experiences to be fit at once.
+# 'start_episodes' indicates how many steps to run before starting to learn
+train_steps: 4
+batch_size: 8
+start_episodes: 0
+
 # Experience Replay batch size
-experience_replay: True
+experience_replay: true
 exp_batch_size: 16
 
-# TensorBoard?
-tensorboard: True
+# Konkorde threshold, above which we can consider an upward trend
+k_threshold: 0.15
 
+# Do I want to hijack actions when price drops?
+stop_drop: true
+stop_drop_rate: 0.02
+
+# TensorBoard?
+tensorboard: False
+tbdir: ./graphs/
 
 # Reduction factor is the amount by which the number of cells in the network
 # is to be reduced. If 1.0, then the num of cells will be the number of
 # possible states times the number of actions.
 cells_reduction_factor: 0.25
 
+# Num. of episodes to run simulate and learn
 # Every how many episodes display the update in q-learning?
-num_episodes_update: 100
+num_episodes: 300
+num_episodes_update: 10
 
 # How many previous states of the environment to store?
 stack_size: 3
 
-# Num. of episodes to run simulate and learn
-num_episodes: 200
-
 # Different states in which the environment might be.
 state:
-  portfolio_value:
+  Gain:
     names:
-      - EVEN
-      - WINN
+      - GAIN
       - LOSE
-  forecast:
+  HaveShares:
     names:
-      - STAL
-      - GOUP
-      - DOWN
-  got_shares:
+      - HAVE
+      - DONT
+  CanBuy:
     names:
-      - YESHAVE
-      - NOTHAVE
-  last_prediction:
+      - BUY
+      - NOB
+  CanSell:
     names:
-      - PUNKNW
-      - PVALID
-      - PWRONG
-  prevlast_pred:
+      - SELL
+      - NOS
+  PredUpward:
     names:
-      - PPUNKNW
-      - PPVALID
-      - PPWRONG
-  pplast_pred:
+      - UPW
+      - DWN
+  LastPredOk:
     names:
-      - PPPUNKNW
-      - PPPVALID
-      - PPPWRONG
-#  stop_loss:
-#    names:
-#      - STOPLOSS
-#      - NOSTPLOS
+      - LOK
+      - LNOK
+  PrevLastPredOk:
+    names:
+      - PLOK
+      - PLNOK
+  PrevPrevLastPredOk:
+    names:
+      - PPLOK
+      - PPLNOK
+  Konkorde:
+    names:
+      - UPTREND
+      - DOWNTREND
 
 # Actions to be accomplished by the agent (Portfolio class)
 action:
@@ -87,31 +107,49 @@ action:
 
 # Environment variables
 environment:
-  initial_budget: 2200.
+  initial_budget: 15000.
+  consider_stop_loss: false
   stop_loss: .05
-  reward_do_nothing: -1
-  reward_failed_buy: -1
-  reward_success_buy: 0
-  reward_failed_sell: -3
-  reward_positive_sell: +10
-  reward_negative_sell: -1
-  reward_stoploss_donothing: -1
-  reward_stoploss_buy: -100
-  reward_stoploss_sell: +100
-
-# Debug flag
-debug: true
+  direct_reward: true         # If True, reward is always netValue, not
+                              # considering the values below.
+  proportional_reward: false  # Controls if reward is multiplied by net value.
+                              # when selling shares. Incompatible with
+                              # direct_reward
+  reward_do_nothing: -1.      # -0.94
+  reward_success_buy: 0.      # -0.94
+  reward_positive_sell: +1.   # +0.45
+  reward_negative_sell: -0.1  # -0.24
+  reward_failed_buy: -1.      # +0.99
+  reward_failed_sell: -1.     # -0.45
 
 # Log headers
 table_headers:
   - t
+  - ts
   - price
   - forecast
   - budget
-  - cashflow
+  - investment
   - value
-  - netValue
+  - profit
   - shares
+  - konkorde
   - action
   - reward
   - state
+  - state_desc
+
+# Seed to be used
+seed: 25
+
+# Network parameters
+deep_qnet:
+  hidden_layers:
+    - 64
+    - 32
+    - 8
+  activation: relu
+  loss: mse
+  optimizer: adam
+  metrics:
+    - mae

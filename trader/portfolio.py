@@ -63,7 +63,7 @@ class Portfolio(Common):
 
     def update(self, price, forecast, konkorde=None):
         """
-        Updates portfolio after an interation step.
+        Updates portfolio after an iteration step.
         :param price: new price registered
         :param forecast: new forecast registered
         :param konkorde: the konkorde value (computed from green & blue read

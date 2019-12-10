@@ -6,14 +6,18 @@
 # Data Path. Where is the data from which l#earning how to invest?
 delimiter: ','
 column_name:
+  date: date
   price: actual
   forecast: forecast
   green: verde
   blue: azul
 
 # Wanna save the model after training?
-models_dir: ../output/
-json_action: /tmp/trader/tmp_action.json
+models_dir: ../output/^GDAXI/
+json_action: /tmp/trader/^GDAXI/tmp_action.json
+
+# Mode (experimental) 'bear' or 'bull'. Default = 'bull'
+mode: bull
 
 # Parameters for the Q-Learning function
 gamma: 0.95
@@ -103,7 +107,7 @@ action:
 
 # Environment variables
 environment:
-  initial_budget: 100. # 13000.
+  initial_budget: 15000.
   consider_stop_loss: false
   stop_loss: .05
   direct_reward: true         # If True, reward is always netValue, not
@@ -121,6 +125,7 @@ environment:
 # Log headers
 table_headers:
   - t
+  - ts
   - price
   - forecast
   - budget

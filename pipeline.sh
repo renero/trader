@@ -5,6 +5,7 @@
 #
 
 set -e
+shopt -s nullglob
 
 usage()
 {
@@ -67,6 +68,13 @@ LATEST_OHLC="${TMP_DIR}/${SYMBOL}/tmp_ohlc.json"
 # Commands
 DATE=$(date '+%F %T')
 LOGHEADER="$DATE ---------"
+
+# Backup all previous temporary files
+echo "$LOGHEADER Backing up previous iteration temporary files"
+for file in "${TMP_DIR}"/"${SYMBOL}"/tmp*
+do
+  mv "${file}" "${file}".bak
+done
 
 # Get latest info from OHLC, and update file
 echo "$LOGHEADER Retrieving latest OHLC data"
