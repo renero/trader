@@ -79,7 +79,8 @@ class closing:
 
     @staticmethod
     def append_to_file(row, file, date_to_append, log):
-        if last.row_date_is(date_to_append, file):
+        # if last.row_date_is(date_to_append, file):
+        if last.date_is(date_to_append, file):
             log.warn('Data already appended. Doing nothing here.')
             return
         with open(file, 'a') as fd:
