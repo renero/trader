@@ -18,6 +18,7 @@ class Environment(Common):
     current_state_ = 0
     t = 0
     portfolio = None
+    ts_ = None
     price_ = 0.
     forecast_ = 0.
     green_ = 0.
@@ -61,7 +62,7 @@ class Environment(Common):
                              self.forecast_,
                              self.memory)
         if creation_time is not True:
-            self.memory.record_values(self.portfolio, t=0)
+            self.memory.record_values(self.portfolio, t=0, ts=self.ts_)
         return self.update_state()
 
     def reset(self):
@@ -105,10 +106,13 @@ class Environment(Common):
         assert self.data_ is not None, 'Price series data has not been read yet'
         col_names = list(self.data_.columns)
 
+        self.ts_ = self.data_.iloc[
+            self.t, col_names.index(self.params.column_name['date'])]
         self.price_ = self.data_.iloc[
             self.t, col_names.index(self.params.column_name['price'])]
         self.forecast_ = self.data_.iloc[
             self.t, col_names.index(self.params.column_name['forecast'])]
+
         self.log.debug('t={}, updated market price/forecast ({}/{})'.format(
             self.t, self.price_, self.forecast_))
 
@@ -186,7 +190,7 @@ class Environment(Common):
         self.update_mkt_price()
         self.portfolio.update(self.price_, self.forecast_, self.konkorde_)
         self.new_state_ = self.update_state()
-        self.memory.record_values(self.portfolio, self.t)
+        self.memory.record_values(self.portfolio, self.t, self.ts_)
 
         return self.new_state_, self.reward_, self.done_, self.t
 
@@ -253,7 +257,7 @@ class Environment(Common):
         self.portfolio.memory = self.memory
         self.portfolio.update(self.price_, self.forecast_, self.konkorde_)
         self.update_state()
-        self.memory.record_values(self.portfolio, self.t)
+        self.memory.record_values(self.portfolio, self.t, self.ts_)
 
         # latest state is the previous to the last int the table.
         return self.current_state_

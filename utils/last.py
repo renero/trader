@@ -78,8 +78,48 @@ class last:
         last_date = existing_data.iloc[-1]['Date']
         return last_date
 
+    # @staticmethod
+    # def row_date_is(for_date: str, file: str) -> bool:
+    #     existing_data = pd.read_csv(file)
+    #     last_date = existing_data.iloc[-1]['Date']
+    #     return last_date == for_date
+
     @staticmethod
-    def row_date_is(for_date: str, file: str) -> bool:
-        existing_data = pd.read_csv(file)
-        last_date = existing_data.iloc[-1]['Date']
-        return last_date == for_date
+    def date_is(this_date, filename, **kwargs):
+        """
+        Checks if last row's date in the file, matches the one passed as
+        first argument.
+
+        :param this_date: The date we want to check is present in the last
+                            row of the file
+        :param filename: The name of the file to read.
+        :param log: the logger to be used in case of errors.
+
+        Additional arguments are passed to pandas.read_csv()
+        """
+        df = pd.read_csv(filename, **kwargs)
+        date_column = last.date_colname(df)
+        if date_column is None:
+            raise ValueError('No date column found in file {}'.format(filename))
+        last_date_in_file = df.iloc[-1][date_column]
+        return last_date_in_file == this_date
+
+    @staticmethod
+    def date_colname(df):
+        """
+        Determine what is the column for date in the data frame. If NOT found
+        return None
+        """
+        possible_names = ['date', 'fecha']
+        df_columns = list(map(lambda s: s.lower(), df.columns))
+        idx = -1
+        tries = 0
+        while idx < 0 and tries < len(possible_names):
+            try:
+                idx = df_columns.index(possible_names[tries])
+            except ValueError:
+                tries += 1
+        if tries > len(possible_names) or idx < 0:
+            return None
+        date_column = list(df.columns)[idx]
+        return date_column

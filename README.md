@@ -1,3 +1,5 @@
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/renero/trader)
+
 # trader
 RL Trader
 

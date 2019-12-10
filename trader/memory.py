@@ -22,14 +22,15 @@ class Memory:
         last_index = self.results.shape[0] - 1
         self.results.loc[last_index, 'action'] = action_name
 
-    def record_values(self, portfolio, t: int):
+    def record_values(self, portfolio, t: int, ts: str):
         """
         Records the values from portfolio in a new memory position
         :param portfolio:
         :param t: instant in time during simulation
+        :param ts: the timestamp of the entry
         :return: None
         """
-        values = [t] + portfolio.values_to_record()
+        values = [t] + [ts] + portfolio.values_to_record()
         row = Series(dict(zip(self.params.table_headers, values)))
         self.results = self.results.append(row, ignore_index=True)
 

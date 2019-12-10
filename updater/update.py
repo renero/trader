@@ -1,7 +1,7 @@
 import numpy as np
-import pandas as pd
 
 from file_io import read_json
+from last import last
 
 
 class Update:
@@ -29,9 +29,9 @@ class Update:
             return False
 
         # Read the preds file to check if last line has already been updated
-        existing_preds = pd.read_csv(self.params.file, self.params.delimiter)
         last_ohlc_date = ohlc[self.params.tmp_dictionary.date]
-        if self.last_date_is(existing_preds, last_ohlc_date):
+        if last.date_is(last_ohlc_date, self.params.file,
+                        delimiter=self.params.delimiter):
             self.log.warn(
                 'Predictions file already contains entry for date: {}'.format(
                     last_ohlc_date))
@@ -92,11 +92,9 @@ class Update:
         csv_row = ','.join(map(Update.round2two, forecast_items)) + '\n'
 
         # Read the forecast file to check if last line has already been updated
-        forecast_data = pd.read_csv(self.params.file,
-                                    delimiter=self.params.delimiter)
-        date_column = self.params.forecast_column_names[0]
-        last_date_in_file = forecast_data.iloc[-1][date_column]
-        if last_date_in_file == ohlc[self.params.tmp_dictionary.date]:
+        last_ohlc_date = ohlc[self.params.tmp_dictionary.date]
+        if last.date_is(last_ohlc_date, self.params.file,
+                        delimiter=self.params.delimiter):
             self.log.warn(
                 'Forecast file already contains entry for date: {}'.format(
                     ohlc[self.params.tmp_dictionary.date]))
@@ -109,26 +107,6 @@ class Update:
                 ohlc[self.params.tmp_dictionary.date]))
 
         return True
-
-    # TODO: Move this method to `last.py` and rework.
-    def last_date_is(self, df, this_date):
-        """ Checks if last row's date in the file, matches the one passed. """
-        # determine what is the column for date in the data frame
-        if 'forecast_column_names' in self.params:
-            date_column = self.params.forecast_column_names[0].lower()
-        else:
-            self.log.debug('No dictionary for preds file columns. Using `date`')
-            date_column = 'date'
-        df_columns = list(map(lambda s: s.lower(), df.columns))
-        try:
-            idx = df_columns.index(date_column)
-        except ValueError:
-            self.log.error('No date column found in {}'.format(
-                self.params.file))
-            raise
-        date_column = list(df.columns)[idx]
-        last_date_in_file = df.iloc[-1][date_column]
-        return last_date_in_file == this_date
 
     @staticmethod
     def round2two(x):
