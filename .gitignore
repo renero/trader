@@ -10,6 +10,7 @@ output/
 data/
 data/*
 log/
+s3/
 
 # Project dependent ignores
 params.yaml

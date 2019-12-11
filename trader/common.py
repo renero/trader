@@ -35,7 +35,7 @@ class Common:
         else:
             return self.white(string)
 
-    def cond_color(self, number, ref):
+    def cond_color(self, number: float, ref: float):
         string = '{:.2f}'.format(number)
         if number > ref:
             return self.green(string)

@@ -159,11 +159,12 @@ class Agent(Common):
             environment.save_portfolio(init=True)
         # display the result of the simulation
         if short:
-            to_remove = {'reward', 'state', 'state_desc'}
+            to_remove = {'konkorde', 'reward', 'state', 'state_desc'}
             to_display = list(
                 set(environment.memory.results.columns) - to_remove)
+        else:
+            to_display = environment.memory.results.columns
         self.params.display.summary(environment.memory.results[to_display],
-                                    environment.portfolio,
                                     do_plot=self.params.do_plot)
         return 0
 

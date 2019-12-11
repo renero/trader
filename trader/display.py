@@ -9,7 +9,6 @@ from tabulate import tabulate
 
 from common import Common
 from logger import Logger
-from portfolio import Portfolio
 
 
 def ts() -> str:
@@ -47,21 +46,31 @@ class Display(Common):
                 model.predict(np.identity(num_states)[i:i + 1])))
         print()
 
-    def summary(self,
-                results: DataFrame,
-                portfolio: Portfolio,
-                totals=True,
-                do_plot=False) -> None:
+    def summary(self, results: DataFrame, totals=True, do_plot=False) -> None:
+        """
+        Displays a nice colored table with the summary of results from current
+        simulation.
+        :param results: The table with the results from each iteration
+        :param totals:  Do I want totals at the end?
+        :param do_plot: Do I want to also display a nice plot?
+        :return: None
+        """
         df = results.copy()
         self.recolor_ref(df, 'forecast', 'price')
         self.reformat(df, 'price')
-        self.reformat(df, 'value')
-        self.reformat(df, 'shares')
-        self.recolor(df, 'budget')
-        self.recolor(df, 'profit')
-        self.recolor(df, 'investment')
-        self.recolor(df, 'reward')
-        if self.params.have_konkorde:
+        if 'value' in results.columns:
+            self.reformat(df, 'value')
+        if 'shares' in results.columns:
+            self.reformat(df, 'shares')
+        if 'budget' in results.columns:
+            self.recolor(df, 'budget')
+        if 'profit' in results.columns:
+            self.recolor(df, 'profit')
+        if 'investment' in results.columns:
+            self.recolor(df, 'investment')
+        if 'reward' in results.columns:
+            self.recolor(df, 'reward')
+        if 'konkorde' in results.columns:
             self.recolor(df, 'konkorde')
 
         # Reorder columns
@@ -72,36 +81,42 @@ class Display(Common):
                    map(lambda x: x if x in df_cols else predef_cols.remove(x),
                        predef_cols)))
         df = df[reordered_cols]
-
         print(tabulate(df,
                        headers='keys',
                        tablefmt='psql',
                        showindex=False,
                        floatfmt=['.0f'] + ['.2f' for i in range(6)]))
-
         if totals:
-            self.report_totals(portfolio)
+            self.report_totals(results)
         if do_plot is True:
             self.plot_results(results, self.params.have_konkorde)
 
-    def report_totals(self, portfolio):
+    def report_totals(self, results):
+        # Extract Portfolio valuation from the table
+        initial_budget = results.iloc[0].budget
+        budget = results.iloc[-1].budget
+        value = results.iloc[-1].value
+        shares = results.iloc[-1].shares
+        investment = results.iloc[-1].investment
+
         # total outcome and final metrics.
-        if portfolio.portfolio_value != 0.0:
-            total = portfolio.budget + portfolio.portfolio_value
+        print('Shares.....: {:d}'.format(int(shares)))
+        if value != 0.0:
+            balance = budget + value
         else:
-            total = portfolio.budget
-        percentage = 100. * ((total / portfolio.initial_budget) - 1.0)
-        print('Final....: € {:.2f} [{} %]'.format(
-            total, self.color(percentage)))
-        print('Budget...: € {:.1f} [{} %]'.format(
-            portfolio.budget,
-            self.color((portfolio.budget / portfolio.initial_budget) * 100.)))
-        print('Cash Flow: {}'.format(
-            self.color(portfolio.investment * -1.)))
-        print('Shares...: {:d}'.format(int(portfolio.shares)))
-        print('Sh.Value.: {:.1f}'.format(portfolio.portfolio_value))
-        print('P/L......: € {}'.format(
-            self.color(portfolio.portfolio_value - portfolio.investment)))
+            balance = budget
+        percentage = 100. * ((balance / initial_budget) - 1.0)
+        print('Balance....: €{} [{} %]'.format(
+            self.cond_color(balance, initial_budget), self.color(percentage)))
+        print('Budget.....: €{:.1f} [{} % of €{}]'.format(
+            budget,
+            self.color((budget / initial_budget) * 100.),
+            initial_budget))
+        print('Investment.: €{}'.format(
+            self.color(investment * -1.)))
+        print('Sh.Value...: €{:.1f}'.format(value))
+        print('P/L........: €{}'.format(
+            self.color(value - investment)))
 
     def progress(self, i, num_episodes, last_avg, start, end):
         """
