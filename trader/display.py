@@ -78,8 +78,7 @@ class Display(Common):
         predef_cols = self.params.table_headers.copy()
         reordered_cols = list(
             filter(lambda x: x is not None,
-                   map(lambda x: x if x in df_cols else predef_cols.remove(x),
-                       predef_cols)))
+                   map(lambda x: x if x in df_cols else None, predef_cols)))
         df = df[reordered_cols]
         print(tabulate(df,
                        headers='keys',

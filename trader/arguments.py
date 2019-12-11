@@ -35,6 +35,9 @@ class Arguments(object):
             '-m', '--model', nargs=1, type=str,
             help='RL Model file to be loaded (without the extension)')
         self.parser.add_argument(
+            '--short', action='store_true',
+            help='Display a short version of summary table when simulating')
+        self.parser.add_argument(
             '--no-dump', action='store_true',
             help='Do not dump temp json portfolio file after single_step')
         self.parser.add_argument(

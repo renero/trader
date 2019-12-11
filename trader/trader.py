@@ -31,12 +31,12 @@ def main(argv) -> int:
         if params.save_model is True:
             agent.nn.save_model(agent.model, environment.memory.results)
         # Simulate what has been learnt with the data.
-        agent.simulate(environment, strategy)
+        agent.simulate(environment, strategy, params.short)
     else:
         # simulate or predict
         if flag['simulate']:
             strategy = agent.q_load(environment)
-            return_value = agent.simulate(environment, strategy, short=True)
+            return_value = agent.simulate(environment, strategy, params.short)
         else:  # predict.
             strategy = agent.q_load(environment)
             return_value = agent.single_step(environment, strategy)
