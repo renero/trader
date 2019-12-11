@@ -135,18 +135,18 @@ class Display(Common):
             return int(floor(log10(x)))
 
         percentage = (i / num_episodes) * 100.0
-        msg = 'Epoch...: {:0{m}}/{:<{m}} [{:>5.1f}%] Avg reward: {:+.3f}'.format(
+        msg = 'Epoch {:0{m}}/{:<{m}} [{:>5.1f}%] Avg.reward: {:+.3f}'.format(
             i,
             num_episodes,
             percentage,
             last_avg,
             m=magnitude(num_episodes) + 1)
         if percentage == 0.0:
-            self.log.info('{} Est.time: UNKNOWN'.format(msg))
+            self.log.info('{} ETA: UNKNOWN'.format(msg))
             return
         elapsed = end - start
         remaining = ((100. - percentage) * elapsed) / percentage
-        self.log.info('{} Est.time: {}'.format(msg, self.timer(remaining)))
+        self.log.info('{} ETA: {}'.format(msg, self.timer(remaining)))
 
     @staticmethod
     def timer(elapsed):

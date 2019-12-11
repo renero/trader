@@ -68,5 +68,5 @@ class Common:
             axis=1)
 
     def recolor_action(self, df: DataFrame, action_column: str = 'action'):
-        df[action_column] = df.apply(
+        df[action_column] = df[action_column].apply(
             lambda x: '{}'.format(self.color_action(x)))
