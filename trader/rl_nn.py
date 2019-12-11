@@ -70,8 +70,7 @@ class RL_NN(Common):
     def compile_model(self):
         self.model.compile(
             loss=self.params.deep_qnet.loss,
-            # optimizer=self.params.deep_qnet.optimizer,
-            optimizer=Adam(lr=0.001),
+            optimizer=Adam(lr=self.params.deep_qnet.lr),
             metrics=self.params.deep_qnet.metrics)
         return self.model
 

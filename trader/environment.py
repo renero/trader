@@ -6,6 +6,7 @@ import pandas as pd
 
 from common import Common
 from file_io import valid_output_name
+from last import last
 from memory import Memory
 from portfolio import Portfolio
 from states_combiner import StatesCombiner

@@ -181,7 +181,11 @@ class Portfolio(Common):
             if action_name == 'wait' and self.shares == 0.:
                 self.log.debug('  direct reward: wait & shares=0 => -.05')
                 return -0.05
+
             net_value = self.portfolio_value - self.investment
+            if self.params.mode == 'bear':
+                net_value *= -1.
+
             # Check if this is a failed situation 'f.buy' or 'f.sell',
             # to reverse the reward sign to negative.
             if action_name in self.failed_actions:

@@ -72,6 +72,8 @@ class Display(Common):
             self.recolor(df, 'reward')
         if 'konkorde' in results.columns:
             self.recolor(df, 'konkorde')
+        if 'action' in results.columns:
+            self.recolor_action(df, 'action')
 
         # Reorder columns
         df_cols = list(df.columns)

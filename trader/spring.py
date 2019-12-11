@@ -26,22 +26,26 @@ class Spring:
         self.has_position = False
         self.log.debug('Sell')
 
-    def stretch(self, new_value: float) -> float:
-        if self.has_position is False:
-            return 0.0
-        if new_value >= self.max_value:
-            self.max_value = new_value
-        return self.max_value
+    def better(self, x: float, y: float) -> bool:
+        """
+        Depending on whether we're in BEAR or BULL mode, determines if X is
+        better than Y. In BEAR mode, X < Y is better, and in BULL mode
+        X >= Y is better.
+        """
+        if self.params.mode == 'bear':
+            return x < y
+        else:
+            return x >= y
 
     def breaks(self, new_value: float) -> bool:
         if self.has_position is False:
             return False
-        if new_value >= self.max_value:
+        if self.better(new_value, self.max_value):
             self.max_value = new_value
-            self.log.debug('Updated max: {:.2f}'.format(self.max_value))
+            self.log.debug('Updated abs.max: {:.2f}'.format(self.max_value))
             return False
         else:
-            ratio = (self.max_value - new_value) / self.max_value
+            ratio = abs(self.max_value - new_value) / self.max_value
             if ratio > self.max_shrink:
                 self.log.debug(
                     'Breaks!! as max({}) - current({}) ratio is {:.2f}'.format(
