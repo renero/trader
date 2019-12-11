@@ -14,6 +14,7 @@ from spring import Spring
 class Agent(Common):
     configuration = None
     tensorboard = None
+    # TODO: Move Experience to a separate class or reuse Memory.
     experience = deque(maxlen=20000)
 
     def __init__(self, configuration):

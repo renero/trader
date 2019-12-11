@@ -17,6 +17,7 @@ class Portfolio(Common):
     konkorde = 0.
     reward = 0.
     failed_actions = ['f.buy', 'f.sell']
+
     # These are the variables that MUST be saved by the `dump()` method
     # in `environment`, in order to be able to resume the state.
     state_variables = ['initial_budget', 'budget', 'latest_price',
@@ -28,11 +29,7 @@ class Portfolio(Common):
     BUY = +1
     SELL = -1
 
-    def __init__(self,
-                 configuration,
-                 initial_price,
-                 forecast,
-                 env_memory):
+    def __init__(self, configuration, initial_price, forecast, env_memory):
         # copy the contents of the dictionary passed as argument. This dict
         # contains the parameters read in the initialization.
         self.params = configuration
@@ -64,11 +61,12 @@ class Portfolio(Common):
     def update(self, price, forecast, konkorde=None):
         """
         Updates portfolio after an iteration step.
-        :param price: new price registered
+
+        :param price:    new price registered
         :param forecast: new forecast registered
         :param konkorde: the konkorde value (computed from green & blue read
-            the data file, if applicable)
-        :return: the portfolio object
+                         the data file, if applicable)
+        :return:         the portfolio object
         """
         self.portfolio_value = self.shares * price
         self.latest_price = price
@@ -121,7 +119,7 @@ class Portfolio(Common):
         self.shares += num_shares
         self.portfolio_value += buy_price
         # what is the value of my investment after selling?
-        self.net_value = self.portfolio_value - self.investment
+        self.net_value = self.compute_value()
 
     def sell(self, num_shares=1.0):
         """
@@ -159,7 +157,7 @@ class Portfolio(Common):
         self.portfolio_value -= sell_price
 
         # what is the value of my investment after selling?
-        self.net_value = self.portfolio_value - self.investment
+        self.net_value = self.compute_value()
 
     def decide_reward(self, action_name, num_shares):
         """ Decide what is the reward for this action """
@@ -182,9 +180,7 @@ class Portfolio(Common):
                 self.log.debug('  direct reward: wait & shares=0 => -.05')
                 return -0.05
 
-            net_value = self.portfolio_value - self.investment
-            if self.params.mode == 'bear':
-                net_value *= -1.
+            net_value = self.compute_value()
 
             # Check if this is a failed situation 'f.buy' or 'f.sell',
             # to reverse the reward sign to negative.
@@ -225,7 +221,7 @@ class Portfolio(Common):
         return reward
 
     def values_to_record(self):
-        net_value = self.portfolio_value - self.investment
+        net_value = self.compute_value()
         values = [
             self.latest_price,
             self.forecast,
@@ -238,6 +234,17 @@ class Portfolio(Common):
         if self.params.have_konkorde:
             return values + [self.konkorde]
         return values
+
+    def compute_value(self):
+        """
+        Compute the value of the portfolio depending on whether it is bear
+        or bull, as the difference between the value of the shares acquired
+        at the moment, and the investment made to purchase them.
+        """
+        if self.params.mode == 'bear':
+            return self.investment - self.portfolio_value
+        else:
+            return self.portfolio_value - self.investment
 
     @property
     def gain(self):
