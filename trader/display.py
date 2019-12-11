@@ -216,7 +216,7 @@ class Display(Common):
         #
         # Konkorde ?
         #
-        if have_konkorde:
+        if have_konkorde and 'konkorde' in data.columns:
             ax3 = ax2.twinx()
             ax3.set_ylim(-1.5, +15.)
             ax3.axhline(0, color='black', alpha=0.3)
