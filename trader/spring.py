@@ -20,11 +20,11 @@ class spring:
         self.has_position = True
         self.starting_point = value
         self.max_value = self.starting_point
-        self.log.warn('Spring anchored at {}'.format(value))
+        self.log.debug('Spring anchored at {}'.format(value))
 
     def release(self):
         self.has_position = False
-        self.log.warn('Spring released...')
+        self.log.debug('Spring released...')
 
     def better(self, x: float, y: float) -> bool:
         """
@@ -42,12 +42,12 @@ class spring:
             return False
         if self.better(new_value, self.max_value):
             self.max_value = new_value
-            self.log.warn('Stretched abs.max: {:.2f}'.format(self.max_value))
+            self.log.debug('Stretched abs.max: {:.2f}'.format(self.max_value))
             return False
         else:
             ratio = abs(self.max_value - new_value) / self.max_value
             if ratio > self.max_shrink:
-                self.log.warn(
+                self.log.debug(
                     'Breaks!! as max({}) - current({}) ratio is {:.2f}'.format(
                         self.max_value, new_value, ratio))
                 self.max_value = new_value
@@ -55,12 +55,19 @@ class spring:
             else:
                 return False
 
-    def check(self, action, price, portfolio):
+    def check(self, action, price, is_failed_action):
         """
         Check if the new price drops significantly, and update positions.
-        :param action: the action decided by the Deep Q-Net
-        :param price: the current price.
-        :return: the action, possibly modified after check
+
+        :param action:     The action decided by the Deep Q-Net
+        :param price:      The current price.
+        :is_failed_action: Boolean indicating if the action proposed by
+                           the RL is feasible or not. If not, the action is
+                           considered a failed action. Examples are attempts
+                           to purchase shares without budget, or selling
+                           non existing actions.
+
+        :return:           The action, possibly modified after check
         """
         if self.breaks(price):
             self.log.debug('! STOP DROP overrides action to SELL')
@@ -68,7 +75,7 @@ class spring:
             action = self.params.action.index('sell')
 
         # Check if action is failed
-        if portfolio.failed_action(action, price) is False:
+        if is_failed_action is False:
             if action == self.params.action.index('buy'):
                 self.anchor(price)
             elif action == self.params.action.index('sell'):

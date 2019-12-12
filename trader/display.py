@@ -55,9 +55,20 @@ class Display(Common):
         :param do_plot: Do I want to also display a nice plot?
         :return: None
         """
-        df = results.copy()
+        # First, guess what do I need to show.
+        if self.params.short:
+            to_remove = {'konkorde', 'reward', 'state', 'state_desc'}
+            to_display = list(
+                set(results.columns) - to_remove)
+        else:
+            to_display = results.columns
+        df = results[to_display].copy()
+
+        # Recolor some columns
         self.recolor_ref(df, 'forecast', 'price')
-        self.reformat(df, 'price')
+        # self.reformat(df, 'price')
+        self.recolor_pref(df, 'price')
+
         if 'value' in results.columns:
             self.reformat(df, 'value')
         if 'shares' in results.columns:

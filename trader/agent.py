@@ -93,9 +93,11 @@ class Agent(Common):
                 # Send the action to the environment and get new state,
                 # reward and information on whether we've finish.
                 new_state, reward, done, _ = env.step(action)
+
                 # Experimental BEARish mode
-                if self.params.mode == 'bear':
-                    reward *= -1.
+                # if self.params.mode == 'bear':
+                #     reward *= -1.
+
                 self.experience.append((state, action, reward, new_state, done))
                 loss, mae = self.nn.do_learn(episode, episode_step,
                                              self.experience)
@@ -128,17 +130,16 @@ class Agent(Common):
         :return: action predicted by the network
         """
         if np.random.random() < epsilon:
-            action = np.random.randint(
-                0, self.params.num_actions)
+            action = np.random.randint(0, self.params.num_actions)
         else:
             action = self.nn.predict(state)
         return action
 
-    def simulate(self, environment: Environment, strategy: list, short=False):
+    def simulate(self, environment: Environment, strategy: list):
         """
         Simulate over a dataset, given a strategy and an environment.
         :param environment: the environment for the simulation
-        :param strategy: strategy data structure to be used in the simulat.
+        :param strategy: strategy data structure to be used in the simulation
         :param short: Only printout relevant columns (remove reward, state...)
         :return:
         """
@@ -153,9 +154,12 @@ class Agent(Common):
 
             # Check if we have to force operation due to stop drop
             if self.params.stop_drop is True:
+                # is this a failed action?
+                is_failed_action = environment.portfolio.failed_action(
+                    action, environment.price_)
                 action = stop_drop.check(action,
                                          environment.price_,
-                                         environment.portfolio)
+                                         is_failed_action)
 
             next_state, reward, done, _ = environment.step(action)
             total_reward += reward
@@ -164,13 +168,7 @@ class Agent(Common):
         if self.params.init_portfolio:
             environment.save_portfolio(init=True)
         # display the result of the simulation
-        if short:
-            to_remove = {'konkorde', 'reward', 'state', 'state_desc'}
-            to_display = list(
-                set(environment.memory.results.columns) - to_remove)
-        else:
-            to_display = environment.memory.results.columns
-        self.params.display.summary(environment.memory.results[to_display],
+        self.params.display.summary(environment.memory.results,
                                     do_plot=self.params.do_plot)
         return 0
 
@@ -192,8 +190,11 @@ class Agent(Common):
         action = environment.decide_next_action(state, strategy)
         self.log.info('Decided action is: {}'.format(action))
         if self.params.stop_drop is True:
-            action = spring(self.params, environment.price_).check(
+            # is this a failed action?
+            is_failed_action = environment.portfolio.failed_action(
                 action, environment.price_)
+            action = spring(self.params, environment.price_).check(
+                action, environment.price_, is_failed_action)
 
         next_state, reward, done, _ = environment.step(action)
 
