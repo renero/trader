@@ -69,6 +69,12 @@ LATEST_OHLC="${TMP_DIR}/${SYMBOL}/tmp_ohlc.json"
 DATE=$(date '+%F %T')
 LOGHEADER="$DATE ---------"
 
+# Create tmp directory if does not exist
+if [ ! -d "${TMP_DIR}/${SYMBOL}" ]; then
+  echo "$LOGHEADER Creating TMP directories"
+  mkdir -p "${TMP_DIR}/${SYMBOL}";
+fi
+
 # Backup all previous temporary files
 echo "$LOGHEADER Backing up previous iteration temporary files"
 for file in "${TMP_DIR}"/"${SYMBOL}"/tmp*
