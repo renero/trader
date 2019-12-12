@@ -8,7 +8,7 @@ from common import Common
 from environment import Environment
 from rl_nn import RL_NN
 from rl_stats import RLStats
-from spring import Spring
+from spring import spring
 
 
 class Agent(Common):
@@ -146,12 +146,17 @@ class Agent(Common):
         total_reward = 0.
         self.params.debug = True
         state = environment.reset()
-        stop_drop = Spring(self.params, environment.price_)
+        stop_drop = spring(self.params, environment.price_)
         self.log.debug('STARTING Simulation')
         while not done:
             action = environment.decide_next_action(state, strategy)
+
+            # Check if we have to force operation due to stop drop
             if self.params.stop_drop is True:
-                action = stop_drop.check(action, environment.price_)
+                action = stop_drop.check(action,
+                                         environment.price_,
+                                         environment.portfolio)
+
             next_state, reward, done, _ = environment.step(action)
             total_reward += reward
             state = next_state
@@ -187,7 +192,7 @@ class Agent(Common):
         action = environment.decide_next_action(state, strategy)
         self.log.info('Decided action is: {}'.format(action))
         if self.params.stop_drop is True:
-            action = Spring(self.params, environment.price_).check(
+            action = spring(self.params, environment.price_).check(
                 action, environment.price_)
 
         next_state, reward, done, _ = environment.step(action)

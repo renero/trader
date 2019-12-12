@@ -246,6 +246,23 @@ class Portfolio(Common):
         else:
             return self.portfolio_value - self.investment
 
+    def failed_action(self, action, price):
+        """
+        Determines if the action can be done or will be a failed operation
+        """
+        if action == self.params.action.index('buy'):
+            if price > self.budget:
+                return True
+            else:
+                return False
+        elif action == self.params.action.index('sell'):
+            if self.shares == 0.:
+                return True
+            else:
+                return False
+        else:
+            return False
+
     @property
     def gain(self):
         return (self.portfolio_value - self.investment) >= 0

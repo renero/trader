@@ -1,4 +1,4 @@
-class Spring:
+class spring:
     """
     This class implements a kind of spring that stretches whenever new values
     are higher than its initial position, but alerts whenever those maximum
@@ -20,11 +20,11 @@ class Spring:
         self.has_position = True
         self.starting_point = value
         self.max_value = self.starting_point
-        self.log.debug('BUY at {}'.format(value))
+        self.log.warn('Spring anchored at {}'.format(value))
 
     def release(self):
         self.has_position = False
-        self.log.debug('Sell')
+        self.log.warn('Spring released...')
 
     def better(self, x: float, y: float) -> bool:
         """
@@ -42,12 +42,12 @@ class Spring:
             return False
         if self.better(new_value, self.max_value):
             self.max_value = new_value
-            self.log.debug('Updated abs.max: {:.2f}'.format(self.max_value))
+            self.log.warn('Stretched abs.max: {:.2f}'.format(self.max_value))
             return False
         else:
             ratio = abs(self.max_value - new_value) / self.max_value
             if ratio > self.max_shrink:
-                self.log.debug(
+                self.log.warn(
                     'Breaks!! as max({}) - current({}) ratio is {:.2f}'.format(
                         self.max_value, new_value, ratio))
                 self.max_value = new_value
@@ -55,7 +55,7 @@ class Spring:
             else:
                 return False
 
-    def check(self, action, price):
+    def check(self, action, price, portfolio):
         """
         Check if the new price drops significantly, and update positions.
         :param action: the action decided by the Deep Q-Net
@@ -67,9 +67,11 @@ class Spring:
             self.log.warn('! STOP DROP overrides action to SELL')
             action = self.params.action.index('sell')
 
-        if action == self.params.action.index('buy'):
-            self.anchor(price)
-        elif action == self.params.action.index('sell'):
-            self.release()
+        # Check if action is failed
+        if portfolio.failed_action(action, price) is False:
+            if action == self.params.action.index('buy'):
+                self.anchor(price)
+            elif action == self.params.action.index('sell'):
+                self.release()
 
         return action
