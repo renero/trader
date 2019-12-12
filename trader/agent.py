@@ -77,6 +77,7 @@ class Agent(Common):
         """
         rl_stats = RLStats()
         epsilon = self.params.epsilon
+        stop_drop = spring(self.params, env.price_)
 
         # Loop over 'num_episodes'
         self.log.debug('Loop over {} episodes'.format(self.params.num_episodes))
@@ -86,24 +87,26 @@ class Agent(Common):
             rl_stats.reset()
             episode_step = 0
             while not done:
+                self.log.debug('-----------')
                 # Decide whether generating random action or predict most
                 # likely from the give state.
                 action = self.epsilon_greedy(epsilon, state)
+
+                # Experimental: Insert the behavior defined by stop_drop
+                # overriding random choice or predictions.
+                action = stop_drop.correction(action, env)
 
                 # Send the action to the environment and get new state,
                 # reward and information on whether we've finish.
                 new_state, reward, done, _ = env.step(action)
 
-                # Experimental BEARish mode
-                # if self.params.mode == 'bear':
-                #     reward *= -1.
-
                 self.experience.append((state, action, reward, new_state, done))
-                loss, mae = self.nn.do_learn(episode, episode_step,
-                                             self.experience)
+                if self.time_to_learn(episode, episode_step):
+                    loss, mae = self.nn.do_learn(episode, episode_step,
+                                                 self.experience)
+                    rl_stats.step(loss, mae, reward)
 
                 # Update states and metrics
-                rl_stats.step(loss, mae, reward)
                 state = new_state
                 episode_step += 1
 
@@ -118,6 +121,7 @@ class Agent(Common):
             # Epsilon decays here
             if epsilon >= self.params.epsilon_min:
                 epsilon *= self.params.decay_factor
+                self.log.debug('Updated epsilon: {:.2f}'.format(epsilon))
 
         return rl_stats.avg_rewards, rl_stats.avg_loss, \
                rl_stats.avg_mae, rl_stats.avg_profit
@@ -129,10 +133,15 @@ class Agent(Common):
         :param state: current state
         :return: action predicted by the network
         """
-        if np.random.random() < epsilon:
+        rn = np.random.random()
+        if rn < epsilon:
             action = np.random.randint(0, self.params.num_actions)
+            self.log.debug('Action (random): {} - {:.2f}<{:.2f}'.format(
+                action, rn, epsilon))
         else:
             action = self.nn.predict(state)
+            self.log.debug('Action (predicted): {} - {:.2f}>{:.2f}'.format(
+                action, rn, epsilon))
         return action
 
     def simulate(self, environment: Environment, strategy: list):
@@ -151,19 +160,12 @@ class Agent(Common):
         self.log.debug('STARTING Simulation')
         while not done:
             action = environment.decide_next_action(state, strategy)
-
-            # Check if we have to force operation due to stop drop
-            if self.params.stop_drop is True:
-                # is this a failed action?
-                is_failed_action = environment.portfolio.failed_action(
-                    action, environment.price_)
-                action = stop_drop.check(action,
-                                         environment.price_,
-                                         is_failed_action)
+            action = stop_drop.correction(action, environment)
 
             next_state, reward, done, _ = environment.step(action)
             total_reward += reward
             state = next_state
+
         # Do I need to init a portfolio, after a simulation
         if self.params.init_portfolio:
             environment.save_portfolio(init=True)
@@ -250,3 +252,15 @@ class Agent(Common):
         else:
             self.log.info(
                 'Minibatch learning mode {}'.format(self.params.batch_size))
+
+    def time_to_learn(self, episode, episode_step):
+        self.log.debug(
+            '> TTL [ {} AND {} ] (ep:{}, step:{}, st_ep:{}, tr_ss:{})'.format(
+                episode_step % self.params.train_steps == 0,
+                episode >= self.params.start_episodes,
+                episode, episode_step,
+                self.params.start_episodes,
+                self.params.train_steps
+            ))
+        return episode_step % self.params.train_steps == 0 and \
+               episode >= self.params.start_episodes

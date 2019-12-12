@@ -76,14 +76,13 @@ class RL_NN(Common):
 
     def do_learn(self, episode, episode_step, memory) -> (float, float):
         """ perform minibatch learning or experience replay """
+        self.log.debug('Time to learn')
         loss = 0.
         mae = 0.
         if self.params.experience_replay is True:
             loss, mae = self.experience_replay(memory)
         else:
-            if episode_step % self.params.train_steps == 0 and \
-                    episode > self.params.start_episodes:
-                loss, mae = self.minibatch_learn(memory)
+            loss, mae = self.minibatch_learn(memory)
         return loss, mae
 
     def minibatch_learn(self, memory):
@@ -118,6 +117,7 @@ class RL_NN(Common):
         :return: loss and mae.
         """
         if len(memory) <= self.params.exp_batch_size:
+            self.log.debug('  Not enough samples in experience memory')
             return 0., 0.
 
         mini_batch = random.sample(memory,
@@ -127,6 +127,8 @@ class RL_NN(Common):
             nn_input, nn_output,
             epochs=1, verbose=0, batch_size=self.params.exp_batch_size,
             **self.callback_args)
+        self.log.debug('  Learnt exp. batch, loss/mae: {:.2f}/{:.2f}'.format(
+            h.history['loss'][0], h.history['mae'][0]))
         return h.history['loss'][0], h.history['mae'][0]
 
     def prepare_nn_data(self, mini_batch):

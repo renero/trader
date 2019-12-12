@@ -114,7 +114,7 @@ class Environment(Common):
         self.forecast_ = self.data_.iloc[
             self.t, col_names.index(self.params.column_name['forecast'])]
 
-        self.log.debug('t={}, updated market price/forecast ({}/{})'.format(
+        self.log.debug('  t={}, updated market price/forecast ({}/{})'.format(
             self.t, self.price_, self.forecast_))
 
         # If I do have konkorde indicators, I also read them.
@@ -188,6 +188,7 @@ class Environment(Common):
             self.done_ = True
             return self.new_state_, self.reward_, self.done_, self.t
 
+        self.log.debug('Updating environment, after step.')
         self.update_mkt_price()
         self.portfolio.update(self.price_, self.forecast_, self.konkorde_)
         self.new_state_ = self.update_state()

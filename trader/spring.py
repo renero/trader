@@ -71,7 +71,7 @@ class spring:
         """
         if self.breaks(price):
             self.log.debug('! STOP DROP overrides action to SELL')
-            self.log.warn('! STOP DROP overrides action to SELL')
+            # self.log.warn('! STOP DROP overrides action to SELL')
             action = self.params.action.index('sell')
 
         # Check if action is failed
@@ -81,4 +81,15 @@ class spring:
             elif action == self.params.action.index('sell'):
                 self.release()
 
+        return action
+
+    def correction(self, action, environment):
+        """
+        Check if we have to force operation due to stop drop
+        """
+        if self.params.stop_drop is True:
+            # is this a failed action?
+            is_failed_action = environment.portfolio.failed_action(
+                action, environment.price_)
+            action = self.check(action, environment.price_, is_failed_action)
         return action

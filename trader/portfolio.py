@@ -73,7 +73,7 @@ class Portfolio(Common):
         self.forecast = forecast
         if konkorde is not None:
             self.konkorde = konkorde
-        self.log.debug('Updating portfolio after STEP.')
+        self.log.debug('  Updating portfolio after STEP.')
         self.log.debug(
             '  > portfolio_value={}, latest_price={}, forecast={}'.format(
                 self.portfolio_value, self.latest_price, self.forecast))
