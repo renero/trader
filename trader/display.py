@@ -57,7 +57,8 @@ class Display(Common):
         """
         # First, guess what do I need to show.
         if self.params.short:
-            to_remove = {'konkorde', 'reward', 'state', 'state_desc'}
+            to_remove = {'t', 'budget', 'investment', 'value', 'reward',
+                         'state', 'state_desc'}
             to_display = list(
                 set(results.columns) - to_remove)
         else:
@@ -69,21 +70,21 @@ class Display(Common):
         # self.reformat(df, 'price')
         self.recolor_pref(df, 'price')
 
-        if 'value' in results.columns:
+        if 'value' in df.columns:
             self.reformat(df, 'value')
-        if 'shares' in results.columns:
+        if 'shares' in df.columns:
             self.reformat(df, 'shares')
-        if 'budget' in results.columns:
+        if 'budget' in df.columns:
             self.recolor(df, 'budget')
-        if 'profit' in results.columns:
+        if 'profit' in df.columns:
             self.recolor(df, 'profit')
-        if 'investment' in results.columns:
+        if 'investment' in df.columns:
             self.recolor(df, 'investment')
-        if 'reward' in results.columns:
+        if 'reward' in df.columns:
             self.recolor(df, 'reward')
-        if 'konkorde' in results.columns:
+        if 'konkorde' in df.columns:
             self.recolor(df, 'konkorde')
-        if 'action' in results.columns:
+        if 'action' in df.columns:
             self.recolor_action(df, 'action')
 
         # Reorder columns
@@ -229,7 +230,7 @@ class Display(Common):
         #
         if have_konkorde and 'konkorde' in data.columns:
             ax3 = ax2.twinx()
-            ax3.set_ylim(-1.5, +15.)
+            ax3.set_ylim(-2., +10.)
             ax3.axhline(0, color='black', alpha=0.3)
             ax3.fill_between(range(data.konkorde.shape[0]), 0, data.konkorde,
                              color='green', alpha=0.3)
