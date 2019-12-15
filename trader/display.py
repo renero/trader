@@ -55,23 +55,37 @@ class Display(Common):
         :param do_plot: Do I want to also display a nice plot?
         :return: None
         """
-        df = results.copy()
+        # First, guess what do I need to show.
+        if self.params.short:
+            to_remove = {'t', 'budget', 'investment', 'value', 'reward',
+                         'state', 'state_desc'}
+            to_display = list(
+                set(results.columns) - to_remove)
+        else:
+            to_display = results.columns
+        df = results[to_display].copy()
+
+        # Recolor some columns
         self.recolor_ref(df, 'forecast', 'price')
-        self.reformat(df, 'price')
-        if 'value' in results.columns:
+        # self.reformat(df, 'price')
+        self.recolor_pref(df, 'price')
+
+        if 'value' in df.columns:
             self.reformat(df, 'value')
-        if 'shares' in results.columns:
+        if 'shares' in df.columns:
             self.reformat(df, 'shares')
-        if 'budget' in results.columns:
+        if 'budget' in df.columns:
             self.recolor(df, 'budget')
-        if 'profit' in results.columns:
+        if 'profit' in df.columns:
             self.recolor(df, 'profit')
-        if 'investment' in results.columns:
+        if 'investment' in df.columns:
             self.recolor(df, 'investment')
-        if 'reward' in results.columns:
+        if 'reward' in df.columns:
             self.recolor(df, 'reward')
-        if 'konkorde' in results.columns:
+        if 'konkorde' in df.columns:
             self.recolor(df, 'konkorde')
+        if 'action' in df.columns:
+            self.recolor_action(df, 'action')
 
         # Reorder columns
         df_cols = list(df.columns)
@@ -99,7 +113,12 @@ class Display(Common):
         investment = results.iloc[-1].investment
 
         # total outcome and final metrics.
-        print('Shares.....: {:d}'.format(int(shares)))
+        if self.params.mode == 'bull':
+            profit = value - investment
+        else:
+            profit = investment - value
+        print('P/L........: €{}'.format(self.color(profit)))
+        print('Sh.Value...: {} shares = €{:.1f}'.format(int(shares), value))
         if value != 0.0:
             balance = budget + value
         else:
@@ -111,11 +130,7 @@ class Display(Common):
             budget,
             self.color((budget / initial_budget) * 100.),
             initial_budget))
-        print('Investment.: €{}'.format(
-            self.color(investment * -1.)))
-        print('Sh.Value...: €{:.1f}'.format(value))
-        print('P/L........: €{}'.format(
-            self.color(value - investment)))
+        print('Investment.: €{}'.format(self.color(investment * -1.)))
 
     def progress(self, i, num_episodes, last_avg, start, end):
         """
@@ -133,18 +148,18 @@ class Display(Common):
             return int(floor(log10(x)))
 
         percentage = (i / num_episodes) * 100.0
-        msg = 'Epoch...: {:0{m}}/{:<{m}} [{:>5.1f}%] Avg reward: {:+.3f}'.format(
+        msg = 'Epoch {:0{m}}/{:<{m}} [{:>5.1f}%] Avg.reward: {:+.3f}'.format(
             i,
             num_episodes,
             percentage,
             last_avg,
             m=magnitude(num_episodes) + 1)
         if percentage == 0.0:
-            self.log.info('{} Est.time: UNKNOWN'.format(msg))
+            self.log.info('{} ETA: UNKNOWN'.format(msg))
             return
         elapsed = end - start
         remaining = ((100. - percentage) * elapsed) / percentage
-        self.log.info('{} Est.time: {}'.format(msg, self.timer(remaining)))
+        self.log.info('{} ETA: {}'.format(msg, self.timer(remaining)))
 
     @staticmethod
     def timer(elapsed):
@@ -214,9 +229,9 @@ class Display(Common):
         #
         # Konkorde ?
         #
-        if have_konkorde:
+        if have_konkorde and 'konkorde' in data.columns:
             ax3 = ax2.twinx()
-            ax3.set_ylim(-1.5, +15.)
+            ax3.set_ylim(-2., +10.)
             ax3.axhline(0, color='black', alpha=0.3)
             ax3.fill_between(range(data.konkorde.shape[0]), 0, data.konkorde,
                              color='green', alpha=0.3)

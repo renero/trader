@@ -15,7 +15,10 @@ class UDictionary(Dictionary):
         else:
             parameters_file = default_params_filename
         super().__init__(parameters_file, **kwargs)
-        setattr(self, 'action', arguments.args.action)
+        if arguments.args.action is None:
+            setattr(self, 'action', arguments.possible_actions[0])
+        else:
+            setattr(self, 'action', arguments.args.action)
         setattr(self, 'file', arguments.args.file[0])
 
         #
@@ -30,3 +33,5 @@ class UDictionary(Dictionary):
 
         self.log.info(
             'Using configuration parameters from: {}'.format(parameters_file))
+        self.log.info(
+            'Updating {} mode.'.format(arguments.possible_actions[0]))

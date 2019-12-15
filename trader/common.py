@@ -1,13 +1,11 @@
 """
 I will place here common functions used across all modules.
 """
-from termcolor import colored
-
 from pandas import DataFrame
+from termcolor import colored
 
 
 class Common:
-
     Reset = '\033[0m'
     Green = '\033[32m'
     White = '\033[37m'
@@ -46,6 +44,12 @@ class Common:
             string = '{:.2f}'.format(number)
             return self.white(string)
 
+    def color_action(self, action):
+        if action[:2] == 'f.':
+            return self.red(action)
+        else:
+            return self.white(action)
+
     def recolor(self, df, column_name):
         if column_name not in df.columns:
             return
@@ -59,5 +63,14 @@ class Common:
     def recolor_ref(self, df: DataFrame, col1: str, col2: str):
         df[col1] = df.apply(
             lambda row: self.cond_color(row[col1], row[col2]),
-            axis=1
-        )
+            axis=1)
+
+    def recolor_action(self, df: DataFrame, action_column: str = 'action'):
+        df[action_column] = df[action_column].apply(
+            lambda x: '{}'.format(self.color_action(x)))
+
+    def recolor_pref(self, df: DataFrame, col: str):
+        new = [df[col].values[0]]
+        for i in range(1, len(df[col])):
+            new.append(self.cond_color(df.iloc[i][col], df.iloc[i - 1][col]))
+        df[col] = new

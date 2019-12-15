@@ -17,30 +17,37 @@ optional arguments:
   -c CONFIG_FILE, --config CONFIG_FILE
                   Relative path to configuration file to be used (YAML)
                   by predictor and trader (same name).
-  -s SYMBOL       The acronym of the symbol to be retrieved from the
+  -s SYMBOL, --symbol SYMBOL
+                  The acronym of the symbol to be retrieved from the
                   stock information provider.
+  -n, --no-retrieve
+                  Run the pipeline without retrieving the latest OHLCV
+                  values from the stock data provider. This option is used
+                  when data is manually placed in the temporary file.
 EOF
 }
 
 #
 # Main --check arguments
 #
-
+RETRIEVE=true
 SYMBOL=""
 CONFIG_FILE=params.yaml
 while [ "$1" != "" ]; do
     case $1 in
-        -c | --config )  shift
-                         CONFIG_FILE=$1
-                         ;;
-        -s | --symbol )  shift
-                         SYMBOL=$1
-                         ;;
-        -h | --help )    usage
-                         exit
-                         ;;
-        * )              usage
-                         exit 1
+        -c | --config )      shift
+                             CONFIG_FILE=$1
+                             ;;
+        -n | --no-retrieve ) RETRIEVE=false
+                             ;;
+        -s | --symbol )      shift
+                             SYMBOL=$1
+                             ;;
+        -h | --help )        usage
+                             exit
+                             ;;
+        * )                  usage
+                             exit 1
     esac
     shift
 done
@@ -51,7 +58,12 @@ if [[ "$SYMBOL" == "" ]]; then
   exit 1
 fi
 
+# ECHO header
+DATE=$(date '+%F %T')
+LOGHEADER="$DATE ---------"
+
 # Input files
+ROOT_DIR="${PWD}"
 OHLC_FILE="../staging/${SYMBOL}/ohlcv.csv"
 PREDS_FILE="../staging/${SYMBOL}/predictions.csv"
 FORECAST_FILE="../staging/${SYMBOL}/forecast.csv"
@@ -65,26 +77,51 @@ TMP_OHLC="${TMP_DIR}/${SYMBOL}/tail_ohlc.csv"
 LATEST_ACTION="${TMP_DIR}/${SYMBOL}/tmp_action.json"
 LATEST_OHLC="${TMP_DIR}/${SYMBOL}/tmp_ohlc.json"
 
-# Commands
-DATE=$(date '+%F %T')
-LOGHEADER="$DATE ---------"
+# Check if arguments are saying that I must run the pipeline without
+# retrieving the OHLCV values. If so, the file LATEST_OHLC must be
+# manually generated with the values.
+if [ "$RETRIEVE" = false ]
+then
+  if [ -f "$LATEST_OHLC" ]; then
+    echo "$LOGHEADER Running without updating OHLCV values from provider"
+  else
+    echo "$LOGHEADER No-retrieve mode, but $LATEST_OHLC file DOES NOT exist"
+    exit 1
+  fi
+else
+  echo "$LOGHEADER Running in NORMAL RETRIEVE mode"
+fi
 
-# Backup all previous temporary files
-echo "$LOGHEADER Backing up previous iteration temporary files"
-for file in "${TMP_DIR}"/"${SYMBOL}"/tmp*
-do
-  mv "${file}" "${file}".bak
-done
+# Create tmp directory if does not exist
+if [ ! -d "${TMP_DIR}/${SYMBOL}" ]; then
+  echo "$LOGHEADER Creating TMP directories"
+  mkdir -p "${TMP_DIR}/${SYMBOL}";
+fi
+
+# Backup previous temporary ACTION file
+if [ -f "${TMP_ACTION}" ]; then
+  echo "$LOGHEADER Backing up previous iteration temporary files"
+  mv "${TMP_ACTION}" "${TMP_ACTION}".bak
+fi
 
 # Get latest info from OHLC, and update file
-echo "$LOGHEADER Retrieving latest OHLC data"
-cd retriever
-python retriever.py --config "${CONFIG_FILE}" --symbol "${SYMBOL}" --file "${OHLC_FILE}"
+if [ "$RETRIEVE" = true ]; then
+  echo "$LOGHEADER Retrieving latest OHLC data"
+  cd retriever
+  python retriever.py --config "${CONFIG_FILE}" --symbol "${SYMBOL}" --file "${OHLC_FILE}"
+  volume=`awk -F":" '{print $NF}' "${TMP_OHLC}"|tr -d '"'|tr -d '}'`
+  if [ "$volume" = "0" ]; then
+    echo "$LOGHEADER Volume is ZERO. Aborting pipeline."
+    exit 1
+  fi
+else
+  echo "$LOGHEADER Using manual OHLC file."
+fi
 
 # Update the predictions file with yesterday's closing (just retrieved) and
 # the latest forecast made (tmp_predictions)
 echo "$LOGHEADER Update predictions"
-cd ../updater
+cd "${ROOT_DIR}"/updater
 python updater.py predictions --config "${CONFIG_FILE}" --file "${PREDS_FILE}"
 
 # Generate a small sample to run predictions on it (smaller = faster)

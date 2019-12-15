@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 
 class Arguments(object):
     args = None
-    possible_actions = ['forecast', 'predictions']
+    possible_actions = ['predictions', 'forecast']
     parser: ArgumentParser = None
 
     def __init__(self, *args):
@@ -12,7 +12,7 @@ class Arguments(object):
 
         self.parser.add_argument(
             'action', nargs='?', choices=self.possible_actions,
-            help='Update the forecast file or the predictions file.')
+            help='Update the predictions (default) or the forecast file.')
         self.parser.add_argument(
             '-c', '--config-file', nargs=1, type=str,
             help='Relative path to configuration file to be used (YAML).')

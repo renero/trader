@@ -46,6 +46,9 @@ class Arguments(object):
         self.parser.add_argument(
             '-s', '--save', action='store_true',
             help='Save ON, default OFF')
+        self.parser.add_argument(
+            '-t', '--trading-mode', nargs=1, type=str,
+            help='Trading mode: either \'bull\' (default) or \'bear\'.')
 
         self.args = self.parser.parse_args()
         action_name = 'arg_{}'.format(self.args.action)

@@ -4,6 +4,36 @@ from portfolio import Portfolio
 from rl_state import RL_State
 
 
+class StatePriceTrend(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        if portfolio.latest_price >= portfolio.last_price:
+            portfolio.log.debug('  ↗︎ price trend up')
+            return 'UP'
+        portfolio.log.debug('  ↘︎ price trend down')
+        return 'DW'
+
+
+class StatePrevPriceTrend(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        if portfolio.last_price >= portfolio.prevlast_price:
+            portfolio.log.debug('  ↗︎ prev. price trend up')
+            return 'UP'
+        portfolio.log.debug('  ↘︎ prev. price trend down')
+        return 'DW'
+
+
+class StatePrevPrevPriceTrend(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        if portfolio.prevlast_price >= portfolio.prevprevlast_price:
+            portfolio.log.debug('  ↗︎ prev. prev. price trend up')
+            return 'UP'
+        portfolio.log.debug('  ↘︎ prev.prev. price trend down')
+        return 'DW'
+
+
 class StateGain(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
@@ -58,10 +88,10 @@ class StateLastPredOk(RL_State):
         actual_sign = sign(portfolio.latest_price - portfolio.last_price)
         # guess what the state, given the forecast
         if prediction_sign == actual_sign:
-            log.debug(' ✓ Last prediction was OK')
+            log.debug('  ✓ Last prediction was OK')
             return 'LOK'
         else:
-            log.debug(' ✕ Last prediction was NOT OK')
+            log.debug('  ✕ Last prediction was NOT OK')
             return 'LNOK'
 
 
@@ -79,10 +109,10 @@ class StatePrevLastPredOk(RL_State):
         actual_sign = sign(portfolio.last_price - portfolio.prevlast_price)
         # guess what the state, given the forecast
         if prediction_sign == actual_sign:
-            log.debug(' ✓ Prev. last prediction was OK')
+            log.debug('  ✓ Prev. last prediction was OK')
             return 'PLOK'
         else:
-            log.debug(' ✕ Prev. last prediction was NOT OK')
+            log.debug('  ✕ Prev. last prediction was NOT OK')
             return 'PLNOK'
 
 
@@ -101,8 +131,8 @@ class StatePrevPrevLastPredOk(RL_State):
             portfolio.prevlast_price - portfolio.prevprevlast_price)
         # guess what the state, given the forecast
         if prediction_sign == actual_sign:
-            log.debug(' ✓ Prev. prev. last prediction was OK')
+            log.debug('  ✓ Prev. prev. last prediction was OK')
             return 'PPLOK'
         else:
-            log.debug(' ✕ Prev. prev. last prediction was NOT OK')
+            log.debug('  ✕ Prev. prev. last prediction was NOT OK')
             return 'PPLNOK'

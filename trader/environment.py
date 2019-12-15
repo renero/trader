@@ -113,7 +113,7 @@ class Environment(Common):
         self.forecast_ = self.data_.iloc[
             self.t, col_names.index(self.params.column_name['forecast'])]
 
-        self.log.debug('t={}, updated market price/forecast ({}/{})'.format(
+        self.log.debug('  t={}, updated market price/forecast ({}/{})'.format(
             self.t, self.price_, self.forecast_))
 
         # If I do have konkorde indicators, I also read them.
@@ -165,13 +165,15 @@ class Environment(Common):
 
         # Call to the proper portfolio method, based on the action number
         # passed to this argument.
+        self.log.debug('-----------')
         self.log.debug('STEP ITERATION - t={} -'.format(self.t))
         self.log.debug('t={}, price={}, action decided={} ({})'.format(
             self.t, self.price_, action, self.params.action_name[action]))
 
         # Compute reward by calling action and record experience.
         action_name = self.params.action_name[action]
-        self.reward_ = getattr(self.portfolio, action_name)()
+        action_done, self.reward_ = getattr(self.portfolio, action_name)()
+        self.memory.record_action(action_done)
         self.memory.record_reward(self.reward_,
                                   self.current_state_,
                                   self.states.name(self.current_state_))
@@ -187,6 +189,7 @@ class Environment(Common):
             self.done_ = True
             return self.new_state_, self.reward_, self.done_, self.t
 
+        self.log.debug('Updating environment, after step.')
         self.update_mkt_price()
         self.portfolio.update(self.price_, self.forecast_, self.konkorde_)
         self.new_state_ = self.update_state()
