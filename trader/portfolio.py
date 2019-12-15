@@ -152,7 +152,11 @@ class Portfolio(Common):
         :param sell_price: the price at which the selling takes place
         :return:
         """
-        self.budget += sell_price
+        if self.params.mode == 'bull':
+            self.budget += sell_price
+        else:
+            self.budget += self.memory.last('investment')
+            self.budget += self.compute_portfolio_value()
         self.investment -= sell_price
         self.shares -= num_shares
         self.portfolio_value -= sell_price
@@ -223,7 +227,8 @@ class Portfolio(Common):
         return reward
 
     def values_to_record(self):
-        net_value = self.compute_portfolio_value()
+        net_value = self.compute_portfolio_value() * self.shares
+        self.investment = self.investment * self.shares
         values = [
             self.latest_price,
             self.forecast,

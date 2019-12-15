@@ -111,12 +111,8 @@ class Display(Common):
         value = results.iloc[-1].value
         shares = results.iloc[-1].shares
         investment = results.iloc[-1].investment
+        profit = results.iloc[-1].budget - results.iloc[0].budget
 
-        # total outcome and final metrics.
-        if self.params.mode == 'bull':
-            profit = value - investment
-        else:
-            profit = investment - value
         print('P/L........: €{}'.format(self.color(profit)))
         print('Sh.Value...: {} shares = €{:.1f}'.format(int(shares), value))
         if value != 0.0:
@@ -192,6 +188,7 @@ class Display(Common):
     def plot_results(results, have_konkorde):
         data = results.copy(deep=True)
         data = data.dropna()
+        ini_budget = data.iloc[0].budget
 
         def color_action(a):
             actions = ['buy', 'sell', 'f.buy', 'f.sell', 'n/a', 'wait']
@@ -201,9 +198,7 @@ class Display(Common):
         data.head()
         colors = {0: 'green', 1: 'red', 2: '#E8D842', 3: '#BE5B11',
                   4: 'white', 5: 'white'}
-        fig, (ax1, ax2) = plt.subplots(2,
-                                       sharex=True,
-                                       figsize=(14, 10),
+        fig, (ax1, ax2) = plt.subplots(2, sharex=True, figsize=(14, 10),
                                        gridspec_kw={'height_ratios': [1, 3]})
         fig.suptitle(
             'Portfolio Value and Shares price ({})'.format(ts()))
@@ -211,10 +206,12 @@ class Display(Common):
         # Portfolio Value
         #
         ax1.axhline(y=0, color='red', alpha=0.4, linewidth=0.4)
-        ax1.scatter(range(len(data.price)), data.profit,
+        ax1.scatter(range(len(data.price)),
+                    (data.budget + data.investment + data.profit) - ini_budget,
                     c=data.action_id.apply(lambda x: colors[x]),
                     marker='.')
-        ax1.plot(data.profit, linewidth=0.6)
+        ax1.plot((data.budget + data.investment + data.profit) - ini_budget,
+                 linewidth=0.6)
         ax1.xaxis.set_ticks_position('none')
         #
         # Price, forecast and operations
