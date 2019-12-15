@@ -165,6 +165,7 @@ class Environment(Common):
 
         # Call to the proper portfolio method, based on the action number
         # passed to this argument.
+        self.log.debug('-----------')
         self.log.debug('STEP ITERATION - t={} -'.format(self.t))
         self.log.debug('t={}, price={}, action decided={} ({})'.format(
             self.t, self.price_, action, self.params.action_name[action]))

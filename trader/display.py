@@ -113,7 +113,12 @@ class Display(Common):
         investment = results.iloc[-1].investment
 
         # total outcome and final metrics.
-        print('Shares.....: {:d}'.format(int(shares)))
+        if self.params.mode == 'bull':
+            profit = value - investment
+        else:
+            profit = investment - value
+        print('P/L........: €{}'.format(self.color(profit)))
+        print('Sh.Value...: {} shares = €{:.1f}'.format(int(shares), value))
         if value != 0.0:
             balance = budget + value
         else:
@@ -125,11 +130,7 @@ class Display(Common):
             budget,
             self.color((budget / initial_budget) * 100.),
             initial_budget))
-        print('Investment.: €{}'.format(
-            self.color(investment * -1.)))
-        print('Sh.Value...: €{:.1f}'.format(value))
-        print('P/L........: €{}'.format(
-            self.color(value - investment)))
+        print('Investment.: €{}'.format(self.color(investment * -1.)))
 
     def progress(self, i, num_episodes, last_avg, start, end):
         """
