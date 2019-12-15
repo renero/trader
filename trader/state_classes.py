@@ -4,6 +4,36 @@ from portfolio import Portfolio
 from rl_state import RL_State
 
 
+class StatePriceTrend(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        if portfolio.latest_price >= portfolio.last_price:
+            portfolio.log.debug('  ↗︎ price trend up')
+            return 'UP'
+        portfolio.log.debug('  ↘︎ price trend down')
+        return 'DW'
+
+
+class StatePrevPriceTrend(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        if portfolio.last_price >= portfolio.prevlast_price:
+            portfolio.log.debug('  ↗︎ prev. price trend up')
+            return 'UP'
+        portfolio.log.debug('  ↘︎ prev. price trend down')
+        return 'DW'
+
+
+class StatePrevPrevPriceTrend(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        if portfolio.prevlast_price >= portfolio.prevprevlast_price:
+            portfolio.log.debug('  ↗︎ prev. prev. price trend up')
+            return 'UP'
+        portfolio.log.debug('  ↘︎ prev.prev. price trend down')
+        return 'DW'
+
+
 class StateGain(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):

@@ -13,15 +13,6 @@ class Memory:
         # table_headers.
         self.results = DataFrame(columns=self.params.table_headers)
 
-    def record_action(self, action_name):
-        """
-        Record action selected in results table.
-        :param action_name:
-        :return: None
-        """
-        last_index = self.results.shape[0] - 1
-        self.results.loc[last_index, 'action'] = action_name
-
     def record_values(self, portfolio, t: int, ts: str):
         """
         Records the values from portfolio in a new memory position
@@ -34,11 +25,21 @@ class Memory:
         row = Series(dict(zip(self.params.table_headers, values)))
         self.results = self.results.append(row, ignore_index=True)
 
+    def record_action(self, action_name):
+        """
+        Record action selected in results table.
+        :param action_name:
+        :return: None
+        """
+        last_index = self.results.shape[0] - 1
+        self.results.loc[last_index, 'action'] = action_name
+
     def record_reward(self, reward, current_state, description):
         """
         Append reward and current state into the last line recorded.
         :param reward:
         :param current_state:
+        :param description:
         :return: None
         """
         last_index = self.results.shape[0] - 1

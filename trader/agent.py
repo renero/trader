@@ -149,7 +149,6 @@ class Agent(Common):
         Simulate over a dataset, given a strategy and an environment.
         :param environment: the environment for the simulation
         :param strategy: strategy data structure to be used in the simulation
-        :param short: Only printout relevant columns (remove reward, state...)
         :return:
         """
         done = False
