@@ -69,7 +69,7 @@ class Agent(Common):
         # Plot metrics?
         plot_metrics = self.params.what_to_do == 'train' or \
                        self.params.what_to_do == 'retrain'
-        if self.params.plot is True and plot_metrics is True:
+        if self.params.do_plot is True and plot_metrics is True:
             self.display.plot_metrics(avg_loss, avg_mae, avg_rewards, avg_value)
 
         return strategy
