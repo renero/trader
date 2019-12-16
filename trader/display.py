@@ -111,7 +111,7 @@ class Display(Common):
         value = results.iloc[-1].value
         shares = results.iloc[-1].shares
         investment = results.iloc[-1].investment
-        profit = results.iloc[-1].budget - results.iloc[0].budget
+        profit = (budget + value) - initial_budget
 
         print('P/L........: €{}'.format(self.color(profit)))
         print('Sh.Value...: {} shares = €{:.1f}'.format(int(shares), value))
