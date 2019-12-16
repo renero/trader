@@ -24,14 +24,7 @@ def main(argv) -> int:
         if flag['retrain']:
             agent.q_load(environment, retrain=flag['retrain'])
             params.epsilon = params.epsilon_min
-        strategy = agent.q_learn(environment,
-                                 fresh_model=flag['train'],
-                                 do_plot=params.do_plot)
-        # Save the model?
-        if params.save_model is True:
-            agent.nn.save_model(agent.model, environment.memory.results)
-        # Simulate what has been learnt with the data.
-        agent.simulate(environment, strategy)
+        agent.q_learn(environment, fresh_model=flag['train'])
     else:
         # simulate or predict
         if flag['simulate']:

@@ -32,8 +32,7 @@ class Agent(Common):
     def q_learn(self,
                 env: Environment,
                 fresh_model: bool = True,
-                display_strategy: bool = False,
-                do_plot: bool = False) -> list:
+                display_strategy: bool = False) -> list:
         """
         Learns an strategy to follow over a given environment,
         using RL.
@@ -41,31 +40,38 @@ class Agent(Common):
         :param fresh_model: if False, it does not create the NN from scratch,
             but, it uses the one previously loaded.
         :param display_strategy:
-        :type do_plot: bool
         """
         start = time.time()
         # create the Keras model and learn, or load it from disk.
         if fresh_model is True:
             self.model = self.nn.create_model()
         avg_rewards, avg_loss, avg_mae, avg_value = self.reinforce_learn(env)
+        self.log.info('Time elapsed: {}'.format(
+            self.params.display.timer(time.time() - start)))
 
-        # display anything?
-        plot_metrics = self.params.what_to_do == 'train' or \
-                       self.params.what_to_do == 'retrain'
-        if do_plot is True and plot_metrics is True:
-            self.display.plot_metrics(avg_loss, avg_mae, avg_rewards, avg_value)
+        # Save the model?
+        if self.params.save_model is True:
+            self.nn.save_model(self.model, env.memory.results)
 
         # Extract the strategy matrix from the model.
         strategy = self.nn.infer_strategy()
+
+        # Simulate what has been learnt with the data.
+        self.simulate(env, strategy)
+
+        # display anything?
         if display_strategy:
             self.display.strategy(self,
                                   env,
                                   self.model,
                                   self.params.num_states,
                                   strategy)
+        # Plot metrics?
+        plot_metrics = self.params.what_to_do == 'train' or \
+                       self.params.what_to_do == 'retrain'
+        if self.params.plot is True and plot_metrics is True:
+            self.display.plot_metrics(avg_loss, avg_mae, avg_rewards, avg_value)
 
-        self.log.info('Time elapsed: {}'.format(
-            self.params.display.timer(time.time() - start)))
         return strategy
 
     def reinforce_learn(self, env: Environment):
