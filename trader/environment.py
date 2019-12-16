@@ -6,6 +6,7 @@ import pandas as pd
 
 from common import Common
 from file_io import valid_output_name
+from last import last
 from memory import Memory
 from portfolio import Portfolio
 from states_combiner import StatesCombiner
@@ -29,6 +30,7 @@ class Environment(Common):
     reward_ = 0
     new_state_: int = 0
     have_konkorde = False
+    date_colname = 'date'
 
     def __init__(self, configuration):
         self.params = configuration
@@ -90,6 +92,9 @@ class Environment(Common):
         self.max_states_ = self.data_.shape[0]
         self.log.info('Read trader forecast file: {}'.format(path))
 
+        # Set the name of the date column
+        self.date_colname_ = last.date_colname(self.data_)
+
         # Do i have konkorde?
         setattr(self.params, 'have_konkorde', bool)
         self.params.have_konkorde = False
@@ -100,14 +105,12 @@ class Environment(Common):
 
     def update_mkt_price(self):
         """
-        Set the price to the current time slot,
-        reading column 0 from DF
+        Set the price to the current time slot.
         """
         assert self.data_ is not None, 'Price series data has not been read yet'
         col_names = list(self.data_.columns)
 
-        self.ts_ = self.data_.iloc[
-            self.t, col_names.index(self.params.column_name['date'])]
+        self.ts_ = self.data_.iloc[self.t, col_names.index(self.date_colname_)]
         self.price_ = self.data_.iloc[
             self.t, col_names.index(self.params.column_name['price'])]
         self.forecast_ = self.data_.iloc[

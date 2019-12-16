@@ -36,7 +36,7 @@ class RLDictionary(Dictionary):
             'Using configuration parameters from: {}'.format(parameters_file))
 
         # Define if acting in BULL or BEAR mode
-        if 'trading_mode' not in arguments.args:
+        if arguments.args.trading_mode is None:
             setattr(self, 'mode', 'bull')
         else:
             setattr(self, 'mode', arguments.args.trading_mode[0])
