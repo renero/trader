@@ -195,12 +195,15 @@ class CSCore:
             log.info('not saving predictions.')
             return
         # Find a valid filename and save everything
-        filename = valid_output_name(
-            filename='pred_{}_{}'.format(
+        if params.output is not None:
+            name = params.output
+        else:
+            name = 'pred_{}_{}'.format(
                 splitext(basename(params.input_file))[0],
-                '_'.join(params.model_names)),
-            path=params.predictions_path,
-            extension='csv')
+                '_'.join(params.model_names))
+        filename = valid_output_name(filename=name,
+                                     path=params.predictions_path,
+                                     extension='csv')
         predictions.round(2).to_csv(filename, index=False)
         log.info('predictions saved to: {}'.format(filename))
 

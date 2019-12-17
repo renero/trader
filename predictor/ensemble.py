@@ -93,11 +93,15 @@ class Ensemble:
         return preds
 
     def save_ensemble(self, preds: DataFrame):
-        current_filename = splitext(basename(self.params.input_file))[0]
-        if re.search('^pred_', current_filename) is not None:
-            new_filename = current_filename.replace('pred_', 'forecast_')
+        # Set the filename of the output file.
+        if self.params.output is not None:
+            new_filename = self.params.output
         else:
-            new_filename = 'forecast_' + current_filename
+            current_filename = splitext(basename(self.params.input_file))[0]
+            if re.search('^pred_', current_filename) is not None:
+                new_filename = current_filename.replace('pred_', 'forecast_')
+            else:
+                new_filename = 'forecast_' + current_filename
 
         # Prepare the data frame to be saved.
         date_column = self.params.csv_dict['d']

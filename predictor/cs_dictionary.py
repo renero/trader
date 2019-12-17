@@ -32,6 +32,12 @@ class CSDictionary(Dictionary):
         else:
             setattr(self, 'epochs', 1)
 
+        # Output filename specified
+        if arguments.args.output is not None:
+            setattr(self, 'output', arguments.args.output[0])
+        else:
+            setattr(self, 'output', None)
+
         #
         # Extend the dictionary with custom meta-parameters
         #

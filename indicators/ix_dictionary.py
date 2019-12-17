@@ -65,6 +65,12 @@ class IXDictionary(Dictionary):
             arguments.parser.error(
                 'Save option is not compatible with merge option')
 
+        # Output filename specified
+        if arguments.args.output is not None:
+            setattr(self, 'output', arguments.args.output[0])
+        else:
+            setattr(self, 'output', None)
+
         #
         # Set log_level and start the logger
         #

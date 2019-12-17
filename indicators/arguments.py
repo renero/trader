@@ -30,6 +30,9 @@ class Arguments(object):
             '-m', '--merge-to-file', nargs=1, type=str,
             help='Merge index into specified file')
         self.parser.add_argument(
+            '-o', '--output', nargs=1, type=str,
+            help='Output filename to be used to save results')
+        self.parser.add_argument(
             '-s', '--save', action='store_true',
             help='Append index to the input file')
         self.parser.add_argument(

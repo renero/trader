@@ -29,6 +29,9 @@ class Arguments(object):
             '-w', '--window', nargs=1, type=int,
             help='Window size for the LSTM. Default=10')
         self.parser.add_argument(
+            '-o', '--output', nargs=1, type=str,
+            help='Output filename to be used to save results')
+        self.parser.add_argument(
             '-p', '--plot', action='store_true',
             help='Plot a nice chart after training')
         self.parser.add_argument(

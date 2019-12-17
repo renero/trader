@@ -88,12 +88,16 @@ class Indicator:
         :param df: The data frame to be saved.
         :return: the names of the files saved.
         """
-        idx_basename = '{}_{}'.format(
-            self.name,
-            splitext(basename(self.params.input_file))[0])
-        scaler_name = 'scaler_{}_{}'.format(
-            self.name,
-            splitext(basename(self.params.input_file))[0])
+        if self.params.output is not None:
+            idx_basename = self.params.output
+            scaler_name = 'scaler_{}'.format(
+                self.params.output)
+        else:
+            idx_basename = '{}_{}'.format(
+                self.name, splitext(basename(self.params.input_file))[0])
+            scaler_name = 'scaler_{}_{}'.format(
+                self.name,
+                splitext(basename(self.params.input_file))[0])
         fused, scaler_saved = save_dataframe(
             idx_basename,
             df,

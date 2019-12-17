@@ -12,6 +12,10 @@ usage()
     cat <<EOF
 usage: $0 -d DATE -s SYMBOL [-h|--help]
 
+This script retrieves the OHLCV for a given date and symbol to store it in
+the temporary directory used by the pipeline. Useful when something went
+wrong during last day.
+
 optional arguments:
   -h, --help      show this help message and exit
   -d DATE, --date DATE
