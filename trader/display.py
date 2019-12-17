@@ -100,21 +100,26 @@ class Display(Common):
                        showindex=False,
                        floatfmt=['.0f'] + ['.2f' for i in range(6)]))
         if totals:
-            self.report_totals(results)
+            self.report_totals(results, self.params.mode)
         if do_plot is True:
             self.plot_results(results, self.params.have_konkorde)
 
-    def report_totals(self, results):
+    def report_totals(self, results, mode):
         # Extract Portfolio valuation from the table
         initial_budget = results.iloc[0].budget
         budget = results.iloc[-1].budget
         value = results.iloc[-1].value
         shares = results.iloc[-1].shares
-        investment = results.iloc[-1].investment
+        # investment = results.iloc[-1].investment
         profit = (budget + value) - initial_budget
+        no_action_perf = results.iloc[-1].price - results.iloc[0].price
+        if mode == 'bull':
+            performance = (no_action_perf - profit) / no_action_perf
+        else:
+            performance = (profit - (profit * -1.)) / no_action_perf
 
-        print('P/L........: €{}'.format(self.color(profit)))
-        print('Sh.Value...: {} shares = €{:.1f}'.format(int(shares), value))
+        print('P/L........: €{} [{:.1f}% over nop ({:.2f})]'.format(
+            self.color(profit), performance*100., no_action_perf))
         if value != 0.0:
             balance = budget + value
         else:
@@ -122,11 +127,12 @@ class Display(Common):
         percentage = 100. * ((balance / initial_budget) - 1.0)
         print('Balance....: €{} [{} %]'.format(
             self.cond_color(balance, initial_budget), self.color(percentage)))
-        print('Budget.....: €{:.1f} [{} % of €{}]'.format(
-            budget,
-            self.color((budget / initial_budget) * 100.),
-            initial_budget))
-        print('Investment.: €{}'.format(self.color(investment * -1.)))
+        print('Sh.Value...: {} shares = €{:.1f}'.format(int(shares), value))
+        # print('Budget.....: €{:.1f} [{} % of €{}]'.format(
+        #     budget,
+        #     self.color((budget / initial_budget) * 100.),
+        #     initial_budget))
+        # print('Investment.: €{}'.format(self.color(investment * -1.)))
 
     def progress(self, i, num_episodes, last_avg, start, end):
         """
