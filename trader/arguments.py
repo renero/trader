@@ -39,7 +39,10 @@ class Arguments(object):
             help='Display a short version of summary table when simulating')
         self.parser.add_argument(
             '--no-dump', action='store_true',
-            help='Do not dump temp json portfolio file after single_step')
+            help='Do not dump temp JSON portfolio file (ONLY) after predict')
+        self.parser.add_argument(
+            '-o', '--output', nargs=1, type=str,
+            help='Output filename to be used to save results (w/out extension)')
         self.parser.add_argument(
             '-p', '--plot', action='store_true',
             help='Plot summary charts, default OFF')

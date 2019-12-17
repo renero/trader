@@ -130,25 +130,6 @@ class CS_NN(object):
         self.log.debug('Hardmax position = {}'.format(y_max))
         return y_max
 
-    def valid_output_name(self):
-        """
-        Builds a valid name with the metadata and the date.
-        Returns The filename if the name is valid and file does not exists,
-                None otherwise.
-        """
-        self.filename = '{}_{}_w{}_e{}'.format(
-            self.metadata['subtype'],
-            self.metadata['dataset'],
-            self.window_size,
-            self.params.epochs)
-        base_filepath = join(self.params.models_dir, self.filename)
-        output_filepath = base_filepath
-        idx = 1
-        while Path(output_filepath).is_file() is True:
-            output_filepath = '{}_{:d}'.format(base_filepath, idx)
-            idx += 1
-        return output_filepath
-
     def load(self, model_name, summary=False):
         """ Load json and create model """
         self.log.info('Reading model file: {}'.format(model_name))
@@ -172,15 +153,40 @@ class CS_NN(object):
 
         return loaded_model
 
-    def save(self, modelname=None):
+    def save(self):
         """ serialize model to JSON """
         if self.metadata['accuracy'] == 'unk':
             raise ValidationException('Trying to save without training.')
-        if modelname is None:
-            modelname = self.valid_output_name()
+
+        if self.params.output is not None:
+            model_name = self.params.output
+        else:
+            model_name = self.valid_model_name()
+
         model_json = self.model.to_json()
-        with open('{}.json'.format(modelname), "w") as json_file:
+        with open('{}.json'.format(model_name), "w") as json_file:
             json_file.write(model_json)
+
         # serialize weights to HDF5
-        self.model.save_weights('{}.h5'.format(modelname))
-        self.log.info("Saved model and weights ({})".format(modelname))
+        self.model.save_weights('{}.h5'.format(model_name))
+        self.log.info("Saved model and weights ({})".format(model_name))
+
+    def valid_model_name(self):
+        """
+        Builds a valid name with the metadata and the date.
+        Returns The filename if the name is valid and file does not exists,
+                None otherwise.
+        """
+        self.filename = '{}_{}_w{}_e{}'.format(
+            self.metadata['subtype'],
+            self.metadata['dataset'],
+            self.window_size,
+            self.params.epochs)
+        base_filepath = join(self.params.models_dir, self.filename)
+        output_filepath = base_filepath
+        idx = 1
+        while Path(output_filepath).is_file() is True:
+            output_filepath = '{}_{:d}'.format(base_filepath, idx)
+            idx += 1
+        return output_filepath
+

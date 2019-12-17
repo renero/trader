@@ -13,7 +13,6 @@ from file_io import valid_output_name
 class CSCore:
 
     def __init__(self, params):
-        # super(CSCore, self).__init__()
         self.params = params
         self.log = params.log
 

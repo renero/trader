@@ -86,6 +86,12 @@ class RLDictionary(Dictionary):
                 'To generate a portfolio, `simulate` with `--init-portfolio`')
             raise ValueError('wrong parameters')
 
+        # Output filename specified
+        if arguments.args.output is not None:
+            setattr(self, 'output', arguments.args.output[0])
+        else:
+            setattr(self, 'output', None)
+
         #
         # Extensions to the dictionary
         #
