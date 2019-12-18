@@ -174,9 +174,14 @@ class Agent(Common):
         # Do I need to init a portfolio, after a simulation
         if self.params.init_portfolio:
             environment.save_portfolio(init=True)
-        # display the result of the simulation
-        self.params.display.summary(environment.memory.results,
-                                    do_plot=self.params.do_plot)
+
+        # display the result of the simulation (maybe only the totals summ)
+        if self.params.totals is True:
+            self.params.display.report_totals(environment.memory.results,
+                                              self.params.mode)
+        else:
+            self.params.display.summary(environment.memory.results,
+                                        do_plot=self.params.do_plot)
         return 0
 
     def single_step(self, environment: Environment, strategy):

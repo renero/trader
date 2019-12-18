@@ -59,6 +59,7 @@ class RLDictionary(Dictionary):
         setattr(self, 'no_dump', arguments.args.no_dump)
         setattr(self, 'do_plot', arguments.args.plot)
         setattr(self, 'save_model', arguments.args.save)
+        setattr(self, 'totals', arguments.args.totals)
         setattr(self, 'short', arguments.args.short)
         if arguments.args.epochs is not None:
             setattr(self, 'num_episodes', int(arguments.args.epochs))

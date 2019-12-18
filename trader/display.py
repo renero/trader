@@ -110,13 +110,12 @@ class Display(Common):
         budget = results.iloc[-1].budget
         value = results.iloc[-1].value
         shares = results.iloc[-1].shares
-        # investment = results.iloc[-1].investment
         profit = (budget + value) - initial_budget
         no_action_perf = results.iloc[-1].price - results.iloc[0].price
         if mode == 'bull':
-            performance = (no_action_perf - profit) / no_action_perf
+            performance = (profit - no_action_perf) / no_action_perf
         else:
-            performance = (profit - (profit * -1.)) / no_action_perf
+            performance = (no_action_perf - profit) / no_action_perf
 
         print('P/L........: €{} [{:.1f}% over nop ({:.2f})]'.format(
             self.color(profit), performance*100., no_action_perf))
@@ -128,11 +127,6 @@ class Display(Common):
         print('Balance....: €{} [{} %]'.format(
             self.cond_color(balance, initial_budget), self.color(percentage)))
         print('Sh.Value...: {} shares = €{:.1f}'.format(int(shares), value))
-        # print('Budget.....: €{:.1f} [{} % of €{}]'.format(
-        #     budget,
-        #     self.color((budget / initial_budget) * 100.),
-        #     initial_budget))
-        # print('Investment.: €{}'.format(self.color(investment * -1.)))
 
     def progress(self, i, num_episodes, last_avg, start, end):
         """
