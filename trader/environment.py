@@ -1,11 +1,13 @@
 import importlib
 import json
+from os.path import splitext, basename
 
+import joblib
 import numpy as np
 import pandas as pd
 
 from common import Common
-from file_io import valid_output_name
+from file_io import valid_output_name, scale_columns
 from last import last
 from memory import Memory
 from portfolio import Portfolio
@@ -29,15 +31,17 @@ class Environment(Common):
     done_ = False
     reward_ = 0
     new_state_: int = 0
+    scaler_ = None
     have_konkorde = False
     date_colname = 'date'
 
-    def __init__(self, configuration):
+    def __init__(self, configuration, train_mode: bool):
         self.params = configuration
         self.log = self.params.log
         self.display = self.params.display
         self.memory = Memory(self.params)
         self.results = self.memory.results
+        self.fcast_dict = self.params.fcast_file.dict
         self.log.info('Creating Environment')
 
         if 'seed' in self.params:
@@ -46,7 +50,7 @@ class Environment(Common):
             np.random.seed(1)
 
         self.states = StatesCombiner(self.params)
-        self.read_market_data(self.params.forecast_file)
+        self.read_forecast(self.params.forecast_file, train_mode)
         self.portfolio = Portfolio(self.params,
                                    self.price_, self.forecast_, self.memory)
         self.init_environment(creation_time=True)
@@ -78,28 +82,43 @@ class Environment(Common):
         self.memory.reset()
         return self.init_environment(creation_time=False)
 
-    def read_market_data(self, path):
+    def read_forecast(self, forecast_file, train_mode: bool):
         """
-        Reads the simulation data.
-        :param path:
-        :return:
+        Reads the forecast data with the actual price values, followed by
+        the forecast made by the RNN and the indicators backing the prediction.
+        The values for price and forecast are immediately scaled using a
+        MinMaxScaler, that will be made available through parameters to later
+        be used when loading a trader trained with this data.
+
+        :param forecast_file: The path to the file containing the forecast
+                              information.
+        :return: None
         """
         if 'delimiter' not in self.params:
             delimiter = ','
         else:
-            delimiter = self.params.delimiter
-        self.data_ = pd.read_csv(path, delimiter)
+            delimiter = self.params.fcast_file.delimiter
+        self.data_ = pd.read_csv(forecast_file, delimiter)
         self.max_states_ = self.data_.shape[0]
-        self.log.info('Read trader forecast file: {}'.format(path))
+        self.log.info('Read trader forecast file: {}'.format(forecast_file))
 
         # Set the name of the date column
         self.date_colname_ = last.date_colname(self.data_)
 
+        # Scale price and forecast info
+        self.scaler_, name = scale_columns(self.data_,
+                                           self.params.fcast_file.cols_to_scale,
+                                           train_mode,
+                                           self.params.forecast_file,
+                                           self.params.models_dir)
+        self.log.info('Scaler {} {}'.format(
+            'applied' if train_mode else 'loaded', name))
+
         # Do i have konkorde?
         setattr(self.params, 'have_konkorde', bool)
         self.params.have_konkorde = False
-        if self.params.column_name['green'] in self.data_.columns and \
-                self.params.column_name['blue'] in self.data_.columns:
+        if self.fcast_dict['green'] in self.data_.columns and \
+                self.fcast_dict['blue'] in self.data_.columns:
             self.params.have_konkorde = True
             self.log.info('Konkorde index present!')
 
@@ -112,9 +131,9 @@ class Environment(Common):
 
         self.ts_ = self.data_.iloc[self.t, col_names.index(self.date_colname_)]
         self.price_ = self.data_.iloc[
-            self.t, col_names.index(self.params.column_name['price'])]
+            self.t, col_names.index(self.fcast_dict['price'])]
         self.forecast_ = self.data_.iloc[
-            self.t, col_names.index(self.params.column_name['forecast'])]
+            self.t, col_names.index(self.fcast_dict['forecast'])]
 
         self.log.debug('  t={}, updated market price/forecast ({}/{})'.format(
             self.t, self.price_, self.forecast_))
@@ -122,9 +141,9 @@ class Environment(Common):
         # If I do have konkorde indicators, I also read them.
         if self.params.have_konkorde:
             self.green_ = self.data_.iloc[
-                self.t, col_names.index(self.params.column_name['green'])]
+                self.t, col_names.index(self.fcast_dict['green'])]
             self.blue_ = self.data_.iloc[
-                self.t, col_names.index(self.params.column_name['blue'])]
+                self.t, col_names.index(self.fcast_dict['blue'])]
             self.konkorde_ = self.green_ + self.blue_
             self.log.debug('  konkorde ({}/{})'.format(
                 self.green_, self.blue_))
@@ -267,3 +286,11 @@ class Environment(Common):
 
         # latest state is the previous to the last int the table.
         return self.current_state_
+
+    def save_scaler(self):
+        base_name = splitext(basename(self.params.forecast_filename))[0]
+        scaler_name = valid_output_name('scaler_{}'.format(base_name),
+                                        self.params.models_dir,
+                                        'pickle')
+        joblib.dump(self.scaler_, scaler_name)
+        self.log.info('Scaler saved to: {}'.format(scaler_name))

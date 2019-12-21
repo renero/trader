@@ -45,7 +45,7 @@ class spring:
             self.log.debug('Stretched abs.max: {:.2f}'.format(self.max_value))
             return False
         else:
-            ratio = abs(self.max_value - new_value) / self.max_value
+            ratio = self.compute_ratio(new_value)
             if ratio > self.max_shrink:
                 self.log.debug(
                     'Breaks!! as max({}) - current({}) ratio is {:.2f}'.format(
@@ -54,6 +54,15 @@ class spring:
                 return True
             else:
                 return False
+
+    def compute_ratio(self, new_value):
+        # Avoid dividing by zero
+        if self.max_value == 0.:
+            max_val = 0.000001
+        else:
+            max_val = self.max_value
+        ratio = abs(max_val - new_value) / max_val
+        return ratio
 
     def check(self, action, price, is_failed_action):
         """

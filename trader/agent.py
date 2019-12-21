@@ -11,6 +11,7 @@ from rl_stats import RLStats
 from spring import spring
 
 
+# TODO: No longer needed to inherit from Common.
 class Agent(Common):
     configuration = None
     tensorboard = None
@@ -34,11 +35,10 @@ class Agent(Common):
                 fresh_model: bool = True,
                 display_strategy: bool = False) -> list:
         """
-        Learns an strategy to follow over a given environment,
-        using RL.
-        :type env: Environment
+        Learns an strategy to follow over a given environment, using RL.
+        :param env: Environment
         :param fresh_model: if False, it does not create the NN from scratch,
-            but, it uses the one previously loaded.
+                                 but, it uses the one previously loaded.
         :param display_strategy:
         """
         start = time.time()
@@ -52,6 +52,7 @@ class Agent(Common):
         # Save the model?
         if self.params.save_model is True:
             self.nn.save_model(self.model, env.memory.results)
+            env.save_scaler()
 
         # Extract the strategy matrix from the model.
         strategy = self.nn.infer_strategy()
@@ -228,10 +229,12 @@ class Agent(Common):
         """
         Load an strategy to follow over a given environment, using RL,
         and acts following the strategy defined on it.
-        :param env: Environment
-        :param retrain: If this flag is set to true, then compile the loaded
-        model to continue learning over it.
-        :param display_strategy:
+
+        :param env:              Environment
+        :param retrain:          If this flag is set to true, then compile
+                                 the loaded model to continue learning over it.
+        :param display_strategy: flag indicating if I want to display the
+                                 strategy on stdout.
         """
         # create the Keras model and learn, or load it from disk.
         self.model = self.nn.load_model(self.params.model_file)

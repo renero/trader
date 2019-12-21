@@ -92,29 +92,26 @@ class Portfolio(Common):
         :param num_shares: number of shares. Default to 1.
         :return: The action executed and the reward obtained by the operation.
         """
+        action_name = 'buy'
         buy_price = num_shares * self.latest_price
         if buy_price > self.budget:
             action_name = 'f.buy'
-            self.reward = self.decide_reward(action_name, num_shares)
-            self.log.debug('  {} action recorded. Reward={:.2f}'.format(
-                action_name, self.reward))
-            return action_name, self.reward
-
-        action_name = 'buy'
-        self.update_after_buy(num_shares, buy_price)
+        self.update_after_buy(action_name, num_shares, buy_price)
         self.reward = self.decide_reward(action_name, num_shares)
-        self.log.debug('  {} action recorded. Reward={:.2f}'.format(
-            action_name, self.reward))
 
         return action_name, self.reward
 
-    def update_after_buy(self, num_shares, buy_price):
+    def update_after_buy(self, action_name, num_shares, buy_price):
         """
         Update portfolio parameters after buying shares
+
+        :param action_name: The name of the action taken
         :param num_shares: the nr. shares bought
         :param buy_price: the price at which the purchase takes place
         :return:
         """
+        if action_name in self.failed_actions:
+            return
         self.budget -= buy_price
         self.investment += buy_price
         self.shares += num_shares
@@ -129,29 +126,25 @@ class Portfolio(Common):
         :param num_shares: number of shares. Default to 1.
         :return: The action executed and the reward obtained by the operation.
         """
+        action_name = 'sell'
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
             action_name = 'f.sell'
-            self.reward = self.decide_reward(action_name, num_shares)
-            self.log.debug('  {} action recorded. Reward={:.2f}'.format(
-                action_name, self.reward))
-            return action_name, self.reward
-
-        action_name = 'sell'
-        self.update_after_sell(num_shares, sell_price)
+        self.update_after_sell(action_name, num_shares, sell_price)
         self.reward = self.decide_reward(action_name, num_shares)
-        self.log.debug('  {} action recorded. Reward={:.2f}'.format(
-            action_name, self.reward))
 
         return action_name, self.reward
 
-    def update_after_sell(self, num_shares, sell_price):
+    def update_after_sell(self, action_name, num_shares, sell_price):
         """
         Update specific portfolio parameters after selling
+        :param action_name: the name of the action taken
         :param num_shares: the nr. of shares sold
         :param sell_price: the price at which the selling takes place
         :return:
         """
+        if action_name in self.failed_actions:
+            return
         if self.params.mode == 'bull':
             self.budget += sell_price
         else:
@@ -195,7 +188,6 @@ class Portfolio(Common):
                 # are no shares, and value is 0. In that case, we must punish.
                 if net_value == 0.0:
                     net_value = -1.0
-
             self.log.debug(
                 '  direct reward: net value s({:.2f})={:.2f}'.format(
                     net_value, sigmoid(net_value)))

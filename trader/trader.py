@@ -9,15 +9,17 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 def main(argv) -> int:
-    # Init
+    # Read parameters and arguments
     return_value = 0
     params = RLDictionary(args=argv)
-    environment = Environment(params)
-    agent = Agent(params)
 
-    # Flags with the actions specified in arguments
+    # Set flag with the action specified in arguments
     flag = {key: params.what_to_do == key for key in
             params.possible_actions}
+
+    # Initialize the environment
+    environment = Environment(params, flag['train'])
+    agent = Agent(params)
 
     # Do something
     if flag['train'] or flag['retrain']:
