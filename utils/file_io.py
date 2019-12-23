@@ -81,46 +81,33 @@ def save_dataframe(name: str,
     """
     data = df.copy()
     file_name = valid_output_name(name, output_path, 'csv')
-    scaler_name = scale_columns(data, cols_to_scale, scaler_name, output_path)
+    if cols_to_scale is not None:
+        scaler = MinMaxScaler(feature_range=(-1., 1.))
+        data[cols_to_scale] = scaler.fit_transform(data[cols_to_scale])
+        # Save the scaler used
+        scaler_name = valid_output_name(scaler_name, output_path, 'pickle')
+        joblib.dump(scaler, scaler_name)
     data.round(2).to_csv(file_name, index=index)
 
     return file_name, scaler_name
 
 
-def scale_columns(df,
-                  cols_to_scale,
-                  train_mode,
-                  fcast_filename,
-                  path):
+def scale(x, minimum, peak_to_peak):
+    return (x - minimum) / peak_to_peak
+
+
+def scale_columns(df, mn, mx):
     """
-    Scale columns from a dataframe, using a MinMaxScaler. If the parameter
-    train_mode is set to True, then a new scaler is fit and saved, otherwise
-    the specified path with and given base filename are used to load and use it
+    Scale columns from a dataframe to 0..1 range.
 
     :param df:              the dataframe
-    :param cols_to_scale:   the columns in the DF to be scaled
-    :param train_mode:      if true the scaler is created and saved, otherwise
-                            the scaler is loaded using the path and name
-                            contained in the following arguments.
-    :param fcast_filename:  the basename used to store the serialized scaler
-    :param path:            the path where the scaler is to be saved
+    :param mn:              the minimum value of the series
+    :param mx:              the maximum value of the series
 
     :return: The name of the scaler serialized with joblib and saved
     """
-    if cols_to_scale is not None:
-        if train_mode is True:
-            # scale the columns and save the scaler
-            scaler = MinMaxScaler(feature_range=(0., 1.))
-            df[cols_to_scale] = scaler.fit_transform(df[cols_to_scale])
-            scaler_name = ''
-        else:
-            # Load the scaler and use it
-            base_name = splitext(basename(fcast_filename))[0]
-            scaler_name = join(path, 'scaler_{}.pickle'.format(base_name))
-            scaler = joblib.load(scaler_name)
-            df[cols_to_scale] = scaler.fit_transform(df[cols_to_scale])
-        return scaler, scaler_name
-    return None
+    df = df.apply(lambda x: scale(x, mn, mx-mn))
+    return df
 
 
 def read_ohlc(filename: str, csv_dict: dict, **kwargs) -> DataFrame:

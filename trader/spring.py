@@ -20,7 +20,8 @@ class spring:
         self.has_position = True
         self.starting_point = value
         self.max_value = self.starting_point
-        self.log.debug('Spring anchored at {}'.format(value))
+        self.log.debug('Spring anchored at {:.2f}, stretched to {:.2f}'.format(
+            value, self.max_value))
 
     def release(self):
         self.has_position = False
@@ -47,9 +48,8 @@ class spring:
         else:
             ratio = self.compute_ratio(new_value)
             if ratio > self.max_shrink:
-                self.log.debug(
-                    'Breaks!! as max({}) - current({}) ratio is {:.2f}'.format(
-                        self.max_value, new_value, ratio))
+                msg = 'Breaks! max({:.2f}) - current({:.2f}) ratio is {:.4f}'
+                self.log.debug(msg.format(self.max_value, new_value, ratio))
                 self.max_value = new_value
                 return True
             else:
@@ -80,7 +80,6 @@ class spring:
         """
         if self.breaks(price):
             self.log.debug('! STOP DROP overrides action to SELL')
-            # self.log.warn('! STOP DROP overrides action to SELL')
             action = self.params.action.index('sell')
 
         # Check if action is failed

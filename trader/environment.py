@@ -52,7 +52,10 @@ class Environment(Common):
         self.states = StatesCombiner(self.params)
         self.read_forecast(self.params.forecast_file, train_mode)
         self.portfolio = Portfolio(self.params,
-                                   self.price_, self.forecast_, self.memory)
+                                   self.price_,
+                                   self.forecast_,
+                                   self.memory,
+                                   self.scaler_)
         self.init_environment(creation_time=True)
         self.log.info('Environment created')
 
@@ -63,13 +66,60 @@ class Environment(Common):
         internal state of the environment accordingly.
         :return: The initial state.
         """
-        self.update_mkt_price()
-        self.portfolio.reset(self.price_,
-                             self.forecast_,
-                             self.memory)
+        self.update_forecast()
+        self.portfolio.reset(self.price_, self.forecast_,
+                             self.memory, self.scaler_)
         if creation_time is not True:
             self.memory.record_values(self.portfolio, t=0, ts=self.ts_)
         return self.update_state()
+
+    def step(self, action):
+        """
+        Send an action to my Environment by calling the proper method in the
+        Portfolio class. As a result, obtain reward and flag indicating whether
+        the goal has been reached (done). Record the sequence to the internal
+        memory and update internal state accordingly.
+
+        :param action: the action to be executed in the environment (portfolio)
+
+        :return: state, reward, done and iter count.
+        """
+        assert action < self.params.num_actions, \
+            'Action ID must be between 0 and {}'.format(
+                self.params.num_actions)
+
+        # Call to the proper portfolio method, based on the action number
+        # passed to this argument.
+        self.log.debug(
+            'Env. Step (t={}), price={:.2f}, action decided={} ({})'.format(
+                self.t, self.price_, action, self.params.action_name[action]))
+
+        # Compute reward by calling action and record experience.
+        action_name = self.params.action_name[action]
+        action_done, self.reward_ = getattr(self.portfolio, action_name)()
+        self.memory.record_action(action_done)
+        self.memory.record_reward(self.reward_,
+                                  self.current_state_,
+                                  self.states.name(self.current_state_))
+        self.log.debug(
+            '  Reward ({:.2f}), recorded to action \'{}\' in state {}'.format(
+                self.reward_, action, self.current_state_))
+
+        # Increase `time pointer`
+        self.t += 1
+        if self.t >= self.max_states_:
+            self.log.debug('End of step (t({}) >= max_states({}))'.format(
+                self.t, self.max_states_))
+            self.done_ = True
+            return self.new_state_, self.reward_, self.done_, self.t
+
+        self.log.debug('Updating environment, after step.')
+        self.update_forecast()
+        self.portfolio.update(self.price_, self.forecast_, self.konkorde_)
+        self.new_state_ = self.update_state()
+        self.memory.record_values(self.portfolio, self.t, self.ts_)
+
+        return self.new_state_, self.reward_, self.done_, self.t
 
     def reset(self):
         """
@@ -105,14 +155,13 @@ class Environment(Common):
         # Set the name of the date column
         self.date_colname_ = last.date_colname(self.data_)
 
-        # Scale price and forecast info
-        self.scaler_, name = scale_columns(self.data_,
-                                           self.params.fcast_file.cols_to_scale,
-                                           train_mode,
-                                           self.params.forecast_file,
-                                           self.params.models_dir)
-        self.log.info('Scaler {} {}'.format(
-            'applied' if train_mode else 'loaded', name))
+        # Scale price and forecast info with manually set ranges for data
+        # in params file.
+        self.data_[self.params.fcast_file.cols_to_scale] = scale_columns(
+            self.data_[self.params.fcast_file.cols_to_scale],
+            self.params.fcast_file.min_support,
+            self.params.fcast_file.max_support)
+        self.log.info('Scaler applied')
 
         # Do i have konkorde?
         setattr(self.params, 'have_konkorde', bool)
@@ -122,7 +171,7 @@ class Environment(Common):
             self.params.have_konkorde = True
             self.log.info('Konkorde index present!')
 
-    def update_mkt_price(self):
+    def update_forecast(self):
         """
         Set the price to the current time slot.
         """
@@ -135,8 +184,9 @@ class Environment(Common):
         self.forecast_ = self.data_.iloc[
             self.t, col_names.index(self.fcast_dict['forecast'])]
 
-        self.log.debug('  t={}, updated market price/forecast ({}/{})'.format(
-            self.t, self.price_, self.forecast_))
+        self.log.debug(
+            '  t={}, updated market price/forecast ({:.2f}/{:.2f})'.format(
+                self.t, self.price_, self.forecast_))
 
         # If I do have konkorde indicators, I also read them.
         if self.params.have_konkorde:
@@ -171,53 +221,9 @@ class Environment(Common):
 
         # Get the ID resulting from the combination of the sub-states
         self.current_state_ = self.states.get_id(*new_substates)
-        self.log.debug('t={}, state updated to: {} ({})'.format(
-            self.t, self.current_state_, self.states.name(self.current_state_)))
+        self.log.debug('  state updated to: {} ({})'.format(
+            self.current_state_, self.states.name(self.current_state_)))
         return self.current_state_
-
-    def step(self, action):
-        """
-        Send an action to my Environment.
-        :param action: the action.
-        :return: state, reward, done and iter count.
-        """
-        assert action < self.params.num_actions, \
-            'Action ID must be between 0 and {}'.format(
-                self.params.num_actions)
-
-        # Call to the proper portfolio method, based on the action number
-        # passed to this argument.
-        self.log.debug('-----------')
-        self.log.debug('STEP ITERATION - t={} -'.format(self.t))
-        self.log.debug('t={}, price={}, action decided={} ({})'.format(
-            self.t, self.price_, action, self.params.action_name[action]))
-
-        # Compute reward by calling action and record experience.
-        action_name = self.params.action_name[action]
-        action_done, self.reward_ = getattr(self.portfolio, action_name)()
-        self.memory.record_action(action_done)
-        self.memory.record_reward(self.reward_,
-                                  self.current_state_,
-                                  self.states.name(self.current_state_))
-        self.log.debug(
-            't={}, reward ({:.2f}), recorded to action {} in state {}'.format(
-                self.t, self.reward_, action, self.current_state_))
-
-        # Increase `time pointer`
-        self.t += 1
-        if self.t >= self.max_states_:
-            self.log.debug('End of step (t({}) >= max_states({}))'.format(
-                self.t, self.max_states_))
-            self.done_ = True
-            return self.new_state_, self.reward_, self.done_, self.t
-
-        self.log.debug('Updating environment, after step.')
-        self.update_mkt_price()
-        self.portfolio.update(self.price_, self.forecast_, self.konkorde_)
-        self.new_state_ = self.update_state()
-        self.memory.record_values(self.portfolio, self.t, self.ts_)
-
-        return self.new_state_, self.reward_, self.done_, self.t
 
     def save_portfolio(self, init=False):
         """
@@ -276,7 +282,7 @@ class Environment(Common):
         if self.t >= self.data_.shape[0]:
             return -1
 
-        self.update_mkt_price()
+        self.update_forecast()
         self.portfolio.latest_price = self.price_
         self.portfolio.forecast = self.forecast_
         self.portfolio.memory = self.memory

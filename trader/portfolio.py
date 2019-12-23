@@ -6,6 +6,8 @@ from utils.dictionary import Dictionary
 
 class Portfolio(Common):
     configuration: Dictionary
+    env_scaler = None
+    memory = None
     initial_budget = 0.
     budget = 0.
     investment = 0
@@ -20,30 +22,30 @@ class Portfolio(Common):
 
     # These are the variables that MUST be saved by the `dump()` method
     # in `environment`, in order to be able to resume the state.
-    state_variables = ['initial_budget', 'budget', 'latest_price',
-                       'forecast', 'investment',
-                       'portfolio_value', 'net_value',
-                       'shares', 'konkorde']
+    state_variables = ['initial_budget', 'budget', 'latest_price', 'forecast',
+                       'investment', 'portfolio_value', 'net_value', 'shares',
+                       'konkorde']
 
-    def __init__(self, configuration, initial_price, forecast, env_memory):
-        # copy the contents of the dictionary passed as argument. This dict
-        # contains the parameters read in the initialization.
+    def __init__(self,
+                 configuration,
+                 initial_price,
+                 forecast,
+                 env_memory,
+                 env_scaler):
+
         self.params = configuration
         self.display = self.params.display
         self.log = self.params.log
-        self.environment = self.params.environment
+        self.env_params = self.params.environment
+        self.env_scaler = env_scaler
+        self.reset(initial_price, forecast, env_memory, env_scaler)
 
-        self.budget = self.environment.initial_budget
-        self.initial_budget = self.environment.initial_budget
-        self.latest_price = initial_price
-        self.forecast = forecast
-        self.memory = env_memory
-        self.log.info('Portfolio created with initial budget: {:.1f}'.format(
-            self.initial_budget))
-
-    def reset(self, initial_price, forecast, env_memory):
-        self.initial_budget = self.environment.initial_budget
-        self.budget = self.environment.initial_budget
+    def reset(self, initial_price, forecast, env_memory, env_scaler):
+        """
+        Initializes portfolio to the initial state.
+        """
+        self.initial_budget = self.scale_budget(self.env_params.initial_budget)
+        self.budget = self.initial_budget
         self.latest_price = initial_price
         self.forecast = forecast
         self.memory = env_memory
@@ -53,6 +55,15 @@ class Portfolio(Common):
         self.shares: float = 0.
         self.konkorde = 0.
         self.reward = 0.
+        self.log.debug('Portfolio reset. Initial budget: {:.1f}'.format(
+            self.initial_budget))
+
+    def scale_budget(self, budget):
+        mn = self.params.fcast_file.min_support
+        ptp = self.params.fcast_file.max_support - mn
+        if ptp == 0.0:
+            ptp = 0.000001
+        return (budget - mn) / ptp
 
     def update(self, price, forecast, konkorde=None):
         """
@@ -70,9 +81,9 @@ class Portfolio(Common):
         if konkorde is not None:
             self.konkorde = konkorde
         self.log.debug('  Updating portfolio after STEP.')
-        self.log.debug(
-            '  > portfolio_value={}, latest_price={}, forecast={}'.format(
-                self.portfolio_value, self.latest_price, self.forecast))
+        msg = '  > portfolio_value={:.2f}, latest_price={:.2f}, forecast={:.2f}'
+        self.log.debug(msg.format(
+            self.portfolio_value, self.latest_price, self.forecast))
         return self
 
     def wait(self):
@@ -81,8 +92,11 @@ class Portfolio(Common):
         """
         action_name = 'wait'
         self.reward = self.decide_reward(action_name, num_shares=0)
-        self.log.debug('  {} action recorded. Reward={:.2f}'.format(
-            action_name, self.reward))
+        msg = '  WAIT: ' + \
+              'prc({:.2f})|bdg({:.2f})|val({:.2f})|prf({:.2f})|inv({:.2f})'
+        self.log.debug(msg.format(
+                self.latest_price, self.budget, self.portfolio_value,
+                self.net_value, self.investment))
 
         return action_name, self.reward
 
@@ -96,6 +110,7 @@ class Portfolio(Common):
         buy_price = num_shares * self.latest_price
         if buy_price > self.budget:
             action_name = 'f.buy'
+            self.log.debug('  FAILED buy')
         self.update_after_buy(action_name, num_shares, buy_price)
         self.reward = self.decide_reward(action_name, num_shares)
 
@@ -119,6 +134,11 @@ class Portfolio(Common):
 
         # what is the value of my investment after selling?
         self.net_value = self.compute_portfolio_value()
+        msg = '  BUY: ' + \
+              'prc({:.2f})|bdg({:.2f})|val({:.2f})|prf({:.2f})|inv({:.2f})'
+        self.log.debug(msg.format(
+                self.latest_price, self.budget, self.portfolio_value,
+                self.net_value, self.investment))
 
     def sell(self, num_shares=1.0):
         """
@@ -130,6 +150,7 @@ class Portfolio(Common):
         sell_price = num_shares * self.latest_price
         if num_shares > self.shares:
             action_name = 'f.sell'
+            self.log.debug('  FAILED sell')
         self.update_after_sell(action_name, num_shares, sell_price)
         self.reward = self.decide_reward(action_name, num_shares)
 
@@ -150,12 +171,18 @@ class Portfolio(Common):
         else:
             self.budget += self.memory.last('investment')
             self.budget += self.compute_portfolio_value()
-        self.investment -= sell_price
+        # self.investment -= sell_price
+        self.investment = 0.
         self.shares -= num_shares
         self.portfolio_value -= sell_price
 
         # what is the value of my investment after selling?
         self.net_value = self.compute_portfolio_value()
+        msg = '  SELL: ' + \
+              'prc({:.2f})|bdg({:.2f})|val({:.2f})|prf({:.2f})|inv({:.2f})'
+        self.log.debug(msg.format(
+                self.latest_price, self.budget, self.portfolio_value,
+                self.net_value, self.investment))
 
     def decide_reward(self, action_name, num_shares):
         """ Decide what is the reward for this action """
@@ -183,11 +210,12 @@ class Portfolio(Common):
             # Check if this is a failed situation 'f.buy' or 'f.sell',
             # to reverse the reward sign to negative.
             if action_name in self.failed_actions:
-                net_value = -1. * abs(net_value)
-                # There is a corner case when it is a failed action but there
-                # are no shares, and value is 0. In that case, we must punish.
-                if net_value == 0.0:
-                    net_value = -1.0
+                return -1.0
+                # net_value = -1. * abs(net_value)
+                # # There is a corner case when it is a failed action but there
+                # # are no shares, and value is 0. In that case, we must punish.
+                # if net_value == 0.0:
+                #     net_value = -1.0
             self.log.debug(
                 '  direct reward: net value s({:.2f})={:.2f}'.format(
                     net_value, sigmoid(net_value)))
@@ -201,21 +229,21 @@ class Portfolio(Common):
         self.log.debug('Preset reward mode')
         reward = 0.
         if action_name == 'wait':
-            reward = self.environment.reward_do_nothing
+            reward = self.env_params.reward_do_nothing
         elif action_name == 'buy':
-            reward = self.environment.reward_success_buy
+            reward = self.env_params.reward_success_buy
         elif action_name == 'sell':
             gain_loss = 1.0
-            if self.environment.proportional_reward is True:
+            if self.env_params.proportional_reward is True:
                 gain_loss = abs(self.net_value) + 1.0
             if self.net_value >= 0:
-                reward = self.environment.reward_positive_sell * gain_loss
+                reward = self.env_params.reward_positive_sell * gain_loss
             else:
-                reward = self.environment.reward_negative_sell * gain_loss
+                reward = self.env_params.reward_negative_sell * gain_loss
         elif action_name == 'f.buy':
-            reward = self.environment.reward_failed_buy
+            reward = self.env_params.reward_failed_buy
         elif action_name == 'f.sell':
-            reward = self.environment.reward_failed_sell
+            reward = self.env_params.reward_failed_sell
         return reward
 
     def values_to_record(self):
@@ -280,48 +308,49 @@ class Portfolio(Common):
 
     @property
     def prediction_upward(self):
+        msg = '  Pred sign ({}) latest price({:.2f}) vs. last_forecast({:.2f})'
         self.log.debug(
-            '  Pred sign ({}) latest price({}) vs. last_forecast({})'.format(
+            msg.format(
                 '↑' if self.latest_price <= self.forecast else '↓',
                 self.latest_price, self.forecast))
         return self.latest_price <= self.forecast
 
     @property
     def last_forecast(self):
-        self.log.debug('    Last forecast in MEM = {}'.format(
+        self.log.debug('    Last forecast in MEM = {:.2f}'.format(
             self.memory.last('forecast')))
         return self.memory.last('forecast')
 
     @property
     def last_price(self):
-        self.log.debug(
-            '    Last price in MEM = {}'.format(self.memory.last('price')))
+        # self.log.debug(
+        #     '    Last price in MEM = {:.2f}'.format(self.memory.last('price')))
         return self.memory.last('price')
 
     @property
     def prevlast_forecast(self):
-        self.log.debug(
-            '    PrevLast forecast in MEM = {}'.format(
-                self.memory.prevlast('forecast')))
+        # self.log.debug(
+        #     '    PrevLast forecast in MEM = {:.2f}'.format(
+        #         self.memory.prevlast('forecast')))
         return self.memory.prevlast('forecast')
 
     @property
     def prevlast_price(self):
-        self.log.debug(
-            '    PrevLast price in MEM = {}'.format(
-                self.memory.prevlast('price')))
+        # self.log.debug(
+        #     '    PrevLast price in MEM = {:.2f}'.format(
+        #         self.memory.prevlast('price')))
         return self.memory.prevlast('price')
 
     @property
     def prevprevlast_forecast(self):
-        self.log.debug(
-            '    PrevPrevLast forecast in MEM = {}'.format(
-                self.memory.prevprevlast('forecast')))
+        # self.log.debug(
+        #     '    PrevPrevLast forecast in MEM = {:.2f}'.format(
+        #         self.memory.prevprevlast('forecast')))
         return self.memory.prevprevlast('forecast')
 
     @property
     def prevprevlast_price(self):
-        self.log.debug(
-            '    PrevPrevLast price in MEM = {}'.format(
-                self.memory.prevprevlast('price')))
+        # self.log.debug(
+        #     '    PrevPrevLast price in MEM = {:.2f}'.format(
+        #         self.memory.prevprevlast('price')))
         return self.memory.prevprevlast('price')

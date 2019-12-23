@@ -1,3 +1,4 @@
+import sys
 import time
 from collections import deque
 
@@ -94,7 +95,11 @@ class Agent(Common):
             rl_stats.reset()
             episode_step = 0
             while not done:
-                self.log.debug('-----------')
+                # sys.stdout.flush()
+                # input("Press ENTER to continue...")
+
+                self.log.debug('----- t={} / price={:.2f} ------'.format(
+                    env.t, env.price_))
                 # Decide whether generating random action or predict most
                 # likely from the give state.
                 action = self.epsilon_greedy(epsilon, state)
@@ -143,12 +148,12 @@ class Agent(Common):
         rn = np.random.random()
         if rn < epsilon:
             action = np.random.randint(0, self.params.num_actions)
-            self.log.debug('Action (random): {} - {:.2f}<{:.2f}'.format(
-                action, rn, epsilon))
+            self.log.debug('Action (random): {}({}) - ε={:.2f}<{:.2f}'.format(
+                self.params.action_name[action], action, rn, epsilon))
         else:
             action = self.nn.predict(state)
-            self.log.debug('Action (predicted): {} - {:.2f}>{:.2f}'.format(
-                action, rn, epsilon))
+            self.log.debug('Action (predicted): {}({}) - {:.2f}>{:.2f}'.format(
+                self.params.action_name[action], action, rn, epsilon))
         return action
 
     def simulate(self, environment: Environment, strategy: list):
@@ -268,7 +273,7 @@ class Agent(Common):
 
     def time_to_learn(self, episode, episode_step):
         self.log.debug(
-            '> TTL [ {} AND {} ] (ep:{}, step:{}, st_ep:{}, tr_ss:{})'.format(
+            'TTL [ {} AND {} ] (ep:{}, step:{}, st_ep:{}, tr_ss:{})'.format(
                 episode_step % self.params.train_steps == 0,
                 episode >= self.params.start_episodes,
                 episode, episode_step,
