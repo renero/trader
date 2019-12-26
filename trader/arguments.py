@@ -53,6 +53,9 @@ class Arguments(object):
             '-T', '--totals', action='store_true',
             help='When in simulate mode, display only the totals summary.')
         self.parser.add_argument(
+            '--stepwise', action='store_true',
+            help='Pauses every step, waiting for user to hit Enter')
+        self.parser.add_argument(
             '-t', '--trading-mode', nargs=1, type=str,
             help='Trading mode: either \'bull\' (default) or \'bear\'.')
 

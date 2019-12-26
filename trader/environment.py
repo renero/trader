@@ -1,5 +1,6 @@
 import importlib
 import json
+import sys
 from os.path import splitext, basename
 
 import joblib
@@ -33,7 +34,7 @@ class Environment(Common):
     new_state_: int = 0
     scaler_ = None
     have_konkorde = False
-    date_colname = 'date'
+    date_colname_ = 'date'
 
     def __init__(self, configuration, train_mode: bool):
         self.params = configuration
@@ -50,7 +51,7 @@ class Environment(Common):
             np.random.seed(1)
 
         self.states = StatesCombiner(self.params)
-        self.read_forecast(self.params.forecast_file, train_mode)
+        self.init_forecast(self.params.forecast_file, train_mode)
         self.portfolio = Portfolio(self.params,
                                    self.price_,
                                    self.forecast_,
@@ -66,11 +67,11 @@ class Environment(Common):
         internal state of the environment accordingly.
         :return: The initial state.
         """
-        self.update_forecast()
+        self.read_next_forecast()
         self.portfolio.reset(self.price_, self.forecast_,
                              self.memory, self.scaler_)
         if creation_time is not True:
-            self.memory.record_values(self.portfolio, t=0, ts=self.ts_)
+            self.memory.record_state(self.portfolio, t=0, ts=self.ts_)
         return self.update_state()
 
     def step(self, action):
@@ -97,13 +98,16 @@ class Environment(Common):
         # Compute reward by calling action and record experience.
         action_name = self.params.action_name[action]
         action_done, self.reward_ = getattr(self.portfolio, action_name)()
-        self.memory.record_action(action_done)
-        self.memory.record_reward(self.reward_,
-                                  self.current_state_,
-                                  self.states.name(self.current_state_))
-        self.log.debug(
-            '  Reward ({:.2f}), recorded to action \'{}\' in state {}'.format(
-                self.reward_, action, self.current_state_))
+        self.memory.record_action_and_reward(
+            action_done,
+            self.reward_,
+            self.current_state_,
+            self.states.name(self.current_state_))
+
+        if self.params.stepwise:
+            self.display.summary(self.memory.results, False)
+            sys.stdout.flush()
+            input("Press ENTER to continue...")
 
         # Increase `time pointer`
         self.t += 1
@@ -114,10 +118,10 @@ class Environment(Common):
             return self.new_state_, self.reward_, self.done_, self.t
 
         self.log.debug('Updating environment, after step.')
-        self.update_forecast()
+        self.read_next_forecast()
         self.portfolio.update(self.price_, self.forecast_, self.konkorde_)
         self.new_state_ = self.update_state()
-        self.memory.record_values(self.portfolio, self.t, self.ts_)
+        self.memory.record_state(self.portfolio, self.t, self.ts_)
 
         return self.new_state_, self.reward_, self.done_, self.t
 
@@ -132,7 +136,7 @@ class Environment(Common):
         self.memory.reset()
         return self.init_environment(creation_time=False)
 
-    def read_forecast(self, forecast_file, train_mode: bool):
+    def init_forecast(self, forecast_file, train_mode: bool):
         """
         Reads the forecast data with the actual price values, followed by
         the forecast made by the RNN and the indicators backing the prediction.
@@ -171,7 +175,7 @@ class Environment(Common):
             self.params.have_konkorde = True
             self.log.info('Konkorde index present!')
 
-    def update_forecast(self):
+    def read_next_forecast(self):
         """
         Set the price to the current time slot.
         """
@@ -282,13 +286,13 @@ class Environment(Common):
         if self.t >= self.data_.shape[0]:
             return -1
 
-        self.update_forecast()
+        self.read_next_forecast()
         self.portfolio.latest_price = self.price_
         self.portfolio.forecast = self.forecast_
         self.portfolio.memory = self.memory
         self.portfolio.update(self.price_, self.forecast_, self.konkorde_)
         self.update_state()
-        self.memory.record_values(self.portfolio, self.t, self.ts_)
+        self.memory.record_state(self.portfolio, self.t, self.ts_)
 
         # latest state is the previous to the last int the table.
         return self.current_state_

@@ -57,7 +57,7 @@ class Display(Common):
         """
         # First, guess what do I need to show.
         if self.params.short:
-            to_remove = {'t', 'budget', 'investment', 'value', 'reward',
+            to_remove = {'t', 'budget', 'cost', 'value', 'reward',
                          'state', 'state_desc'}
             to_display = list(
                 set(results.columns) - to_remove)
@@ -78,8 +78,8 @@ class Display(Common):
             self.recolor(df, 'budget')
         if 'profit' in df.columns:
             self.recolor(df, 'profit')
-        if 'investment' in df.columns:
-            self.recolor(df, 'investment')
+        if 'cost' in df.columns:
+            self.recolor(df, 'cost')
         if 'reward' in df.columns:
             self.recolor(df, 'reward')
         if 'konkorde' in df.columns:

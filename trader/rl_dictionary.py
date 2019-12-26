@@ -27,6 +27,12 @@ class RLDictionary(Dictionary):
         setattr(self, 'log_level',
                 arguments.args.debug[0] if arguments.args.debug else 3)
 
+        # Interactive or Stepwise mode, overrides debug and log_level
+        setattr(self, 'stepwise', arguments.args.stepwise)
+        if self.stepwise is True:
+            self.debug = True
+            self.log_level = 4
+
         # Start the logger
         if 'log_level' not in self:
             self.log_level = 3  # default value = INFO

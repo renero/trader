@@ -4,16 +4,16 @@ from common import Common
 from utils.dictionary import Dictionary
 
 
-class Portfolio(Common):
+class Portfolio:
     configuration: Dictionary
     env_scaler = None
     memory = None
     initial_budget = 0.
     budget = 0.
-    investment = 0
+    cost = 0
     portfolio_value: float = 0.
-    net_value: float = 0
-    shares: float = 0.
+    profit: float = 0
+    num_shares: float = 0.
     latest_price: float = 0.
     forecast: float = 0.
     konkorde = 0.
@@ -23,7 +23,7 @@ class Portfolio(Common):
     # These are the variables that MUST be saved by the `dump()` method
     # in `environment`, in order to be able to resume the state.
     state_variables = ['initial_budget', 'budget', 'latest_price', 'forecast',
-                       'investment', 'portfolio_value', 'net_value', 'shares',
+                       'cost', 'portfolio_value', 'profit', 'shares',
                        'konkorde']
 
     def __init__(self,
@@ -49,10 +49,10 @@ class Portfolio(Common):
         self.latest_price = initial_price
         self.forecast = forecast
         self.memory = env_memory
-        self.investment = 0
+        self.cost = 0
         self.portfolio_value: float = 0.
-        self.net_value: float = 0
-        self.shares: float = 0.
+        self.profit: float = 0
+        self.num_shares: float = 0.
         self.konkorde = 0.
         self.reward = 0.
         self.log.debug('Portfolio reset. Initial budget: {:.1f}'.format(
@@ -65,27 +65,6 @@ class Portfolio(Common):
             ptp = 0.000001
         return (budget - mn) / ptp
 
-    def update(self, price, forecast, konkorde=None):
-        """
-        Updates portfolio after an iteration step.
-
-        :param price:    new price registered
-        :param forecast: new forecast registered
-        :param konkorde: the konkorde value (computed from green & blue read
-                         the data file, if applicable)
-        :return:         the portfolio object
-        """
-        self.portfolio_value = self.shares * price
-        self.latest_price = price
-        self.forecast = forecast
-        if konkorde is not None:
-            self.konkorde = konkorde
-        self.log.debug('  Updating portfolio after STEP.')
-        msg = '  > portfolio_value={:.2f}, latest_price={:.2f}, forecast={:.2f}'
-        self.log.debug(msg.format(
-            self.portfolio_value, self.latest_price, self.forecast))
-        return self
-
     def wait(self):
         """
         WAIT Operation
@@ -96,7 +75,7 @@ class Portfolio(Common):
               'prc({:.2f})|bdg({:.2f})|val({:.2f})|prf({:.2f})|inv({:.2f})'
         self.log.debug(msg.format(
                 self.latest_price, self.budget, self.portfolio_value,
-                self.net_value, self.investment))
+                self.profit, self.cost))
 
         return action_name, self.reward
 
@@ -111,8 +90,8 @@ class Portfolio(Common):
         if buy_price > self.budget:
             action_name = 'f.buy'
             self.log.debug('  FAILED buy')
-        self.update_after_buy(action_name, num_shares, buy_price)
         self.reward = self.decide_reward(action_name, num_shares)
+        self.update_after_buy(action_name, num_shares, buy_price)
 
         return action_name, self.reward
 
@@ -128,17 +107,17 @@ class Portfolio(Common):
         if action_name in self.failed_actions:
             return
         self.budget -= buy_price
-        self.investment += buy_price
-        self.shares += num_shares
+        self.cost += buy_price
+        self.num_shares += num_shares
         self.portfolio_value += buy_price
 
         # what is the value of my investment after selling?
-        self.net_value = self.compute_portfolio_value()
+        self.profit = self.compute_portfolio_value()
         msg = '  BUY: ' + \
               'prc({:.2f})|bdg({:.2f})|val({:.2f})|prf({:.2f})|inv({:.2f})'
         self.log.debug(msg.format(
                 self.latest_price, self.budget, self.portfolio_value,
-                self.net_value, self.investment))
+                self.profit, self.cost))
 
     def sell(self, num_shares=1.0):
         """
@@ -148,11 +127,11 @@ class Portfolio(Common):
         """
         action_name = 'sell'
         sell_price = num_shares * self.latest_price
-        if num_shares > self.shares:
+        if num_shares > self.num_shares:
             action_name = 'f.sell'
             self.log.debug('  FAILED sell')
-        self.update_after_sell(action_name, num_shares, sell_price)
         self.reward = self.decide_reward(action_name, num_shares)
+        self.update_after_sell(action_name, num_shares, sell_price)
 
         return action_name, self.reward
 
@@ -169,20 +148,19 @@ class Portfolio(Common):
         if self.params.mode == 'bull':
             self.budget += sell_price
         else:
-            self.budget += self.memory.last('investment')
+            self.budget += self.memory.last('cost')
             self.budget += self.compute_portfolio_value()
-        # self.investment -= sell_price
-        self.investment = 0.
-        self.shares -= num_shares
+        self.cost -= sell_price
+        self.num_shares -= num_shares
         self.portfolio_value -= sell_price
 
         # what is the value of my investment after selling?
-        self.net_value = self.compute_portfolio_value()
+        self.profit = self.compute_portfolio_value()
         msg = '  SELL: ' + \
               'prc({:.2f})|bdg({:.2f})|val({:.2f})|prf({:.2f})|inv({:.2f})'
         self.log.debug(msg.format(
                 self.latest_price, self.budget, self.portfolio_value,
-                self.net_value, self.investment))
+                self.profit, self.cost))
 
     def decide_reward(self, action_name, num_shares):
         """ Decide what is the reward for this action """
@@ -194,6 +172,11 @@ class Portfolio(Common):
     def direct_reward(self, action_name, num_shares):
         """ Direct reward is directly related to portfolio value """
 
+        # Check if this is a failed situation 'f.buy' or 'f.sell',
+        # to reverse the reward sign to negative.
+        if action_name in self.failed_actions:
+            return -1.0
+
         def sigmoid(x: float):
             return x / math.sqrt(1. + math.pow(x, 2.))
 
@@ -201,25 +184,13 @@ class Portfolio(Common):
             self.log.debug('  direct reward: buy = 0.0')
             return 0.0
         else:
-            if action_name == 'wait' and self.shares == 0.:
+            if action_name == 'wait' and self.num_shares == 0.:
                 self.log.debug('  direct reward: wait & shares=0 => -.05')
                 return -0.05
-
             net_value = self.compute_portfolio_value()
-
-            # Check if this is a failed situation 'f.buy' or 'f.sell',
-            # to reverse the reward sign to negative.
-            if action_name in self.failed_actions:
-                return -1.0
-                # net_value = -1. * abs(net_value)
-                # # There is a corner case when it is a failed action but there
-                # # are no shares, and value is 0. In that case, we must punish.
-                # if net_value == 0.0:
-                #     net_value = -1.0
             self.log.debug(
                 '  direct reward: net value s({:.2f})={:.2f}'.format(
                     net_value, sigmoid(net_value)))
-
             return sigmoid(net_value)
 
     def preset_reward(self, action_name, num_shares):
@@ -235,8 +206,8 @@ class Portfolio(Common):
         elif action_name == 'sell':
             gain_loss = 1.0
             if self.env_params.proportional_reward is True:
-                gain_loss = abs(self.net_value) + 1.0
-            if self.net_value >= 0:
+                gain_loss = abs(self.profit) + 1.0
+            if self.profit >= 0:
                 reward = self.env_params.reward_positive_sell * gain_loss
             else:
                 reward = self.env_params.reward_negative_sell * gain_loss
@@ -246,20 +217,41 @@ class Portfolio(Common):
             reward = self.env_params.reward_failed_sell
         return reward
 
+    def update(self, price, forecast, konkorde=None):
+        """
+        Updates portfolio after an iteration step.
+
+        :param price:    new price registered
+        :param forecast: new forecast registered
+        :param konkorde: the konkorde value (computed from green & blue read
+                         the data file, if applicable)
+        :return:         the portfolio object
+        """
+        self.portfolio_value = self.num_shares * price
+        self.latest_price = price
+        self.forecast = forecast
+        if konkorde is not None:
+            self.konkorde = konkorde
+        self.log.debug('  Updating portfolio after STEP.')
+        msg = '  > portfolio_value={:.2f}, latest_price={:.2f}, forecast={:.2f}'
+        self.log.debug(msg.format(
+            self.portfolio_value, self.latest_price, self.forecast))
+        return self
+
     def values_to_record(self):
-        net_value = self.compute_portfolio_value() * self.shares
-        self.investment = self.investment * self.shares
+        profit = self.compute_portfolio_value() * self.num_shares
         values = [
             self.latest_price,
             self.forecast,
             self.budget,
-            self.investment,
+            self.cost,
             self.portfolio_value,
-            net_value,
-            self.shares
+            profit,
+            self.num_shares
         ]
         if self.params.have_konkorde:
-            return values + [self.konkorde]
+            values += [self.konkorde]
+        values += ['', 0., 0., '']
         return values
 
     def compute_portfolio_value(self):
@@ -269,9 +261,9 @@ class Portfolio(Common):
         at the moment, and the investment made to purchase them.
         """
         if self.params.mode == 'bear':
-            return self.investment - self.portfolio_value
+            return self.cost - self.portfolio_value
         else:
-            return self.portfolio_value - self.investment
+            return self.portfolio_value - self.cost
 
     def failed_action(self, action, price):
         """
@@ -283,7 +275,7 @@ class Portfolio(Common):
             else:
                 return False
         elif action == self.params.action.index('sell'):
-            if self.shares == 0.:
+            if self.num_shares == 0.:
                 return True
             else:
                 return False
@@ -292,11 +284,11 @@ class Portfolio(Common):
 
     @property
     def gain(self):
-        return (self.portfolio_value - self.investment) >= 0
+        return (self.portfolio_value - self.cost) >= 0
 
     @property
     def have_shares(self):
-        return self.shares > 0
+        return self.num_shares > 0
 
     @property
     def can_buy(self) -> bool:
@@ -304,7 +296,7 @@ class Portfolio(Common):
 
     @property
     def can_sell(self) -> bool:
-        return self.shares > 0.
+        return self.num_shares > 0.
 
     @property
     def prediction_upward(self):

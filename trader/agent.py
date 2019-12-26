@@ -1,4 +1,3 @@
-import sys
 import time
 from collections import deque
 
@@ -95,9 +94,6 @@ class Agent(Common):
             rl_stats.reset()
             episode_step = 0
             while not done:
-                # sys.stdout.flush()
-                # input("Press ENTER to continue...")
-
                 self.log.debug('----- t={} / price={:.2f} ------'.format(
                     env.t, env.price_))
                 # Decide whether generating random action or predict most
