@@ -89,6 +89,9 @@ class Environment(Common):
             'Action ID must be between 0 and {}'.format(
                 self.params.num_actions)
 
+        self.log.debug('----- ts={} / price={:.2f} ------'.format(
+            self.ts_, self.price_))
+
         # Call to the proper portfolio method, based on the action number
         # passed to this argument.
         self.log.debug(

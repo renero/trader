@@ -1,6 +1,6 @@
 import math
 
-from common import Common
+from positions import Positions
 from utils.dictionary import Dictionary
 
 
@@ -38,6 +38,7 @@ class Portfolio:
         self.log = self.params.log
         self.env_params = self.params.environment
         self.env_scaler = env_scaler
+        self.positions = Positions(configuration)
         self.reset(initial_price, forecast, env_memory, env_scaler)
 
     def reset(self, initial_price, forecast, env_memory, env_scaler):
@@ -55,6 +56,7 @@ class Portfolio:
         self.num_shares: float = 0.
         self.konkorde = 0.
         self.reward = 0.
+        self.positions.reset()
         self.log.debug('Portfolio reset. Initial budget: {:.1f}'.format(
             self.initial_budget))
 
@@ -74,8 +76,9 @@ class Portfolio:
         msg = '  WAIT: ' + \
               'prc({:.2f})|bdg({:.2f})|val({:.2f})|prf({:.2f})|inv({:.2f})'
         self.log.debug(msg.format(
-                self.latest_price, self.budget, self.portfolio_value,
-                self.profit, self.cost))
+            self.latest_price, self.budget, self.portfolio_value,
+            self.profit, self.cost))
+        # self.positions.debug()
 
         return action_name, self.reward
 
@@ -90,6 +93,7 @@ class Portfolio:
         if buy_price > self.budget:
             action_name = 'f.buy'
             self.log.debug('  FAILED buy')
+
         self.reward = self.decide_reward(action_name, num_shares)
         self.update_after_buy(action_name, num_shares, buy_price)
 
@@ -110,14 +114,17 @@ class Portfolio:
         self.cost += buy_price
         self.num_shares += num_shares
         self.portfolio_value += buy_price
-
+        self.positions.buy_position(num_shares,
+                                    self.latest_price,
+                                    self.params.mode)
         # what is the value of my investment after selling?
         self.profit = self.compute_portfolio_value()
         msg = '  BUY: ' + \
               'prc({:.2f})|bdg({:.2f})|val({:.2f})|prf({:.2f})|inv({:.2f})'
         self.log.debug(msg.format(
-                self.latest_price, self.budget, self.portfolio_value,
-                self.profit, self.cost))
+            self.latest_price, self.budget, self.portfolio_value,
+            self.profit, self.cost))
+        # self.positions.debug()
 
     def sell(self, num_shares=1.0):
         """
@@ -130,6 +137,7 @@ class Portfolio:
         if num_shares > self.num_shares:
             action_name = 'f.sell'
             self.log.debug('  FAILED sell')
+
         self.reward = self.decide_reward(action_name, num_shares)
         self.update_after_sell(action_name, num_shares, sell_price)
 
@@ -153,14 +161,16 @@ class Portfolio:
         self.cost -= sell_price
         self.num_shares -= num_shares
         self.portfolio_value -= sell_price
+        self.positions.sell_positions(num_shares, self.latest_price)
 
         # what is the value of my investment after selling?
         self.profit = self.compute_portfolio_value()
         msg = '  SELL: ' + \
               'prc({:.2f})|bdg({:.2f})|val({:.2f})|prf({:.2f})|inv({:.2f})'
         self.log.debug(msg.format(
-                self.latest_price, self.budget, self.portfolio_value,
-                self.profit, self.cost))
+            self.latest_price, self.budget, self.portfolio_value,
+            self.profit, self.cost))
+        # self.positions.debug()
 
     def decide_reward(self, action_name, num_shares):
         """ Decide what is the reward for this action """
@@ -229,6 +239,7 @@ class Portfolio:
         """
         self.portfolio_value = self.num_shares * price
         self.latest_price = price
+        self.positions.update(self.latest_price)
         self.forecast = forecast
         if konkorde is not None:
             self.konkorde = konkorde
@@ -236,6 +247,7 @@ class Portfolio:
         msg = '  > portfolio_value={:.2f}, latest_price={:.2f}, forecast={:.2f}'
         self.log.debug(msg.format(
             self.portfolio_value, self.latest_price, self.forecast))
+        self.positions.debug()
         return self
 
     def values_to_record(self):

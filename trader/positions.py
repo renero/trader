@@ -12,6 +12,10 @@ class Positions:
         self.params = configuration
         self.book = []
 
+    def reset(self):
+        del self.book[:]
+        self.book = []
+
     def buy_position(self, num, price, mode='bull'):
         """ Buy a number of positions, at a given price """
         self.book.append(share(price, num, mode))
@@ -44,7 +48,6 @@ class Positions:
         if num_shares_i_have == 0. or num_shares_to_sell > num_shares_i_have:
             return 0., 0.
         if num_shares_i_have == num_shares_to_sell:
-            print('selling all')
             return self.sell_all(sell_price)
 
         # Sort positions by profit to sell first those with max prof.
@@ -118,9 +121,33 @@ class Positions:
             total_value += s.value_
         return total_value
 
+    def cost(self):
+        """ Computes the cost of the positions with the price passed """
+        total_cost = 0.
+        for s in self.book:
+            total_cost += s.cost_
+        return total_cost
+
     def profit(self):
         """ Returns the total profit accumulated by each share """
         total_profit = 0.
         for s in self.book:
             total_profit += s.profit_
         return total_profit
+
+    def debug(self):
+        if not self.book:
+            return
+        debug = self.params.log.debug
+        debug('  Book ----------------------------------------------+')
+        for s in self.book:
+            dm = '  | {:<4.1f}({:>7.2f}) | val.{:>8.2f} |   profit={:>8.2f} |'
+            debug(dm.format(s.num_, s.buy_price_, s.value_, s.profit_))
+
+        debug('  |---------------+--------------+-------------------|')
+        dm =  '  | {:<4.1f}({:>7.2f}) |     {:>8.2f} |          {:>8.2f} |'
+
+        debug(dm.format(
+            self.num_shares(), self.cost(), self.value(), self.profit()
+        ))
+        debug('  +---------------+--------------+-------------------+')

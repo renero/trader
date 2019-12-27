@@ -25,6 +25,7 @@ class Memory:
         values = [t] + [ts] + portfolio.values_to_record()
         row = Series(dict(zip(self.params.table_headers, values)))
         self.results = self.results.append(row, ignore_index=True)
+        self.log.debug('  Recorded values (ts={})'.format(ts))
 
     def record_action_and_reward(
             self,
