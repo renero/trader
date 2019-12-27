@@ -12,7 +12,7 @@ class Positions:
         self.params = configuration
         self.book = []
 
-    def add_position(self, num, price, mode='bull'):
+    def buy_position(self, num, price, mode='bull'):
         """ Buy a number of positions, at a given price """
         self.book.append(share(price, num, mode))
 

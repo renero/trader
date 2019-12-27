@@ -15,7 +15,8 @@ class share:
         self.cost_ = self.buy_price_ * self.num_
         self.value_ = self.cost_
         self.profit_ = 0.
-        self.performance_ = self.current_price_ - self.buy_price_
+        self.performance_ = (self.current_price_ - self.buy_price_) / \
+                             self.buy_price_
         self.mode_ = mode
 
     def sell(self, num, sell_price):
@@ -46,10 +47,13 @@ class share:
             new_price = self.current_price_
         self.current_price_ = new_price
         self.value_ = self.num_ * new_price
-        self.performance_ = self.current_price_ - self.buy_price_
-        if self.mode_ == 'bear':
-            self.performance_ *= -1.
-        self.profit_ = self.num_ * self.performance_
+        if self.mode_ == 'bull':
+            self.performance_ = (self.current_price_ - self.buy_price_) / \
+                             self.buy_price_
+        else:
+            self.performance_ = (self.buy_price_ - self.current_price_) / \
+                             self.buy_price_
+        self.profit_ = self.performance_ * self.value_
         return self.value_, self.profit_
 
     def valuate(self, num=None, price=None):
@@ -65,7 +69,5 @@ class share:
             price = self.current_price_
 
         value = num * price
-        profit = (num * price) - (self.buy_price_ * num)
-        if self.mode_ == 'bear':
-            profit *= -1.
+        profit = self.performance_ * value
         return value, profit
