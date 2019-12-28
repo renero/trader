@@ -17,13 +17,17 @@ class Positions:
         self.book = []
 
     def buy_position(self, num, price, mode='bull'):
-        """ Buy a number of positions, at a given price """
+        """
+        Buy a number of positions, at a given price.
+        Returns the cost of the buy operation.
+        """
         self.book.append(share(price, num, mode))
+        return self.book[-1].cost_
 
     def sell_all(self, price):
         """ Sell all the options we have. Clear the book """
         self.update(price)
-        sell_value = self.value()
+        sell_value = self.cost()
         sell_profit = self.profit()
         del self.book[:]
         return sell_value, sell_profit
@@ -78,7 +82,7 @@ class Positions:
         :param position:   the position to be sold
         :param num_shares: the nr of shares to sell
         :param sell_price: the selling price
-        :return:           the number of shares sold.
+        :return:           the number of shares sold, income and profit
         """
         # Get the reference in the actual book, not the selling book.
         position = self.book[self.book.index(position)]
@@ -128,7 +132,7 @@ class Positions:
             total_cost += s.cost_
         return total_cost
 
-    def profit(self):
+    def profit(self) -> float:
         """ Returns the total profit accumulated by each share """
         total_profit = 0.
         for s in self.book:
@@ -139,15 +143,20 @@ class Positions:
         if not self.book:
             return
         debug = self.params.log.debug
-        debug('  Book ----------------------------------------------+')
+        ht = '  | num.( b.price) | cost      | value     | perf  | proft | m |'
+        hl = '  +----------------+-----------+-----------+-------+-------+---+'
+        debug(hl)
+        debug(ht)
+        debug(hl)
+        # '  | 12.4(123456.8) | 123456.89 | 123456.89 | 12.45 | 12.45 | c |')
+        fm = '  | {:<4.1f}({:>8.1f}) | {:>9.2f} | {:>9.2f} | {:>5.2f} '
+        fm += '| {:>5.2f} | {} |'
         for s in self.book:
-            dm = '  | {:<4.1f}({:>7.2f}) | val.{:>8.2f} |   profit={:>8.2f} |'
-            debug(dm.format(s.num_, s.buy_price_, s.value_, s.profit_))
-
-        debug('  |---------------+--------------+-------------------|')
-        dm =  '  | {:<4.1f}({:>7.2f}) |     {:>8.2f} |          {:>8.2f} |'
-
-        debug(dm.format(
-            self.num_shares(), self.cost(), self.value(), self.profit()
-        ))
-        debug('  +---------------+--------------+-------------------+')
+            debug(fm.format(s.num_, s.buy_price_, s.cost_, s.value_,
+                            s.performance_, s.profit_,
+                            'B' if s.mode_ == 'bull' else 'b'))
+        debug(hl)
+        fm = '  | {:<14.1f} | {:>9.2f} | {:>9.2f} | ----- | {:>5.2f} | - |'
+        debug(fm.format(
+            self.num_shares(), self.cost(), self.value(), self.profit()))
+        debug(hl)

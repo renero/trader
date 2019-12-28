@@ -29,11 +29,15 @@ class share:
         :return:           the value of the portion of shares sold, and profit
         """
         assert num <= self.num_, 'Attempt to sell more shares than owned!'
+
         # Captures the value of the portion sold.-
         value, profit = self.valuate(num, sell_price)
+        print('SELL VALUE = {}'.format(value))
+
         # Updates the remaining part, without changing price
         self.num_ -= num
         self.update()
+
         return value, profit
 
     def update(self, new_price=None):
@@ -53,7 +57,7 @@ class share:
         else:
             self.performance_ = (self.buy_price_ - self.current_price_) / \
                              self.buy_price_
-        self.profit_ = self.performance_ * self.value_
+        self.profit_ = self.performance_ * self.cost_
         return self.value_, self.profit_
 
     def valuate(self, num=None, price=None):
@@ -68,6 +72,6 @@ class share:
         if price is None:
             price = self.current_price_
 
-        value = num * price
-        profit = self.performance_ * value
+        value = num * self.buy_price_
+        profit = self.performance_ * num * self.buy_price_
         return value, profit

@@ -94,6 +94,9 @@ class Agent(Common):
             rl_stats.reset()
             episode_step = 0
             while not done:
+                self.log.debug('----- t={}, ts={}, price={:.2f} ------'.format(
+                    env.t, env.ts_, env.price_))
+
                 # Decide whether generating random action or predict most
                 # likely from the give state.
                 action = self.epsilon_greedy(epsilon, state)
