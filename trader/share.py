@@ -32,7 +32,6 @@ class share:
 
         # Captures the value of the portion sold.-
         value, profit = self.valuate(num, sell_price)
-        print('SELL VALUE = {}'.format(value))
 
         # Updates the remaining part, without changing price
         self.num_ -= num
