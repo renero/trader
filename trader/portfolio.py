@@ -15,11 +15,6 @@ class Portfolio:
     forecast: float = 0.
     konkorde = 0.
 
-    # cost = 0
-    # portfolio_value: float = 0.
-    # profit: float = 0
-    # num_shares: float = 0.
-
     failed_actions = ['f.buy', 'f.sell']
 
     # These are the variables that MUST be saved by the `dump()` method
@@ -104,29 +99,6 @@ class Portfolio:
         # self.update_after_buy(action_name, num_shares, buy_price)
         return action_name, rw
 
-    # def update_after_buy(self, action_name, num_shares, buy_price):
-    #     """
-    #     Update portfolio parameters after buying shares
-    #
-    #     :param action_name: The name of the action taken
-    #     :param num_shares: the nr. shares bought
-    #     :param buy_price: the price at which the purchase takes place
-    #     :return:
-    #     """
-    #     if action_name in self.failed_actions:
-    #         return
-    #     self.budget -= buy_price
-    #     self.cost += buy_price
-    #     self.num_shares += num_shares
-    #     self.portfolio_value += buy_price
-    #     # what is the value of my investment after selling?
-    #     self.profit = self.positions.profit()
-    #     msg = '  BUY: ' + \
-    #           'prc({:.2f})|bdg({:.2f})|val({:.2f})|prf({:.2f})|inv({:.2f})'
-    #     self.log.debug(msg.format(
-    #         self.latest_price, self.budget, self.portfolio_value,
-    #         self.profit, self.cost))
-
     def sell(self, num_shares=1.0):
         """
         SELL Operation
@@ -149,34 +121,6 @@ class Portfolio:
             self.budget += (income + profit)
 
         return action_name, rw
-
-    # def update_after_sell(self, action_name, num_shares, sell_price):
-    #     """
-    #     Update specific portfolio parameters after selling
-    #     :param action_name: the name of the action taken
-    #     :param num_shares: the nr. of shares sold
-    #     :param sell_price: the price at which the selling takes place
-    #     :return:
-    #     """
-    #     if action_name in self.failed_actions:
-    #         return
-    #     if self.params.mode == 'bull':
-    #         self.budget += sell_price
-    #     else:
-    #         self.budget += self.memory.last('cost')
-    #         self.budget += self.positions.profit()
-    #     self.cost -= sell_price
-    #     self.num_shares -= num_shares
-    #     self.portfolio_value -= sell_price
-    #     self.positions.sell_positions(num_shares, self.latest_price)
-    #
-    #     # what is the value of my investment after selling?
-    #     self.profit = self.positions.profit()
-    #     msg = '  SELL: ' + \
-    #           'prc({:.2f})|bdg({:.2f})|val({:.2f})|prf({:.2f})|inv({:.2f})'
-    #     self.log.debug(msg.format(
-    #         self.latest_price, self.budget, self.portfolio_value,
-    #         self.profit, self.cost))
 
     def update(self, price, forecast, konkorde=None):
         """
@@ -216,17 +160,6 @@ class Portfolio:
             values += [self.konkorde]
         values += ['', 0., 0., '']
         return values
-
-    # def compute_portfolio_value(self):
-    #     """
-    #     Compute the value of the portfolio depending on whether it is bear
-    #     or bull, as the difference between the value of the shares acquired
-    #     at the moment, and the investment made to purchase them.
-    #     """
-    #     if self.params.mode == 'bear':
-    #         return self.cost - self.portfolio_value
-    #     else:
-    #         return self.portfolio_value - self.cost
 
     def failed_action(self, action, price):
         """
