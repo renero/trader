@@ -108,21 +108,19 @@ class Display(Common):
         # Extract Portfolio valuation from the table
         initial_budget = results.iloc[0].budget
         budget = results.iloc[-1].budget
-        value = results.iloc[-1].value
+        cost = results.iloc[-1].cost
+        last_profit = results.iloc[-1].profit
+        value = cost + last_profit
         shares = results.iloc[-1].shares
-        profit = (budget + value) - initial_budget
+        balance = budget + cost + last_profit
+        profit = balance - initial_budget
+
+        # My performance vs. what would happen if I do nothing.
         no_action_perf = results.iloc[-1].price - results.iloc[0].price
-        if mode == 'bull':
-            performance = (profit - no_action_perf) / no_action_perf
-        else:
-            performance = (no_action_perf - profit) / no_action_perf
+        performance = (profit - no_action_perf) / no_action_perf
 
         print('P/L........: €{} [{:.1f}% over nop ({:.2f})]'.format(
             self.color(profit), performance*100., no_action_perf))
-        if value != 0.0:
-            balance = budget + value
-        else:
-            balance = budget
         percentage = 100. * ((balance / initial_budget) - 1.0)
         print('Balance....: €{} [{} %]'.format(
             self.cond_color(balance, initial_budget), self.color(percentage)))
@@ -207,10 +205,10 @@ class Display(Common):
         #
         ax1.axhline(y=0, color='red', alpha=0.4, linewidth=0.4)
         ax1.scatter(range(len(data.price)),
-                    (data.budget + data.investment + data.profit) - ini_budget,
+                    (data.budget + data.cost + data.profit) - ini_budget,
                     c=data.action_id.apply(lambda x: colors[x]),
                     marker='.')
-        ax1.plot((data.budget + data.investment + data.profit) - ini_budget,
+        ax1.plot((data.budget + data.cost + data.profit) - ini_budget,
                  linewidth=0.6)
         ax1.xaxis.set_ticks_position('none')
         #

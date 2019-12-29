@@ -7,7 +7,10 @@ from utils.my_dict import MyDict
 
 class RLDictionary(Dictionary):
 
-    def __init__(self, default_params_filename='params.yaml', *args, **kwargs):
+    def __init__(self,
+                 default_params_filename='params.yaml',
+                 *args,
+                 **kwargs):
 
         # Extend the dictionary with the values passed in arguments.
         # Call the Dictionary constructor once the parameters file is set.
