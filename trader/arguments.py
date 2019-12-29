@@ -58,6 +58,10 @@ class Arguments(object):
         self.parser.add_argument(
             '-t', '--trading-mode', nargs=1, type=str,
             help='Trading mode: either \'bull\' (default) or \'bear\'.')
+        self.parser.add_argument(
+            '--decay-factor', nargs=1, type=float,
+            help='Decay factor applied to epsilon after each iteration.')
+
 
         self.args = self.parser.parse_args()
         action_name = 'arg_{}'.format(self.args.action)

@@ -12,7 +12,7 @@ from spring import spring
 
 
 # TODO: No longer needed to inherit from Common.
-class Agent(Common):
+class Agent:
     configuration = None
     tensorboard = None
     # TODO: Move Experience to a separate class or reuse Memory.
@@ -181,7 +181,7 @@ class Agent(Common):
         # display the result of the simulation (maybe only the totals summ)
         if self.params.totals is True:
             self.params.display.report_totals(environment.memory.results,
-                                              self.params.mode)
+                                              unscale=True)
         else:
             self.params.display.summary(environment.memory.results,
                                         do_plot=self.params.do_plot)

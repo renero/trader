@@ -75,6 +75,12 @@ class RLDictionary(Dictionary):
         else:
             setattr(self, 'num_episodes', 1)
 
+        if arguments.args.decay_factor is not None:
+            setattr(self, 'decay_factor', float(arguments.args.decay_factor[0]))
+        else:
+            setattr(self, 'decay_factor', 0.996)
+        self.log.info('Decay factor: {:.4f}'.format(self.decay_factor))
+
         # Init portfolio
         if arguments.args.init_portfolio is not None:
             setattr(self, 'init_portfolio', True)

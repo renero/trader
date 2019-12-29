@@ -8,6 +8,7 @@ from pandas import DataFrame
 from tabulate import tabulate
 
 from common import Common
+from file_io import unscale_columns
 from logger import Logger
 
 
@@ -57,13 +58,20 @@ class Display(Common):
         """
         # First, guess what do I need to show.
         if self.params.short:
-            to_remove = {'t', 'budget', 'cost', 'value', 'reward',
-                         'state', 'state_desc'}
+            to_remove = {'t', 'reward', 'konkorde', 'state', 'state_desc'}
             to_display = list(
                 set(results.columns) - to_remove)
         else:
             to_display = results.columns
         df = results[to_display].copy()
+
+        # Un-scale results money info with manually set ranges for data
+        # in params file.
+        to_unscale = ['price', 'forecast', 'budget', 'cost', 'value', 'profit']
+        df[to_unscale] = unscale_columns(df[to_unscale],
+                                         self.params.fcast_file.min_support,
+                                         self.params.fcast_file.max_support)
+        self.log.info('Unscaler applied')
 
         # Recolor some columns
         self.recolor_ref(df, 'forecast', 'price')
@@ -100,27 +108,36 @@ class Display(Common):
                        showindex=False,
                        floatfmt=['.0f'] + ['.2f' for i in range(6)]))
         if totals:
-            self.report_totals(results, self.params.mode)
+            self.report_totals(results)
         if do_plot is True:
             self.plot_results(results, self.params.have_konkorde)
 
-    def report_totals(self, results, mode):
+    def report_totals(self, results):
+        df = results.copy()
+        # Un-scale results money info with manually set ranges for data
+        # in params file.
+        to_unscale = ['price', 'forecast', 'budget', 'cost', 'value',
+                      'profit']
+        df[to_unscale] = unscale_columns(df[to_unscale],
+                                         self.params.fcast_file.min_support,
+                                         self.params.fcast_file.max_support)
+
         # Extract Portfolio valuation from the table
-        initial_budget = results.iloc[0].budget
-        budget = results.iloc[-1].budget
-        cost = results.iloc[-1].cost
-        last_profit = results.iloc[-1].profit
+        initial_budget = df.iloc[0].budget
+        budget = df.iloc[-1].budget
+        cost = df.iloc[-1].cost
+        last_profit = df.iloc[-1].profit
         value = cost + last_profit
-        shares = results.iloc[-1].shares
+        shares = df.iloc[-1].shares
         balance = budget + cost + last_profit
         profit = balance - initial_budget
 
         # My performance vs. what would happen if I do nothing.
-        no_action_perf = results.iloc[-1].price - results.iloc[0].price
+        no_action_perf = df.iloc[-1].price - df.iloc[0].price
         performance = (profit - no_action_perf) / no_action_perf
 
         print('P/L........: €{} [{:.1f}% over nop ({:.2f})]'.format(
-            self.color(profit), performance*100., no_action_perf))
+            self.color(profit), performance * 100., no_action_perf))
         percentage = 100. * ((balance / initial_budget) - 1.0)
         print('Balance....: €{} [{} %]'.format(
             self.cond_color(balance, initial_budget), self.color(percentage)))
