@@ -40,6 +40,18 @@ class StateGain(RL_State):
         return 'GAIN' if portfolio.gain else 'LOSE'
 
 
+class StateLastGain(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        return 'GAIN' if portfolio.last_gain else 'LOSE'
+
+
+class StatePrevLastGain(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        return 'GAIN' if portfolio.prev_last_gain else 'LOSE'
+
+
 class StateHaveShares(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
@@ -73,6 +85,22 @@ class StateKonkorde(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
         return 'UPTREND' if portfolio.konkorde >= portfolio.params.k_threshold \
+            else 'DOWNTREND'
+
+
+class StateLastKonkorde(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        return 'UPTREND' if portfolio.memory.last(
+            'konkorde') > portfolio.params.k_threshold \
+            else 'DOWNTREND'
+
+
+class StatePrevLastKonkorde(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        return 'UPTREND' if portfolio.memory.prevlast(
+            'konkorde') > portfolio.params.k_threshold \
             else 'DOWNTREND'
 
 

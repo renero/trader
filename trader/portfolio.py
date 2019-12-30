@@ -173,7 +173,15 @@ class Portfolio:
 
     @property
     def gain(self):
-        return (self.positions.value() - self.positions.cost()) >= 0
+        return self.positions.profit() > 0
+
+    @property
+    def last_gain(self):
+        return self.memory.last('profit') > 0.
+
+    @property
+    def prev_last_gain(self):
+        return self.memory.prevlast('profit') > 0.
 
     @property
     def have_shares(self):
@@ -205,7 +213,7 @@ class Portfolio:
     @property
     def last_price(self):
         # self.log.debug(
-        #     '    Last price in MEM = {:.2f}'.format(self.memory.last('price')))
+        #    '    Last price in MEM = {:.2f}'.format(self.memory.last('price')))
         return self.memory.last('price')
 
     @property
