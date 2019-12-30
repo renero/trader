@@ -30,17 +30,17 @@ $$
 
 **Sell Operations**
 
-When selling partially or totally a position, we sell a number of options from it: $n_s$. From the sell operation, we're interested in knowing what is the **income** and the **profit** that the sell operation generates. 
+When selling partially or totally a position, we sell a number of options from it: $n_s$. From the sell operation, we're interested in knowing what is the **cost** and the **profit** that the sell operation generates.
 
-The **income** is computed by simply multiplying the amount of shares sold by the current price.
-
-$$
-I_{s, t} = n_s \cdot p_t
-$$
-
-And the benefit from that operaion is given by the product between the performance and the income, to obtain the portion of that amount of money that corresponds to the price difference:
+The **cost** is the amount of money that we spent when acquiring a given package of shares. We compute it by multiplying the amount of shares sold by the acquisition price price.
 
 $$
-M_{s, t} = r_t \cdot I_{s, t} = r_{t} \cdot n_s \cdot p_t
+k_{s} = n_s \cdot p_0
+$$
+
+And the benefit from that operaion is given by the product between the performance and the cost, to obtain the portion of that amount of money that corresponds to the price difference:
+
+$$
+M_{s, t} = r_t \cdot k_{s} = r_{t} \cdot n_s \cdot p_0
 $$
 

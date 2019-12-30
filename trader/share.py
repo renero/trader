@@ -19,7 +19,7 @@ class share:
                              self.buy_price_
         self.mode_ = mode
 
-    def sell(self, num, sell_price):
+    def sell(self, num):
         """
         Sell a portion of this position, or totally. In case there're no
         more positions
@@ -31,7 +31,7 @@ class share:
         assert num <= self.num_, 'Attempt to sell more shares than owned!'
 
         # Captures the value of the portion sold.-
-        value, profit = self.valuate(num, sell_price)
+        value, profit = self.valuate(num)
 
         # Updates the remaining part, without changing price
         self.num_ -= num
@@ -59,7 +59,7 @@ class share:
         self.profit_ = self.performance_ * self.cost_
         return self.value_, self.profit_
 
-    def valuate(self, num=None, price=None):
+    def valuate(self, num=None):
         """
         Returns the value and profit represented by a given number of shares
         on this current position. If no `num` is given, the current number
@@ -68,8 +68,6 @@ class share:
         """
         if num is None:
             num = self.num_
-        if price is None:
-            price = self.current_price_
 
         value = num * self.buy_price_
         profit = self.performance_ * num * self.buy_price_

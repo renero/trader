@@ -99,10 +99,6 @@ def unscale(y, minimum, peak_to_peak):
     return (peak_to_peak * y) + minimum
 
 
-def correct_unscaling(x, minimum):
-    return x - minimum
-
-
 def scale_columns(df, mn, mx):
     """
     Scale columns from a dataframe to 0..1 range.
@@ -128,9 +124,9 @@ def unscale_columns(df, mn, mx):
     :return: The data frame scaled
     """
     df = df.apply(lambda y: unscale(y, mn, mx - mn))
-    df['cost'] = df['cost'].apply(lambda y: 0.0 if y == mn else y)
-    df['value'] = df['value'].apply(lambda y: 0.0 if y == mn else y)
-    df['profit'] = df['profit'].apply(lambda y: 0.0 if y == mn else y)
+    # df['cost'] = df['cost'].apply(lambda y: 0.0 if y == mn else y)
+    # df['value'] = df['value'].apply(lambda y: 0.0 if y == mn else y)
+    # df['profit'] = df['profit'].apply(lambda y: 0.0 if y == mn else y)
     return df
 
 

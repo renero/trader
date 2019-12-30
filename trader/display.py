@@ -63,19 +63,11 @@ class Display(Common):
                 set(results.columns) - to_remove)
         else:
             to_display = results.columns
-        df = results[to_display].copy()
-
-        # Un-scale results money info with manually set ranges for data
-        # in params file.
-        to_unscale = ['price', 'forecast', 'budget', 'cost', 'value', 'profit']
-        df[to_unscale] = unscale_columns(df[to_unscale],
-                                         self.params.fcast_file.min_support,
-                                         self.params.fcast_file.max_support)
-        self.log.info('Unscaler applied')
+        df = Display.unscale_results(results[to_display],
+                                     self.params.fcast_file.max_support)
 
         # Recolor some columns
         self.recolor_ref(df, 'forecast', 'price')
-        # self.reformat(df, 'price')
         self.recolor_pref(df, 'price')
 
         if 'value' in df.columns:
@@ -110,17 +102,12 @@ class Display(Common):
         if totals:
             self.report_totals(results)
         if do_plot is True:
-            self.plot_results(results, self.params.have_konkorde)
+            self.plot_results(results, self.params.have_konkorde,
+                              self.params.fcast_file.max_support)
 
     def report_totals(self, results):
-        df = results.copy()
-        # Un-scale results money info with manually set ranges for data
-        # in params file.
-        to_unscale = ['price', 'forecast', 'budget', 'cost', 'value',
-                      'profit']
-        df[to_unscale] = unscale_columns(df[to_unscale],
-                                         self.params.fcast_file.min_support,
-                                         self.params.fcast_file.max_support)
+        df = Display.unscale_results(results,
+                                     self.params.fcast_file.max_support)
 
         # Extract Portfolio valuation from the table
         initial_budget = df.iloc[0].budget
@@ -200,8 +187,8 @@ class Display(Common):
         return
 
     @staticmethod
-    def plot_results(results, have_konkorde):
-        data = results.copy(deep=True)
+    def plot_results(results, have_konkorde, maximum_value):
+        data = Display.unscale_results(results, maximum_value)
         data = data.dropna()
         ini_budget = data.iloc[0].budget
 
@@ -234,8 +221,7 @@ class Display(Common):
         ax2.set_xticks(ax2.get_xticks()[::10])
         ax2.plot(data.price, c='black', linewidth=0.6)
         ax2.scatter(range(len(data.price)), data.price,
-                    c=data.action_id.apply(lambda x: colors[x]),
-                    marker='.')
+                    c=data.action_id.apply(lambda x: colors[x]), marker='.')
         ax2.plot(data.forecast, 'k--', linewidth=0.5)
         ax2.grid(True, which='major', axis='x')
         #
@@ -248,6 +234,16 @@ class Display(Common):
             ax3.fill_between(range(data.konkorde.shape[0]), 0, data.konkorde,
                              color='green', alpha=0.3)
         plt.show()
+
+    @staticmethod
+    def unscale_results(results, maximum):
+        df = results.copy()
+        # Un-scale results money info with manually set ranges for data
+        # in params file.
+        to_unscale = ['price', 'forecast', 'budget', 'cost', 'value', 'profit']
+        df[to_unscale] = unscale_columns(df[to_unscale], 0.0, maximum)
+
+        return df
 
     @staticmethod
     def chart(arrays,

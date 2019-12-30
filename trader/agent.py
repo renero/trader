@@ -52,7 +52,6 @@ class Agent:
         # Save the model?
         if self.params.save_model is True:
             self.nn.save_model(self.model, env.memory.results)
-            env.save_scaler()
 
         # Extract the strategy matrix from the model.
         strategy = self.nn.infer_strategy()

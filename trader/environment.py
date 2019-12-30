@@ -296,11 +296,3 @@ class Environment(Common):
 
         # latest state is the previous to the last int the table.
         return self.current_state_
-
-    def save_scaler(self):
-        base_name = splitext(basename(self.params.forecast_filename))[0]
-        scaler_name = valid_output_name('scaler_{}'.format(base_name),
-                                        self.params.models_dir,
-                                        'pickle')
-        joblib.dump(self.scaler_, scaler_name)
-        self.log.info('Scaler saved to: {}'.format(scaler_name))
