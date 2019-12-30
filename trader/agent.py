@@ -4,7 +4,6 @@ from collections import deque
 import numpy as np
 import pandas as pd
 
-from common import Common
 from environment import Environment
 from rl_nn import RL_NN
 from rl_stats import RLStats
@@ -22,13 +21,12 @@ class Agent:
         self.params = configuration
         self.display = self.params.display
         self.log = self.params.log
-        env_params = self.params.environment
 
         self.log.info('Creating agent')
         self.nn = RL_NN(self.params)
         self.model = None
 
-        self.info_learning_mode(env_params)
+        self.info_learning_mode()
 
     def q_learn(self,
                 env: Environment,
@@ -252,20 +250,16 @@ class Agent:
                                   strategy)
         return strategy
 
-    def info_learning_mode(self, env_params):
+    def info_learning_mode(self):
         # display some helpful info
-        if self.params.environment.direct_reward is True:
-            self.log.info('Direct Reward mode')
-        else:
-            self.log.info('Preset reward mode {}'.format(
-                '(proport.)' if env_params.proportional_reward is True else ''
-            ))
         if self.params.experience_replay is True:
             self.log.info(
                 'Experience replay mode {}'.format(self.params.exp_batch_size))
         else:
             self.log.info(
                 'Minibatch learning mode {}'.format(self.params.batch_size))
+        self.log.info(
+            'Initial Budget: {:.0f}'.format(self.params.initial_budget))
 
     def time_to_learn(self, episode, episode_step):
         self.log.debug(

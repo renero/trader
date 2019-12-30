@@ -124,9 +124,16 @@ def unscale_columns(df, mn, mx):
     :return: The data frame scaled
     """
     df = df.apply(lambda y: unscale(y, mn, mx - mn))
-    # df['cost'] = df['cost'].apply(lambda y: 0.0 if y == mn else y)
-    # df['value'] = df['value'].apply(lambda y: 0.0 if y == mn else y)
-    # df['profit'] = df['profit'].apply(lambda y: 0.0 if y == mn else y)
+    return df
+
+
+def unscale_results(results, maximum):
+    df = results.copy()
+    # Un-scale results money info with manually set ranges for data
+    # in params file.
+    to_unscale = ['price', 'forecast', 'budget', 'cost', 'value', 'profit']
+    df[to_unscale] = unscale_columns(df[to_unscale], 0.0, maximum)
+
     return df
 
 

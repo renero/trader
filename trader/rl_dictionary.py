@@ -81,6 +81,13 @@ class RLDictionary(Dictionary):
             setattr(self, 'decay_factor', 0.996)
         self.log.info('Decay factor: {:.4f}'.format(self.decay_factor))
 
+        if arguments.args.initial_budget is not None:
+            setattr(self, 'initial_budget',
+                    float(arguments.args.initial_budget[0]))
+        else:
+            setattr(self, 'initial_budget', 15000.)
+        self.log.info('Initial Budget: {:.0f}'.format(self.initial_budget))
+
         # Init portfolio
         if arguments.args.init_portfolio is not None:
             setattr(self, 'init_portfolio', True)

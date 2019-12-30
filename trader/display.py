@@ -8,7 +8,7 @@ from pandas import DataFrame
 from tabulate import tabulate
 
 from common import Common
-from file_io import unscale_columns
+from file_io import unscale_results
 from logger import Logger
 
 
@@ -63,8 +63,8 @@ class Display(Common):
                 set(results.columns) - to_remove)
         else:
             to_display = results.columns
-        df = Display.unscale_results(results[to_display],
-                                     self.params.fcast_file.max_support)
+        df = unscale_results(results[to_display],
+                             self.params.fcast_file.max_support)
 
         # Recolor some columns
         self.recolor_ref(df, 'forecast', 'price')
@@ -106,8 +106,8 @@ class Display(Common):
                               self.params.fcast_file.max_support)
 
     def report_totals(self, results):
-        df = Display.unscale_results(results,
-                                     self.params.fcast_file.max_support)
+        df = unscale_results(results,
+                             self.params.fcast_file.max_support)
 
         # Extract Portfolio valuation from the table
         initial_budget = df.iloc[0].budget
@@ -188,7 +188,7 @@ class Display(Common):
 
     @staticmethod
     def plot_results(results, have_konkorde, maximum_value):
-        data = Display.unscale_results(results, maximum_value)
+        data = unscale_results(results, maximum_value)
         data = data.dropna()
         ini_budget = data.iloc[0].budget
 
@@ -234,16 +234,6 @@ class Display(Common):
             ax3.fill_between(range(data.konkorde.shape[0]), 0, data.konkorde,
                              color='green', alpha=0.3)
         plt.show()
-
-    @staticmethod
-    def unscale_results(results, maximum):
-        df = results.copy()
-        # Un-scale results money info with manually set ranges for data
-        # in params file.
-        to_unscale = ['price', 'forecast', 'budget', 'cost', 'value', 'profit']
-        df[to_unscale] = unscale_columns(df[to_unscale], 0.0, maximum)
-
-        return df
 
     @staticmethod
     def chart(arrays,

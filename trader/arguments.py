@@ -61,7 +61,9 @@ class Arguments(object):
         self.parser.add_argument(
             '--decay-factor', nargs=1, type=float,
             help='Decay factor applied to epsilon after each iteration.')
-
+        self.parser.add_argument(
+            '--initial-budget', nargs=1, type=float,
+            help='Initial budget to start with either training or simulation.')
 
         self.args = self.parser.parse_args()
         action_name = 'arg_{}'.format(self.args.action)

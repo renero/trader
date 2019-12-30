@@ -5,7 +5,6 @@ from utils.dictionary import Dictionary
 
 class Portfolio:
     configuration: Dictionary
-    env_scaler = None
     memory = None
 
     initial_budget = 0.
@@ -27,30 +26,24 @@ class Portfolio:
                  configuration,
                  initial_price,
                  forecast,
-                 env_memory,
-                 env_scaler):
+                 env_memory):
 
         self.params = configuration
         self.display = self.params.display
         self.log = self.params.log
-        self.env_params = self.params.environment
-        self.env_scaler = env_scaler
         self.positions = Positions(configuration)
-        self.reset(initial_price, forecast, env_memory, env_scaler)
+        self.reset(initial_price, forecast, env_memory)
 
-    def reset(self, initial_price, forecast, env_memory, env_scaler):
+    def reset(self, initial_price, forecast, env_memory):
         """
         Initializes portfolio to the initial state.
         """
-        self.initial_budget = self.scale_budget(self.env_params.initial_budget)
+        self.initial_budget = self.scale_budget(
+            self.params.initial_budget)
         self.budget = self.initial_budget
         self.latest_price = initial_price
         self.forecast = forecast
         self.memory = env_memory
-        # self.cost = 0
-        # self.portfolio_value: float = 0.
-        # self.profit: float = 0
-        # self.num_shares: float = 0.
         self.konkorde = 0.
         self.positions.reset()
 
@@ -117,7 +110,7 @@ class Portfolio:
             self.log.debug('  Sell op -> income:{:.2f}, profit:{:.2f}'.format(
                 income, profit))
             self.log.debug('  Budget -> {:.2f} + {:.2f}'.format(
-                self.budget, (income+profit)))
+                self.budget, (income + profit)))
             self.budget += (income + profit)
 
         return action_name, rw

@@ -1,9 +1,7 @@
 import importlib
 import json
 import sys
-from os.path import splitext, basename
 
-import joblib
 import numpy as np
 import pandas as pd
 
@@ -55,8 +53,7 @@ class Environment(Common):
         self.portfolio = Portfolio(self.params,
                                    self.price_,
                                    self.forecast_,
-                                   self.memory,
-                                   self.scaler_)
+                                   self.memory)
         self.init_environment(creation_time=True)
         self.log.info('Environment created')
 
@@ -69,7 +66,7 @@ class Environment(Common):
         """
         self.read_next_forecast()
         self.portfolio.reset(self.price_, self.forecast_,
-                             self.memory, self.scaler_)
+                             self.memory)
         if creation_time is not True:
             self.memory.record_state(self.portfolio, t=0, ts=self.ts_)
         return self.update_state()
