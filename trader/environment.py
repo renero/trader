@@ -54,6 +54,24 @@ class Environment(Common):
                                    self.price_,
                                    self.forecast_,
                                    self.memory)
+
+        # Create dict with functions linked to action names
+        self.action_method = dict()
+        for action in self.params.action:
+            self.action_method[action] = getattr(self.portfolio, action)
+
+        # Create another dict with the state methods so, we don't have to
+        # call getattr and module load at each step
+        self.state_class = dict()
+        for module_param_name in self.params.state.keys():
+            # The extended classes are defined in the params file and must
+            # start with the 'state_' string.
+            module_name = 'State' + module_param_name
+            module = importlib.import_module('state_classes')
+            self.state_class[module_name] = getattr(
+                getattr(
+                    module, module_name), 'update_state')
+
         self.init_environment(creation_time=True)
         self.log.info('Environment created')
 
@@ -94,7 +112,9 @@ class Environment(Common):
 
         # Compute reward by calling action and record experience.
         action_name = self.params.action_name[action]
-        action_done, self.reward_ = getattr(self.portfolio, action_name)()
+        # action_done, self.reward_ = getattr(self.portfolio, action_name)()
+        action_done, self.reward_ = self.action_method[action_name]()
+
         self.memory.record_action_and_reward(
             action_done,
             self.reward_,
@@ -215,9 +235,10 @@ class Environment(Common):
             # The extended classes are defined in the params file and must
             # start with the 'state_' string.
             module_name = 'State' + module_param_name
-            module = importlib.import_module('state_classes')  # module_name)
-            state_class = getattr(module, module_name)
-            new_substate = state_class.update_state(self.portfolio)
+            # module = importlib.import_module('state_classes')
+            # state_class = getattr(module, module_name)
+            # new_substate = state_class.update_state(self.portfolio)
+            new_substate = self.state_class[module_name](self.portfolio)
             new_substates.append(new_substate)
 
         # Get the ID resulting from the combination of the sub-states

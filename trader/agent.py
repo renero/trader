@@ -47,6 +47,9 @@ class Agent:
         self.log.info('Time elapsed: {}'.format(
             self.params.display.timer(time.time() - start)))
 
+        # XXX REMOVE THIS XXX
+        return None
+
         # Save the model?
         if self.params.save_model is True:
             self.nn.save_model(self.model, env.memory.results)
