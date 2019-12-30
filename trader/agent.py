@@ -258,8 +258,6 @@ class Agent:
         else:
             self.log.info(
                 'Minibatch learning mode {}'.format(self.params.batch_size))
-        self.log.info(
-            'Initial Budget: {:.0f}'.format(self.params.initial_budget))
 
     def time_to_learn(self, episode, episode_step):
         self.log.debug(
