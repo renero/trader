@@ -123,7 +123,9 @@ class Display(Common):
         no_action_perf = df.iloc[-1].price - df.iloc[0].price
         if self.params.mode == 'bear':
             no_action_perf *= -1.
-        performance = (profit - no_action_perf) / no_action_perf
+            performance = (no_action_perf - profit) / no_action_perf
+        else:
+            performance = (profit - no_action_perf) / no_action_perf
 
         print('P/L........: €{} [{:.1f}% over nop ({:.2f})]'.format(
             self.color(profit), performance * 100., no_action_perf))

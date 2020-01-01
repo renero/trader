@@ -180,7 +180,7 @@ class RL_NN:
     def onehot(self, state: int):
         bits_formatter = '{{:0{}b}}'.format(int(self.params.num_state_bits))
         bits = bits_formatter.format(state)
-        encoded = list(map(lambda x: -1 if x == '0' else 1, bits))
+        encoded = list(map(lambda x: 0 if x == '0' else 1, bits))
         return np.array(encoded).reshape(1, self.params.num_state_bits)
 
     def predict(self, state) -> int:
