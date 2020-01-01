@@ -121,6 +121,8 @@ class Display(Common):
 
         # My performance vs. what would happen if I do nothing.
         no_action_perf = df.iloc[-1].price - df.iloc[0].price
+        if self.params.mode == 'bear':
+            no_action_perf *= -1.
         performance = (profit - no_action_perf) / no_action_perf
 
         print('P/L........: €{} [{:.1f}% over nop ({:.2f})]'.format(
@@ -128,7 +130,7 @@ class Display(Common):
         percentage = 100. * ((balance / initial_budget) - 1.0)
         print('Balance....: €{} [{} %]'.format(
             self.cond_color(balance, initial_budget), self.color(percentage)))
-        print('Sh.Value...: {} shares = €{:.1f}'.format(int(shares), value))
+        print('Sh.Value...: {} share(s) = €{:.1f}'.format(int(shares), value))
 
     def progress(self, i, num_episodes, last_avg, start, end):
         """

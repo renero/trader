@@ -1,3 +1,5 @@
+import math
+
 from arguments import Arguments
 from display import Display
 from logger import Logger
@@ -144,7 +146,13 @@ class RLDictionary(Dictionary):
         for state in self.state.keys():
             self.num_states = self.num_states * len(
                 self.state[state].names)
-        self.log.debug('{} possible states'.format(self.num_states))
+        self.log.info('{} possible states'.format(self.num_states))
+
+        # Compute the number of bytes required to represent all BINARY states
+        # If states become non-binary, this encoder is no longer useful
+        setattr(self, 'num_state_bits', int(math.log(self.num_states, 2.)))
+        self.log.info('{} bits to represent all states'.format(
+            self.num_state_bits))
 
         # Create a display property to centralize all reporting activity into
         # a single function. That way I can store it all in a single dataframe
