@@ -140,7 +140,7 @@ class RLDictionary(Dictionary):
             self.states_list.append(self.state[state].names)
 
         # Compute the total number of states as the multiplication of the
-        # number of substates in eachs posible state-stack
+        # number of substates in each possible state-stack
         setattr(self, 'num_states', int)
         self.num_states = 1
         for state in self.state.keys():
