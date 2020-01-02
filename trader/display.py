@@ -204,7 +204,7 @@ class Display(Common):
         data.head()
         colors = {0: 'green', 1: 'red', 2: '#E8D842', 3: '#BE5B11',
                   4: 'white', 5: 'white'}
-        fig, (ax1, ax2) = plt.subplots(2, sharex=True, figsize=(14, 10),
+        fig, (ax1, ax2) = plt.subplots(2, sharex=True, figsize=(12, 8),
                                        gridspec_kw={'height_ratios': [1, 3]})
         fig.suptitle(
             'Portfolio Value and Shares price ({})'.format(ts()))
