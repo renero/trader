@@ -19,22 +19,22 @@ def main(argv) -> int:
 
     # Initialize the environment
     environment = Environment(params, flag['train'])
-    agent = Agent(params)
+    agent = Agent(params, environment)
 
     # Do something
     if flag['train'] or flag['retrain']:
         if flag['retrain']:
-            agent.q_load(environment, retrain=flag['retrain'])
+            agent.q_load(retrain=flag['retrain'])
             params.epsilon = params.epsilon_min
-        agent.q_learn(environment, fresh_model=flag['train'])
+        agent.q_learn(fresh_model=flag['train'])
     else:
         # simulate or predict
         if flag['simulate']:
-            strategy = agent.q_load(environment)
-            return_value = agent.simulate(environment, strategy)
+            strategy = agent.q_load()
+            return_value = agent.simulate(strategy)
         else:  # predict.
-            strategy = agent.q_load(environment)
-            return_value = agent.single_step(environment, strategy)
+            strategy = agent.q_load()
+            return_value = agent.single_step(strategy)
 
     return return_value
 

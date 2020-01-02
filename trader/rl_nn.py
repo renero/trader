@@ -9,6 +9,7 @@ from keras.layers import Dense, InputLayer
 from keras.models import Sequential, model_from_json
 from keras.optimizers import Adam
 
+from environment import Environment
 from file_io import valid_output_name
 from utils.dictionary import Dictionary
 
@@ -19,9 +20,10 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 class RL_NN:
     model = None
 
-    def __init__(self, configuration: Dictionary):
+    def __init__(self, configuration: Dictionary, env: Environment):
         self.params = configuration
         self.log = self.params.log
+        self.env = env
         self.model = None
 
         self.callback_args = {}
@@ -37,7 +39,7 @@ class RL_NN:
 
         # Input layer
         self.model.add(
-            InputLayer(batch_input_shape=(None, self.params.num_state_bits)))
+            InputLayer(batch_input_shape=(None, self.params.num_substates)))
         first_layer = True
 
         # Create all the layers
@@ -45,7 +47,7 @@ class RL_NN:
             if first_layer:
                 self.model.add(Dense(
                     num_cells,
-                    input_shape=(self.params.num_state_bits,),
+                    input_shape=(self.params.num_substates,),
                     activation=self.params.deep_qnet.activation))
                 first_layer = False
             else:
@@ -136,7 +138,7 @@ class RL_NN:
                             next states and done values.
         :return: input and output to the network.
         """
-        nn_input = np.empty((0, self.params.num_state_bits), dtype=np.int32)
+        nn_input = np.empty((0, self.params.num_substates), dtype=np.int32)
         nn_output = np.empty((0, self.params.num_actions))
         for state, action, reward, next_state, done in mini_batch:
             y = self.prepare_nn_output(state, action, reward, next_state, done)
@@ -177,11 +179,26 @@ class RL_NN:
         ]
         return strategy
 
-    def onehot(self, state: int):
+    def old_onehot(self, state: int):
         bits_formatter = '{{:0{}b}}'.format(int(self.params.num_state_bits))
         bits = bits_formatter.format(state)
         encoded = list(map(lambda x: 0 if x == '0' else 1, bits))
         return np.array(encoded).reshape(1, self.params.num_state_bits)
+
+    def onehot(self, state: int):
+        state_name = self.env.states.name(state)
+        substates = state_name.split('_')
+        shift = 0
+        enc = np.zeros((1, self.params.num_substates), dtype=int)
+        for state_pos, substate in enumerate(substates):
+            substate_pos = self.env.states.state_list[state_pos].index(
+                substate)
+            shift += len(self.env.states.state_list[
+                             state_pos - 1]) if state_pos > 0 else 0
+            enc[0, shift + substate_pos] = 1
+        self.log.debug('  state: {}'.format(state_name))
+        self.log.debug('  encod: {}'.format(enc))
+        return enc
 
     def predict(self, state) -> int:
         return int(np.argmax(self.model.predict(self.onehot(state))))

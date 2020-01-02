@@ -4,37 +4,33 @@ from collections import deque
 import numpy as np
 import pandas as pd
 
-from environment import Environment
 from rl_nn import RL_NN
 from rl_stats import RLStats
 from spring import spring
 
 
-# TODO: No longer needed to inherit from Common.
 class Agent:
     configuration = None
     tensorboard = None
-    # TODO: Move Experience to a separate class or reuse Memory.
     experience = deque(maxlen=20000)
 
-    def __init__(self, configuration):
+    def __init__(self, configuration, env):
         self.params = configuration
+        self.env = env
         self.display = self.params.display
         self.log = self.params.log
 
         self.log.info('Creating agent')
-        self.nn = RL_NN(self.params)
+        self.nn = RL_NN(self.params, env)
         self.model = None
 
         self.info_learning_mode()
 
     def q_learn(self,
-                env: Environment,
                 fresh_model: bool = True,
                 display_strategy: bool = False) -> list:
         """
         Learns an strategy to follow over a given environment, using RL.
-        :param env: Environment
         :param fresh_model: if False, it does not create the NN from scratch,
                                  but, it uses the one previously loaded.
         :param display_strategy:
@@ -43,24 +39,24 @@ class Agent:
         # create the Keras model and learn, or load it from disk.
         if fresh_model is True:
             self.model = self.nn.create_model()
-        avg_rewards, avg_loss, avg_mae, avg_value = self.reinforce_learn(env)
+        avg_rewards, avg_loss, avg_mae, avg_value = self.reinforce_learn()
         self.log.info('Time elapsed: {}'.format(
             self.params.display.timer(time.time() - start)))
 
         # Save the model?
         if self.params.save_model is True:
-            self.nn.save_model(self.model, env.memory.results)
+            self.nn.save_model(self.model, self.env.memory.results)
 
         # Extract the strategy matrix from the model.
         strategy = self.nn.infer_strategy()
 
         # Simulate what has been learnt with the data.
-        self.simulate(env, strategy)
+        self.simulate(strategy)
 
         # display anything?
         if display_strategy:
             self.display.strategy(self,
-                                  env,
+                                  self.env,
                                   self.model,
                                   self.params.num_states,
                                   strategy)
@@ -72,27 +68,26 @@ class Agent:
 
         return strategy
 
-    def reinforce_learn(self, env: Environment):
+    def reinforce_learn(self):
         """
         Implements the learning loop over the states, actions and strategies
         to learn what is the sequence of actions that maximize reward.
-        :param env: the environment
         :return: avg_rewards, avg_loss, avg_mae, last_profit
         """
         rl_stats = RLStats()
         epsilon = self.params.epsilon
-        stop_drop = spring(self.params, env.price_)
+        stop_drop = spring(self.params, self.env.price_)
 
         # Loop over 'num_episodes'
         self.log.debug('Loop over {} episodes'.format(self.params.num_episodes))
         for episode in range(self.params.num_episodes):
-            state = env.reset()
+            state = self.env.reset()
             done = False
             rl_stats.reset()
             episode_step = 0
             while not done:
                 self.log.debug('----- t={}, ts={}, price={:.2f} ------'.format(
-                    env.t, env.ts_, env.price_))
+                    self.env.t, self.env.ts_, self.env.price_))
 
                 # Decide whether generating random action or predict most
                 # likely from the give state.
@@ -100,11 +95,11 @@ class Agent:
 
                 # Experimental: Insert the behavior defined by stop_drop
                 # overriding random choice or predictions.
-                action = stop_drop.correction(action, env)
+                action = stop_drop.correction(action, self.env)
 
                 # Send the action to the environment and get new state,
                 # reward and information on whether we've finish.
-                new_state, reward, done, _ = env.step(action)
+                new_state, reward, done, _ = self.env.step(action)
 
                 self.experience.append((state, action, reward, new_state, done))
                 if self.time_to_learn(episode, episode_step):
@@ -122,7 +117,7 @@ class Agent:
 
             #  Update average metrics
             rl_stats.update(self.params.num_episodes,
-                            env.memory.results.profit.iloc[-1])
+                            self.env.memory.results.profit.iloc[-1])
 
             # Epsilon decays here
             if epsilon >= self.params.epsilon_min:
@@ -150,48 +145,46 @@ class Agent:
                 self.params.action_name[action], action, rn, epsilon))
         return action
 
-    def simulate(self, environment: Environment, strategy: list):
+    def simulate(self, strategy: list):
         """
         Simulate over a dataset, given a strategy and an environment.
-        :param environment: the environment for the simulation
         :param strategy: strategy data structure to be used in the simulation
         :return:
         """
         done = False
         total_reward = 0.
         self.params.debug = True
-        state = environment.reset()
-        stop_drop = spring(self.params, environment.price_)
+        state = self.env.reset()
+        stop_drop = spring(self.params, self.env.price_)
         self.log.debug('STARTING Simulation')
         while not done:
-            action = environment.decide_next_action(state, strategy)
-            action = stop_drop.correction(action, environment)
+            action = self.env.decide_next_action(state, strategy)
+            action = stop_drop.correction(action, self.env)
 
-            next_state, reward, done, _ = environment.step(action)
+            next_state, reward, done, _ = self.env.step(action)
             total_reward += reward
             state = next_state
 
         # Do I need to init a portfolio, after a simulation
         if self.params.init_portfolio:
-            environment.save_portfolio(init=True)
+            self.env.save_portfolio(init=True)
 
         # display the result of the simulation (maybe only the totals summ)
         if self.params.totals is True:
-            self.params.display.report_totals(environment.memory.results,
+            self.params.display.report_totals(self.env.memory.results,
                                               unscale=True)
         else:
-            self.params.display.summary(environment.memory.results,
+            self.params.display.summary(self.env.memory.results,
                                         do_plot=self.params.do_plot)
         return 0
 
-    def single_step(self, environment: Environment, strategy):
+    def single_step(self, strategy):
         """
         Simulate a single step, given a strategy and an environment.
-        :param environment: the environment for the simulation
         :param strategy: strategy data structure to be used in the simulation
         :return: None
         """
-        state = environment.resume()
+        state = self.env.resume()
         if state == -1:
             self.log.warn(
                 'Portfolio({}) and forecast({}) are in same state(len)'.format(
@@ -199,37 +192,35 @@ class Agent:
             self.log.warn('No action/recommendation produced by environment')
             return -1
 
-        action = environment.decide_next_action(state, strategy)
+        action = self.env.decide_next_action(state, strategy)
         self.log.info('Decided action is: {}'.format(action))
         if self.params.stop_drop is True:
             # is this a failed action?
-            is_failed_action = environment.portfolio.failed_action(
-                action, environment.price_)
-            action = spring(self.params, environment.price_).check(
-                action, environment.price_, is_failed_action)
+            is_failed_action = self.env.portfolio.failed_action(
+                action, self.env.price_)
+            action = spring(self.params, self.env.price_).check(
+                action, self.env.price_, is_failed_action)
 
-        next_state, reward, done, _ = environment.step(action)
+        next_state, reward, done, _ = self.env.step(action)
 
         # Save the action to the tmp file.
-        last_action = environment.memory.results.iloc[-1]['action']
+        last_action = self.env.memory.results.iloc[-1]['action']
         self.log.info('Last action is: {}'.format(last_action))
         pd.Series({'action': last_action}).to_json(self.params.json_action)
         self.log.info('Saved action to: {}'.format(self.params.json_action))
 
         # Save the updated portfolio, overwriting the file.
         if self.params.no_dump is not True:
-            environment.save_portfolio()
+            self.env.save_portfolio()
         return 0
 
     def q_load(self,
-               env: Environment,
                retrain: bool = False,
                display_strategy: bool = False) -> list:
         """
         Load an strategy to follow over a given environment, using RL,
         and acts following the strategy defined on it.
 
-        :param env:              Environment
         :param retrain:          If this flag is set to true, then compile
                                  the loaded model to continue learning over it.
         :param display_strategy: flag indicating if I want to display the
@@ -244,7 +235,7 @@ class Agent:
         strategy = self.nn.infer_strategy()
         if display_strategy:
             self.display.strategy(self,
-                                  env,
+                                  self.env,
                                   self.model,
                                   self.params.num_states,
                                   strategy)

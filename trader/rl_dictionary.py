@@ -154,6 +154,16 @@ class RLDictionary(Dictionary):
         self.log.info('{} bits to represent all states'.format(
             self.num_state_bits))
 
+        # Set the number of substates (values inside each state)
+        setattr(self, 'num_substates', int)
+        self.num_substates = 0
+        for _, v in self.state.items():
+            if isinstance(v.names, list):
+                self.num_substates += len(v.names)
+            else:
+                self.num_substates += 1
+        self.log.info('{} substates in all states'.format(self.num_substates))
+
         # Create a display property to centralize all reporting activity into
         # a single function. That way I can store it all in a single dataframe
         # for later analysis.

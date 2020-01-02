@@ -13,7 +13,6 @@ class TestStatesCombiner(TestCase):
     states = StatesCombiner(params)
 
     def test_combine(self):
-        # states = self.init_class()
         self.assertIsInstance(self.states, StatesCombiner)
         self.assertEqual(self.states.max_id, 4)
         self.assertEqual(len(self.states.state), 4)

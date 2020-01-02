@@ -5,7 +5,6 @@ import sys
 import numpy as np
 import pandas as pd
 
-from common import Common
 from file_io import valid_output_name, scale_columns
 from last import last
 from memory import Memory
@@ -13,7 +12,7 @@ from portfolio import Portfolio
 from states_combiner import StatesCombiner
 
 
-class Environment(Common):
+class Environment:
     configuration = None
     max_states_ = 0
     data_ = None
@@ -56,9 +55,9 @@ class Environment(Common):
                                    self.memory)
 
         # Create dict with functions linked to action names
-        self.action_method = dict()
+        self.call_action = dict()
         for action in self.params.action:
-            self.action_method[action] = getattr(self.portfolio, action)
+            self.call_action[action] = getattr(self.portfolio, action)
 
         # Create another dict with the state methods so, we don't have to
         # call getattr and module load at each step
@@ -112,8 +111,7 @@ class Environment(Common):
 
         # Compute reward by calling action and record experience.
         action_name = self.params.action_name[action]
-        # action_done, self.reward_ = getattr(self.portfolio, action_name)()
-        action_done, self.reward_ = self.action_method[action_name]()
+        action_done, self.reward_ = self.call_action[action_name]()
 
         self.memory.record_action_and_reward(
             action_done,
