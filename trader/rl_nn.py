@@ -201,7 +201,10 @@ class RL_NN:
         return enc
 
     def predict(self, state) -> int:
-        return int(np.argmax(self.model.predict(self.onehot(state))))
+        if np.random.random() > self.params.rnd_output_prob:
+            return int(np.argmax(self.model.predict(self.onehot(state))))
+        else:
+            return np.random.randint(0, self.params.num_actions)
 
     def predict_value(self, state):
         return np.max(self.model.predict(self.onehot(state)))

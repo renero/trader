@@ -116,8 +116,11 @@ class Agent:
                 rl_stats.last_avg, rl_stats.start)
 
             #  Update average metrics
-            rl_stats.update(self.params.num_episodes,
-                            self.env.memory.results.profit.iloc[-1])
+            budget = self.env.memory.results.iloc[-1].budget
+            cost = self.env.memory.results.iloc[-1].cost
+            last_profit = self.env.memory.results.iloc[-1].profit
+            balance = budget + cost + last_profit
+            rl_stats.update(self.params.num_episodes, balance)
 
             # Epsilon decays here
             if epsilon >= self.params.epsilon_min:
@@ -125,7 +128,7 @@ class Agent:
                 self.log.debug('Updated epsilon: {:.2f}'.format(epsilon))
 
         return rl_stats.avg_rewards, rl_stats.avg_loss, \
-               rl_stats.avg_mae, rl_stats.avg_profit
+               rl_stats.avg_mae, rl_stats.avg_balance
 
     def epsilon_greedy(self, epsilon, state):
         """

@@ -87,7 +87,7 @@ class RLDictionary(Dictionary):
             setattr(self, 'initial_budget',
                     float(arguments.args.initial_budget[0]))
         else:
-            setattr(self, 'initial_budget', 15000.)
+            setattr(self, 'initial_budget', self.initial_budget)
         self.log.info('Initial Budget: {:.0f}'.format(self.initial_budget))
 
         # Init portfolio
