@@ -193,7 +193,8 @@ class RL_NN:
                 self.model.predict(
                     self.onehot(
                         self.env.states.name(state),
-                        self.env.states.state_list))[0])
+                        self.env.states.state_list),
+                    relax=False)[0])
             for state in range(self.params.num_states)
         ]
         return strategy
@@ -234,13 +235,21 @@ class RL_NN:
         self.log.debug('  encod: {}'.format(enc))
         return np.array(enc).reshape(1, -1)
 
-    def predict(self, state) -> int:
-        if np.random.random() > self.params.rnd_output_prob:
-            return int(np.argmax(
-                self.model.predict(
-                    self.onehot(
-                        self.env.states.name(state),
-                        self.env.states.state_list))))
+    def predict(self, state, relax=True) -> int:
+        """
+        Produces a prediction.
+        Relax controls whether to allow random output instead of MAX value
+        at output layer. Relax MUST set to FALSE when called once TRAINED.
+        """
+        prediction = int(np.argmax(
+            self.model.predict(
+                self.onehot(
+                    self.env.states.name(state),
+                    self.env.states.state_list))))
+        if relax is not True:
+            return prediction
+        elif np.random.random() > self.params.rnd_output_prob:
+            return prediction
         else:
             return np.random.randint(0, self.params.num_actions)
 

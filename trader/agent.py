@@ -39,6 +39,7 @@ class Agent:
         # create the Keras model and learn, or load it from disk.
         if fresh_model is True:
             self.model = self.nn.create_model()
+
         avg_rewards, avg_loss, avg_mae, avg_value = self.reinforce_learn()
         self.log.info('Time elapsed: {}'.format(
             self.params.display.timer(time.time() - start)))
