@@ -193,8 +193,7 @@ class RL_NN:
                 self.model.predict(
                     self.onehot(
                         self.env.states.name(state),
-                        self.env.states.state_list),
-                    relax=False)[0])
+                        self.env.states.state_list))[0])
             for state in range(self.params.num_states)
         ]
         return strategy

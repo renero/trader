@@ -124,7 +124,7 @@ class StateLastPredOk(RL_State):
         sign = lambda x: copysign(1, x)
         if portfolio.memory.len < 1:
             log.debug('  Not enough history to check last prediction')
-            return 'LNOK'
+            return 'LOK'
         prediction_sign = sign(portfolio.last_forecast - portfolio.last_price)
         actual_sign = sign(portfolio.latest_price - portfolio.last_price)
         # guess what the state, given the forecast
