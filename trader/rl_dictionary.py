@@ -148,12 +148,6 @@ class RLDictionary(Dictionary):
                 self.state[state].names)
         self.log.info('{} possible states'.format(self.num_states))
 
-        # Compute the number of bytes required to represent all BINARY states
-        # If states become non-binary, this encoder is no longer useful
-        setattr(self, 'num_state_bits', int(math.log(self.num_states, 2.)))
-        self.log.info('{} bits to represent all states'.format(
-            self.num_state_bits))
-
         # Set the number of substates (values inside each state)
         setattr(self, 'num_substates', int)
         self.num_substates = 0

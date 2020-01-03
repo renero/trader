@@ -84,24 +84,37 @@ class StatePredUpward(RL_State):
 class StateKonkorde(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
-        return 'UPTREND' if portfolio.konkorde >= portfolio.params.k_threshold \
-            else 'DOWNTREND'
+        return 'KP' if portfolio.konkorde >= portfolio.params.k_threshold \
+            else 'KN'
 
 
-class StateLastKonkorde(RL_State):
+class StateKTrend(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
-        return 'UPTREND' if portfolio.memory.last(
-            'konkorde') > portfolio.params.k_threshold \
-            else 'DOWNTREND'
+        if portfolio.konkorde > portfolio.memory.last('konkorde'):
+            return 'KU'
+        else:
+            return 'KD'
 
 
-class StatePrevLastKonkorde(RL_State):
+class StateLastKTrend(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
-        return 'UPTREND' if portfolio.memory.prevlast(
-            'konkorde') > portfolio.params.k_threshold \
-            else 'DOWNTREND'
+        if portfolio.memory.last('konkorde') > portfolio.memory.prevlast(
+                'konkorde'):
+            return 'LKU'
+        else:
+            return 'LKD'
+
+
+class StatePrevLastKTrend(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        if portfolio.memory.prevlast(
+                'konkorde') > portfolio.memory.prevprevlast('konkorde'):
+            return 'PLKU'
+        else:
+            return 'PLKD'
 
 
 class StateLastPredOk(RL_State):
@@ -120,7 +133,7 @@ class StateLastPredOk(RL_State):
             return 'LOK'
         else:
             log.debug('  ✕ Last prediction was NOT OK')
-            return 'LNOK'
+            return 'LNO'
 
 
 class StatePrevLastPredOk(RL_State):
