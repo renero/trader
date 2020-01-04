@@ -140,13 +140,16 @@ class Portfolio:
         return self
 
     def values_to_record(self):
+        cost = self.positions.cost()
+        profit = self.positions.profit()
         values = [
             self.latest_price,
             self.forecast,
             self.budget,
-            self.positions.cost(),
+            cost,
             self.positions.value(),
-            self.positions.profit(),
+            profit,
+            self.budget + cost + profit,
             self.positions.num_shares()
         ]
         if self.params.have_konkorde:

@@ -131,7 +131,8 @@ def unscale_results(results, maximum):
     df = results.copy()
     # Un-scale results money info with manually set ranges for data
     # in params file.
-    to_unscale = ['price', 'forecast', 'budget', 'cost', 'value', 'profit']
+    to_unscale = ['price', 'forecast', 'budget', 'cost',
+                  'value', 'profit', 'balance']
     df[to_unscale] = unscale_columns(df[to_unscale], 0.0, maximum)
 
     return df

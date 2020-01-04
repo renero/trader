@@ -69,6 +69,7 @@ class Display(Common):
         # Recolor some columns
         self.recolor_ref(df, 'forecast', 'price')
         self.recolor_pref(df, 'price')
+        initial_budget = float(df.iloc[0]['budget'])
 
         if 'value' in df.columns:
             self.reformat(df, 'value')
@@ -78,6 +79,8 @@ class Display(Common):
             self.recolor(df, 'budget')
         if 'profit' in df.columns:
             self.recolor(df, 'profit')
+        if 'balance' in df.columns:
+            self.recolor_value(df, 'balance', initial_budget)
         if 'cost' in df.columns:
             self.recolor(df, 'cost')
         if 'reward' in df.columns:

@@ -60,6 +60,11 @@ class Common:
         df[column_name] = df[column_name].apply(
             lambda x: '{}'.format(self.no_color(x)))
 
+    def recolor_value(self, df: DataFrame, col1: str, value: float):
+        df[col1] = df.apply(
+            lambda row: self.cond_color(row[col1], value),
+            axis=1)
+
     def recolor_ref(self, df: DataFrame, col1: str, col2: str):
         df[col1] = df.apply(
             lambda row: self.cond_color(row[col1], row[col2]),
