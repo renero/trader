@@ -32,17 +32,15 @@ class Portfolio:
         self.params = configuration
         self.display = self.params.display
         self.log = self.params.log
-        self.positions = Positions(configuration)
+        self.initial_budget = scale(self.params.initial_budget, 0.,
+                                    self.params.fcast_file.max_support)
+        self.positions = Positions(configuration, self.initial_budget)
         self.reset(initial_price, forecast, env_memory)
 
     def reset(self, initial_price, forecast, env_memory):
         """
         Initializes portfolio to the initial state.
         """
-        # self.initial_budget = self.scale_budget(
-        #     self.params.initial_budget)
-        self.initial_budget = scale(self.params.initial_budget, 0.,
-                                    self.params.fcast_file.max_support)
         self.budget = self.initial_budget
         self.latest_price = initial_price
         self.forecast = forecast
@@ -53,20 +51,12 @@ class Portfolio:
         self.log.debug('Portfolio reset. Initial budget: {:.1f}'.format(
             self.initial_budget))
 
-    def scale_budget(self, budget):
-        mn = 0.0
-        ptp = self.params.fcast_file.max_support - mn
-        if ptp == 0.0:
-            ptp = 0.000001
-        return (budget - mn) / ptp
-
     def wait(self):
         """
         WAIT Operation
         """
         action_name = 'wait'
-        rw = reward.decide(action_name, self.positions, self.initial_budget,
-                           self.budget)
+        rw = reward.decide(action_name, self.positions)
         msg = '  WAIT: ' + \
               'prc({:.2f})|bdg({:.2f})|val({:.2f})|prf({:.2f})|cost({:.2f})'
         self.log.debug(msg.format(
@@ -88,11 +78,10 @@ class Portfolio:
             self.log.debug('  FAILED buy')
             rw = reward.failed()
         else:
-            rw = reward.decide(action_name, self.positions, self.initial_budget,
-                               self.budget)
-            self.budget -= self.positions.buy_position(num_shares,
-                                                       self.latest_price,
-                                                       self.params.mode)
+            rw = reward.decide(action_name, self.positions)
+            self.budget -= self.positions.buy(num_shares,
+                                              self.latest_price,
+                                              self.params.mode)
 
         # self.update_after_buy(action_name, num_shares, buy_price)
         return action_name, rw
@@ -109,15 +98,13 @@ class Portfolio:
             self.log.debug('  FAILED sell')
             rw = reward.failed()
         else:
-            rw = reward.decide(action_name, self.positions, self.initial_budget,
-                               self.budget)
-            income, profit = self.positions.sell_positions(num_shares,
-                                                           self.latest_price)
+            rw = reward.decide(action_name, self.positions)
+            income, profit = self.positions.sell(num_shares, self.latest_price)
+            self.budget += (income + profit)
             self.log.debug('  Sell op -> income:{:.2f}, profit:{:.2f}'.format(
                 income, profit))
             self.log.debug('  Budget -> {:.2f} + {:.2f}'.format(
                 self.budget, (income + profit)))
-            self.budget += (income + profit)
 
         return action_name, rw
 

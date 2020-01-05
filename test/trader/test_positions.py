@@ -10,8 +10,8 @@ class TestPositions(TestCase):
     @staticmethod
     def init_pos(mode='bull'):
         my_positions = Positions(None)
-        my_positions.buy_position(0.7, 100, mode=mode)
-        my_positions.buy_position(0.1, 90, mode=mode)
+        my_positions.buy(0.7, 100, mode=mode)
+        my_positions.buy(0.1, 90, mode=mode)
         return my_positions
 
     def test_num_positions(self):
@@ -78,14 +78,14 @@ class TestPositions(TestCase):
         my_positions = self.init_pos()
         my_positions.update(110.)
         # sell 0.1 from the package bought at 90 (highest performance)
-        income, profit = my_positions.sell_positions(0.1, 110)
+        income, profit = my_positions.sell(0.1, 110)
         self.assertAlmostEqual(income, 11.)
         self.assertAlmostEqual(profit, 2.44, places=2)
         self.assertEqual(my_positions.num_positions(), 1)
         self.assertAlmostEqual(my_positions.num_shares(), 0.7)
 
         # Sell from the remaining 0.7 shares acquired at 100.
-        income, profit = my_positions.sell_positions(0.2, 110)
+        income, profit = my_positions.sell(0.2, 110)
         self.assertAlmostEqual(income, 22.)
         self.assertAlmostEqual(profit, 2.20, places=2)
         self.assertEqual(my_positions.num_positions(), 1)
@@ -95,14 +95,14 @@ class TestPositions(TestCase):
         my_positions = self.init_pos()
         my_positions.update(80.)
         # sell 0.1 from the package bought at 90 (highest performance)
-        income, profit = my_positions.sell_positions(0.1, 80)
+        income, profit = my_positions.sell(0.1, 80)
         self.assertAlmostEqual(income, 8.)
         self.assertAlmostEqual(profit, -0.89, places=2)
         self.assertEqual(my_positions.num_positions(), 1)
         self.assertAlmostEqual(my_positions.num_shares(), 0.7)
 
         # Sell from the remaining 0.7 shares acquired at 100.
-        income, profit = my_positions.sell_positions(0.2, 80)
+        income, profit = my_positions.sell(0.2, 80)
         self.assertAlmostEqual(income, 16.)
         self.assertAlmostEqual(profit, -3.20, places=2)
         self.assertEqual(my_positions.num_positions(), 1)
@@ -112,14 +112,14 @@ class TestPositions(TestCase):
         my_positions = self.init_pos('bear')
         my_positions.update(80.)
         # sell 0.1 from the package bought at 90 (highest performance)
-        income, profit = my_positions.sell_positions(0.1, 80.)
+        income, profit = my_positions.sell(0.1, 80.)
         self.assertAlmostEqual(income, 8.)
         self.assertAlmostEqual(profit, 1.60, places=2)
         self.assertEqual(my_positions.num_positions(), 2)
         self.assertAlmostEqual(my_positions.num_shares(), 0.7)
 
         # Sell 0.2 from the 0.7
-        income, profit = my_positions.sell_positions(0.2, 80.)
+        income, profit = my_positions.sell(0.2, 80.)
         self.assertAlmostEqual(income, 16.)
         self.assertAlmostEqual(profit, 3.20, places=2)
         self.assertEqual(my_positions.num_positions(), 2)
@@ -129,14 +129,14 @@ class TestPositions(TestCase):
         my_positions = self.init_pos('bear')
         my_positions.update(110.)
         # sell 0.1 from the package bought at 100 (highest performance)
-        income, profit = my_positions.sell_positions(0.1, 110.)
+        income, profit = my_positions.sell(0.1, 110.)
         self.assertAlmostEqual(income, 11.)
         self.assertAlmostEqual(profit, -1.10, places=2)
         self.assertEqual(my_positions.num_positions(), 2)
         self.assertAlmostEqual(my_positions.num_shares(), 0.7)
 
         # Sell 0.2 from the 0.7
-        income, profit = my_positions.sell_positions(0.2, 110.)
+        income, profit = my_positions.sell(0.2, 110.)
         self.assertAlmostEqual(income, 22.)
         self.assertAlmostEqual(profit, -2.20, places=2)
         self.assertEqual(my_positions.num_positions(), 2)

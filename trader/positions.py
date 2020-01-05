@@ -7,32 +7,29 @@ from share import share
 class Positions:
     configuration: Dictionary
     book: List[share] = []
+    initial_budget: float = 0.
+    budget = 0.
 
-    def __init__(self, configuration):
+    def __init__(self, configuration, initial_budget):
         self.params = configuration
         self.book = []
+        self.initial_budget = initial_budget
+        self.budget = self.initial_budget
 
     def reset(self):
         del self.book[:]
         self.book = []
 
-    def buy_position(self, num, price, mode='bull'):
+    def buy(self, num, price, mode='bull'):
         """
         Buy a number of positions, at a given price.
         Returns the cost of the buy operation.
         """
         self.book.append(share(price, num, mode))
+        self.budget -= self.book[-1].cost_
         return self.book[-1].cost_
 
-    def sell_all(self, price):
-        """ Sell all the options we have. Clear the book """
-        self.update(price)
-        sell_value = self.cost()
-        sell_profit = self.profit()
-        del self.book[:]
-        return sell_value, sell_profit
-
-    def sell_positions(self, num_shares_to_sell, sell_price):
+    def sell(self, num_shares_to_sell, sell_price):
         """
         Sell `num` positions from our portfolio. The shares must be already
         updated with the proper current price, before executing the sell
@@ -51,8 +48,8 @@ class Positions:
         num_shares_i_have = self.num_shares()
         if num_shares_i_have == 0. or num_shares_to_sell > num_shares_i_have:
             return 0., 0.
-        if num_shares_i_have == num_shares_to_sell:
-            return self.sell_all(sell_price)
+        # if num_shares_i_have == num_shares_to_sell:
+        #     return self.sell_all(sell_price)
 
         # Sort positions by profit to sell first those with max prof.
         sell_book: list[share] = sorted(
@@ -63,14 +60,25 @@ class Positions:
         idx = 0
         while num_shares_sold != num_shares_to_sell:
             num = num_shares_to_sell - num_shares_sold
-            sold, income, profit = self.sell(sell_book[idx], num, sell_price)
+            sold, income, profit = self.sell_position(sell_book[idx], num,
+                                                      sell_price)
             total_income += income
             total_profit += profit
             num_shares_sold += sold
             idx += 1
+        self.budget += (total_income + total_profit)
         return total_income, total_profit
 
-    def sell(self, position: share, num_shares: float, sell_price: float):
+    # def sell_all(self, price):
+    #     """ Sell all the options we have. Clear the book """
+    #     self.update(price)
+    #     sell_value = self.cost()
+    #     sell_profit = self.profit()
+    #     del self.book[:]
+    #     return sell_value, sell_profit
+
+    def sell_position(self, position: share, num_shares: float,
+                      sell_price: float):
         """
         Sell the number of shares specified from position.
         - If the nr of shares to sell is lower than the nr of shares
@@ -92,7 +100,7 @@ class Positions:
             num_shares = position.num_
 
         # Sell the adjusted amount from the position
-        value, profit = position.sell(num_shares, sell_price)
+        value, profit = position.sell(num_shares) # , sell_price)
 
         # Check if position is empty, to remove it from the book.
         if position.num_ == 0.:
