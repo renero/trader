@@ -52,13 +52,13 @@ class TestPositions(TestCase):
         my_positions = self.init_pos()
         my_positions.update(80.)
         profit = my_positions.profit()
-        self.assertAlmostEqual(profit, -12.088, places=2)
+        self.assertAlmostEqual(profit, -15.0, places=2)
 
         # Bear MODE
         my_positions = self.init_pos('bear')
         my_positions.update(80.)
         profit = my_positions.profit()
-        self.assertAlmostEqual(profit, 12.088, places=2)
+        self.assertAlmostEqual(profit, 15.0, places=2)
 
     def test_sell_all(self):
         my_positions = self.init_pos()

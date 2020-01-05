@@ -1,3 +1,4 @@
+from file_io import scale
 from positions import Positions
 from reward import reward
 from utils.dictionary import Dictionary
@@ -38,8 +39,10 @@ class Portfolio:
         """
         Initializes portfolio to the initial state.
         """
-        self.initial_budget = self.scale_budget(
-            self.params.initial_budget)
+        # self.initial_budget = self.scale_budget(
+        #     self.params.initial_budget)
+        self.initial_budget = scale(self.params.initial_budget, 0.,
+                                    self.params.fcast_file.max_support)
         self.budget = self.initial_budget
         self.latest_price = initial_price
         self.forecast = forecast
@@ -51,7 +54,7 @@ class Portfolio:
             self.initial_budget))
 
     def scale_budget(self, budget):
-        mn = self.params.fcast_file.min_support
+        mn = 0.0
         ptp = self.params.fcast_file.max_support - mn
         if ptp == 0.0:
             ptp = 0.000001
@@ -62,7 +65,8 @@ class Portfolio:
         WAIT Operation
         """
         action_name = 'wait'
-        rw = reward.decide(action_name, self.positions)
+        rw = reward.decide(action_name, self.positions, self.initial_budget,
+                           self.budget)
         msg = '  WAIT: ' + \
               'prc({:.2f})|bdg({:.2f})|val({:.2f})|prf({:.2f})|cost({:.2f})'
         self.log.debug(msg.format(
@@ -82,9 +86,10 @@ class Portfolio:
         if buy_price > self.budget:
             action_name = 'f.buy'
             self.log.debug('  FAILED buy')
-            rw = reward.failed(action_name)
+            rw = reward.failed()
         else:
-            rw = reward.decide(action_name, self.positions)
+            rw = reward.decide(action_name, self.positions, self.initial_budget,
+                               self.budget)
             self.budget -= self.positions.buy_position(num_shares,
                                                        self.latest_price,
                                                        self.params.mode)
@@ -102,9 +107,10 @@ class Portfolio:
         if num_shares > self.positions.num_shares():
             action_name = 'f.sell'
             self.log.debug('  FAILED sell')
-            rw = reward.failed(action_name)
+            rw = reward.failed()
         else:
-            rw = reward.decide(action_name, self.positions)
+            rw = reward.decide(action_name, self.positions, self.initial_budget,
+                               self.budget)
             income, profit = self.positions.sell_positions(num_shares,
                                                            self.latest_price)
             self.log.debug('  Sell op -> income:{:.2f}, profit:{:.2f}'.format(

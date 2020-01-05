@@ -178,7 +178,6 @@ class Environment:
         # in params file.
         self.data_[self.params.fcast_file.cols_to_scale] = scale_columns(
             self.data_[self.params.fcast_file.cols_to_scale],
-            self.params.fcast_file.min_support,
             self.params.fcast_file.max_support)
         self.log.info('Scaler applied')
 

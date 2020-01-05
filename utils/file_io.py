@@ -99,7 +99,7 @@ def unscale(y, minimum, peak_to_peak):
     return (peak_to_peak * y) + minimum
 
 
-def scale_columns(df, mn, mx):
+def scale_columns(df, mx):
     """
     Scale columns from a dataframe to 0..1 range.
 
@@ -109,11 +109,11 @@ def scale_columns(df, mn, mx):
 
     :return: The data frame scaled
     """
-    df = df.apply(lambda x: scale(x, mn, mx - mn))
+    df = df.apply(lambda x: scale(x, minimum=0., peak_to_peak=mx - 0.))
     return df
 
 
-def unscale_columns(df, mn, mx):
+def unscale_columns(df, mx):
     """
     UN_Scale columns from a dataframe to 0..1 range.
 
@@ -123,7 +123,7 @@ def unscale_columns(df, mn, mx):
 
     :return: The data frame scaled
     """
-    df = df.apply(lambda y: unscale(y, mn, mx - mn))
+    df = df.apply(lambda y: unscale(y, minimum=0.0, peak_to_peak=mx - 0.0))
     return df
 
 
@@ -133,7 +133,7 @@ def unscale_results(results, maximum):
     # in params file.
     to_unscale = ['price', 'forecast', 'budget', 'cost',
                   'value', 'profit', 'balance']
-    df[to_unscale] = unscale_columns(df[to_unscale], 0.0, maximum)
+    df[to_unscale] = unscale_columns(df[to_unscale], maximum)
 
     return df
 

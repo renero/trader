@@ -137,23 +137,22 @@ class RLDictionary(Dictionary):
         # Build a list of lists with the names of all possible states.
         setattr(self, 'states_list', list())
         for state in self.state.keys():
-            self.states_list.append(self.state[state].names)
+            self.states_list.append(self.state[state])
 
         # Compute the total number of states as the multiplication of the
         # number of substates in each possible state-stack
         setattr(self, 'num_states', int)
         self.num_states = 1
         for state in self.state.keys():
-            self.num_states = self.num_states * len(
-                self.state[state].names)
+            self.num_states = self.num_states * len(self.state[state])
         self.log.info('{} possible states'.format(self.num_states))
 
         # Set the number of substates (values inside each state)
         setattr(self, 'num_substates', int)
         self.num_substates = 0
         for _, v in self.state.items():
-            if isinstance(v.names, list):
-                self.num_substates += len(v.names)
+            if isinstance(v, list):
+                self.num_substates += len(v)
             else:
                 self.num_substates += 1
         self.log.info('{} substates in all states'.format(self.num_substates))
