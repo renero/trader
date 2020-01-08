@@ -111,9 +111,10 @@ class RLDictionary(Dictionary):
                 'To generate a portfolio, `simulate` with `--init-portfolio`')
             raise ValueError('wrong parameters')
 
-        # Output filename specified
+        # Output filename specified. Save is implicit.
         if arguments.args.output is not None:
             setattr(self, 'output', arguments.args.output[0])
+            setattr(self, 'save_model', True)
         else:
             setattr(self, 'output', None)
 

@@ -18,7 +18,9 @@ class Arguments(object):
             help='Relative path to configuration file to be used (YAML).')
         self.parser.add_argument(
             '-d', '--debug', nargs=1, type=int,
-            help='Debug level (0..4), default 3.')
+            help=('Debug level (0..4), default 3. When using level 4, a lot of '
+                  'information is added. If you want the code to run silently, '
+                  'set this flag to 0.'))
         self.parser.add_argument(
             '-e', '--epochs', nargs='?', type=int, const=20, default=20,
             help='Number of epochs in training')
@@ -42,7 +44,9 @@ class Arguments(object):
             help='Do not dump temp JSON portfolio file (ONLY) after predict')
         self.parser.add_argument(
             '-o', '--output', nargs=1, type=str,
-            help='Output filename to be used to save results (w/out extension)')
+            help=("Output filename used to save results (w/out extension). "
+                  "When using this option, it\'s assumed that model will be "
+                  "saved, so, no need to add --save flag."))
         self.parser.add_argument(
             '-p', '--plot', action='store_true',
             help='Plot summary charts, default OFF')
