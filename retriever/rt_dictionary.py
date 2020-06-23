@@ -1,6 +1,6 @@
-from arguments import Arguments
-from dictionary import Dictionary
-from logger import Logger
+from retriever.arguments import Arguments
+from utils.dictionary import Dictionary
+from utils.logger import Logger
 
 
 class RTDictionary(Dictionary):

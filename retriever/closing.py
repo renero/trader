@@ -1,11 +1,11 @@
 import pandas as pd
 import requests
 
-from last import last
-from logger import Logger
+from utils.last import last
+from utils.logger import Logger
 
 
-class closing:
+class Closing:
 
     @staticmethod
     def retrieve_stock_data(params) -> (dict, str):
