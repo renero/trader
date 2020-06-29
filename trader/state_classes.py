@@ -37,25 +37,37 @@ class StatePrevPrevPriceTrend(RL_State):
 class StateGain(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
-        return 'GAIN' if portfolio.gain else 'LOSE'
+        return 'GN' if portfolio.gain else 'LS'
+
+
+class StateLastGain(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        return 'GN' if portfolio.last_gain else 'LS'
+
+
+class StatePrevLastGain(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        return 'GN' if portfolio.prev_last_gain else 'LS'
 
 
 class StateHaveShares(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
-        return 'HAVE' if portfolio.have_shares else 'DONT'
+        return 'HV' if portfolio.have_shares else 'DH'
 
 
 class StateCanBuy(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
-        return 'BUY' if portfolio.can_buy else 'NOB'
+        return 'BY' if portfolio.can_buy else 'NB'
 
 
 class StateCanSell(RL_State):
     @staticmethod
     def update_state(portfolio: Portfolio):
-        return 'SELL' if portfolio.can_sell else 'NOS'
+        return 'SL' if portfolio.can_sell else 'NS'
 
 
 class StatePredUpward(RL_State):
@@ -63,17 +75,10 @@ class StatePredUpward(RL_State):
     def update_state(portfolio: Portfolio):
         if portfolio.prediction_upward:
             portfolio.log.debug('  ↗︎ prediction trends price raise')
-            return 'UPW'
+            return 'UP'
         else:
             portfolio.log.debug('  ↘︎ prediction trends price down')
-            return 'DWN'
-
-
-class StateKonkorde(RL_State):
-    @staticmethod
-    def update_state(portfolio: Portfolio):
-        return 'UPTREND' if portfolio.konkorde >= portfolio.params.k_threshold \
-            else 'DOWNTREND'
+            return 'DW'
 
 
 class StateLastPredOk(RL_State):
@@ -83,16 +88,16 @@ class StateLastPredOk(RL_State):
         sign = lambda x: copysign(1, x)
         if portfolio.memory.len < 1:
             log.debug('  Not enough history to check last prediction')
-            return 'LNOK'
+            return 'PI'
         prediction_sign = sign(portfolio.last_forecast - portfolio.last_price)
         actual_sign = sign(portfolio.latest_price - portfolio.last_price)
         # guess what the state, given the forecast
         if prediction_sign == actual_sign:
             log.debug('  ✓ Last prediction was OK')
-            return 'LOK'
+            return 'PC'
         else:
             log.debug('  ✕ Last prediction was NOT OK')
-            return 'LNOK'
+            return 'PI'
 
 
 class StatePrevLastPredOk(RL_State):
@@ -102,7 +107,7 @@ class StatePrevLastPredOk(RL_State):
         sign = lambda x: copysign(1, x)
         if portfolio.memory.len < 2:
             log.debug('  Not enough history to check prev. last prediction')
-            return 'PLNOK'
+            return 'PI'
 
         prediction_sign = sign(
             portfolio.prevlast_forecast - portfolio.prevlast_price)
@@ -110,10 +115,10 @@ class StatePrevLastPredOk(RL_State):
         # guess what the state, given the forecast
         if prediction_sign == actual_sign:
             log.debug('  ✓ Prev. last prediction was OK')
-            return 'PLOK'
+            return 'PC'
         else:
             log.debug('  ✕ Prev. last prediction was NOT OK')
-            return 'PLNOK'
+            return 'PI'
 
 
 class StatePrevPrevLastPredOk(RL_State):
@@ -123,7 +128,7 @@ class StatePrevPrevLastPredOk(RL_State):
         sign = lambda x: copysign(1, x)
         if portfolio.memory.len < 3:
             log.debug('  Not enough history to check prev.prev.last prediction')
-            return 'PPLNOK'
+            return 'PI'
 
         prediction_sign = sign(
             portfolio.prevprevlast_forecast - portfolio.prevprevlast_price)
@@ -132,7 +137,43 @@ class StatePrevPrevLastPredOk(RL_State):
         # guess what the state, given the forecast
         if prediction_sign == actual_sign:
             log.debug('  ✓ Prev. prev. last prediction was OK')
-            return 'PPLOK'
+            return 'PC'
         else:
             log.debug('  ✕ Prev. prev. last prediction was NOT OK')
-            return 'PPLNOK'
+            return 'PI'
+
+
+class StateKonkorde(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        return 'KP' if portfolio.konkorde >= portfolio.params.k_threshold \
+            else 'KN'
+
+
+class StateKTrend(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        if portfolio.konkorde > portfolio.memory.last('konkorde'):
+            return 'KU'
+        else:
+            return 'KD'
+
+
+class StateLastKTrend(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        if portfolio.memory.last('konkorde') > portfolio.memory.prevlast(
+                'konkorde'):
+            return 'KU'
+        else:
+            return 'KD'
+
+
+class StatePrevLastKTrend(RL_State):
+    @staticmethod
+    def update_state(portfolio: Portfolio):
+        if portfolio.memory.prevlast(
+                'konkorde') > portfolio.memory.prevprevlast('konkorde'):
+            return 'KU'
+        else:
+            return 'KD'

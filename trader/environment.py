@@ -1,18 +1,18 @@
 import importlib
 import json
+import sys
 
 import numpy as np
 import pandas as pd
 
-from common import Common
-from file_io import valid_output_name
+from file_io import valid_output_name, scale_columns
 from last import last
 from memory import Memory
 from portfolio import Portfolio
 from states_combiner import StatesCombiner
 
 
-class Environment(Common):
+class Environment:
     configuration = None
     max_states_ = 0
     data_ = None
@@ -29,15 +29,17 @@ class Environment(Common):
     done_ = False
     reward_ = 0
     new_state_: int = 0
+    scaler_ = None
     have_konkorde = False
-    date_colname = 'date'
+    date_colname_ = 'date'
 
-    def __init__(self, configuration):
+    def __init__(self, configuration, train_mode: bool):
         self.params = configuration
         self.log = self.params.log
         self.display = self.params.display
         self.memory = Memory(self.params)
         self.results = self.memory.results
+        self.fcast_dict = self.params.fcast_file.dict
         self.log.info('Creating Environment')
 
         if 'seed' in self.params:
@@ -46,9 +48,29 @@ class Environment(Common):
             np.random.seed(1)
 
         self.states = StatesCombiner(self.params)
-        self.read_market_data(self.params.forecast_file)
+        self.init_forecast(self.params.forecast_file, train_mode)
         self.portfolio = Portfolio(self.params,
-                                   self.price_, self.forecast_, self.memory)
+                                   self.price_,
+                                   self.forecast_,
+                                   self.memory)
+
+        # Create dict with functions linked to action names
+        self.call_action = dict()
+        for action in self.params.action:
+            self.call_action[action] = getattr(self.portfolio, action)
+
+        # Create another dict with the state methods so, we don't have to
+        # call getattr and module load at each step
+        self.state_class = dict()
+        for module_param_name in self.params.state.keys():
+            # The extended classes are defined in the params file and must
+            # start with the 'state_' string.
+            module_name = 'State' + module_param_name
+            module = importlib.import_module('state_classes')
+            self.state_class[module_name] = getattr(
+                getattr(
+                    module, module_name), 'update_state')
+
         self.init_environment(creation_time=True)
         self.log.info('Environment created')
 
@@ -59,13 +81,64 @@ class Environment(Common):
         internal state of the environment accordingly.
         :return: The initial state.
         """
-        self.update_mkt_price()
-        self.portfolio.reset(self.price_,
-                             self.forecast_,
+        self.read_next_forecast()
+        self.portfolio.reset(self.price_, self.forecast_,
                              self.memory)
         if creation_time is not True:
-            self.memory.record_values(self.portfolio, t=0, ts=self.ts_)
+            self.memory.record_state(self.portfolio, t=0, ts=self.ts_)
         return self.update_state()
+
+    def step(self, action):
+        """
+        Send an action to my Environment by calling the proper method in the
+        Portfolio class. As a result, obtain reward and flag indicating whether
+        the goal has been reached (done). Record the sequence to the internal
+        memory and update internal state accordingly.
+
+        :param action: the action to be executed in the environment (portfolio)
+
+        :return: state, reward, done and iter count.
+        """
+        assert action < self.params.num_actions, \
+            'Action ID must be between 0 and {}'.format(
+                self.params.num_actions)
+
+        # Call to the proper portfolio method, based on the action number
+        # passed to this argument.
+        self.log.debug(
+            'Env. Step (t={}), price={:.2f}, action decided={} ({})'.format(
+                self.t, self.price_, action, self.params.action_name[action]))
+
+        # Compute reward by calling action and record experience.
+        action_name = self.params.action_name[action]
+        action_done, self.reward_ = self.call_action[action_name]()
+
+        self.memory.record_action_and_reward(
+            action_done,
+            self.reward_,
+            self.current_state_,
+            self.states.name(self.current_state_))
+
+        if self.params.stepwise:
+            self.display.summary(self.memory.results, False)
+            sys.stdout.flush()
+            input("Press ENTER to continue...")
+
+        # Increase `time pointer`
+        self.t += 1
+        if self.t >= self.max_states_:
+            self.log.debug('End of step (t({}) >= max_states({}))'.format(
+                self.t, self.max_states_))
+            self.done_ = True
+            return self.new_state_, self.reward_, self.done_, self.t
+
+        self.log.debug('Updating environment, after step.')
+        self.read_next_forecast()
+        self.portfolio.update(self.price_, self.forecast_, self.konkorde_)
+        self.new_state_ = self.update_state()
+        self.memory.record_state(self.portfolio, self.t, self.ts_)
+
+        return self.new_state_, self.reward_, self.done_, self.t
 
     def reset(self):
         """
@@ -78,32 +151,45 @@ class Environment(Common):
         self.memory.reset()
         return self.init_environment(creation_time=False)
 
-    def read_market_data(self, path):
+    def init_forecast(self, forecast_file, train_mode: bool):
         """
-        Reads the simulation data.
-        :param path:
-        :return:
+        Reads the forecast data with the actual price values, followed by
+        the forecast made by the RNN and the indicators backing the prediction.
+        The values for price and forecast are immediately scaled using a
+        MinMaxScaler, that will be made available through parameters to later
+        be used when loading a trader trained with this data.
+
+        :param forecast_file: The path to the file containing the forecast
+                              information.
+        :return: None
         """
         if 'delimiter' not in self.params:
             delimiter = ','
         else:
-            delimiter = self.params.delimiter
-        self.data_ = pd.read_csv(path, delimiter)
+            delimiter = self.params.fcast_file.delimiter
+        self.data_ = pd.read_csv(forecast_file, delimiter)
         self.max_states_ = self.data_.shape[0]
-        self.log.info('Read trader forecast file: {}'.format(path))
+        self.log.info('Read trader forecast file: {}'.format(forecast_file))
 
         # Set the name of the date column
         self.date_colname_ = last.date_colname(self.data_)
 
+        # Scale price and forecast info with manually set ranges for data
+        # in params file.
+        self.data_[self.params.fcast_file.cols_to_scale] = scale_columns(
+            self.data_[self.params.fcast_file.cols_to_scale],
+            self.params.fcast_file.max_support)
+        self.log.info('Scaler applied')
+
         # Do i have konkorde?
         setattr(self.params, 'have_konkorde', bool)
         self.params.have_konkorde = False
-        if self.params.column_name['green'] in self.data_.columns and \
-                self.params.column_name['blue'] in self.data_.columns:
+        if self.fcast_dict['green'] in self.data_.columns and \
+                self.fcast_dict['blue'] in self.data_.columns:
             self.params.have_konkorde = True
             self.log.info('Konkorde index present!')
 
-    def update_mkt_price(self):
+    def read_next_forecast(self):
         """
         Set the price to the current time slot.
         """
@@ -112,19 +198,20 @@ class Environment(Common):
 
         self.ts_ = self.data_.iloc[self.t, col_names.index(self.date_colname_)]
         self.price_ = self.data_.iloc[
-            self.t, col_names.index(self.params.column_name['price'])]
+            self.t, col_names.index(self.fcast_dict['price'])]
         self.forecast_ = self.data_.iloc[
-            self.t, col_names.index(self.params.column_name['forecast'])]
+            self.t, col_names.index(self.fcast_dict['forecast'])]
 
-        self.log.debug('  t={}, updated market price/forecast ({}/{})'.format(
-            self.t, self.price_, self.forecast_))
+        self.log.debug(
+            '  t={}, updated market price/forecast ({:.2f}/{:.2f})'.format(
+                self.t, self.price_, self.forecast_))
 
         # If I do have konkorde indicators, I also read them.
         if self.params.have_konkorde:
             self.green_ = self.data_.iloc[
-                self.t, col_names.index(self.params.column_name['green'])]
+                self.t, col_names.index(self.fcast_dict['green'])]
             self.blue_ = self.data_.iloc[
-                self.t, col_names.index(self.params.column_name['blue'])]
+                self.t, col_names.index(self.fcast_dict['blue'])]
             self.konkorde_ = self.green_ + self.blue_
             self.log.debug('  konkorde ({}/{})'.format(
                 self.green_, self.blue_))
@@ -145,60 +232,14 @@ class Environment(Common):
             # The extended classes are defined in the params file and must
             # start with the 'state_' string.
             module_name = 'State' + module_param_name
-            module = importlib.import_module('state_classes')  # module_name)
-            state_class = getattr(module, module_name)
-            new_substate = state_class.update_state(self.portfolio)
+            new_substate = self.state_class[module_name](self.portfolio)
             new_substates.append(new_substate)
 
         # Get the ID resulting from the combination of the sub-states
         self.current_state_ = self.states.get_id(*new_substates)
-        self.log.debug('t={}, state updated to: {} ({})'.format(
-            self.t, self.current_state_, self.states.name(self.current_state_)))
+        self.log.debug('  state updated to: {} ({})'.format(
+            self.current_state_, self.states.name(self.current_state_)))
         return self.current_state_
-
-    def step(self, action):
-        """
-        Send an action to my Environment.
-        :param action: the action.
-        :return: state, reward, done and iter count.
-        """
-        assert action < self.params.num_actions, \
-            'Action ID must be between 0 and {}'.format(
-                self.params.num_actions)
-
-        # Call to the proper portfolio method, based on the action number
-        # passed to this argument.
-        self.log.debug('-----------')
-        self.log.debug('STEP ITERATION - t={} -'.format(self.t))
-        self.log.debug('t={}, price={}, action decided={} ({})'.format(
-            self.t, self.price_, action, self.params.action_name[action]))
-
-        # Compute reward by calling action and record experience.
-        action_name = self.params.action_name[action]
-        action_done, self.reward_ = getattr(self.portfolio, action_name)()
-        self.memory.record_action(action_done)
-        self.memory.record_reward(self.reward_,
-                                  self.current_state_,
-                                  self.states.name(self.current_state_))
-        self.log.debug(
-            't={}, reward ({:.2f}), recorded to action {} in state {}'.format(
-                self.t, self.reward_, action, self.current_state_))
-
-        # Increase `time pointer`
-        self.t += 1
-        if self.t >= self.max_states_:
-            self.log.debug('End of step (t({}) >= max_states({}))'.format(
-                self.t, self.max_states_))
-            self.done_ = True
-            return self.new_state_, self.reward_, self.done_, self.t
-
-        self.log.debug('Updating environment, after step.')
-        self.update_mkt_price()
-        self.portfolio.update(self.price_, self.forecast_, self.konkorde_)
-        self.new_state_ = self.update_state()
-        self.memory.record_values(self.portfolio, self.t, self.ts_)
-
-        return self.new_state_, self.reward_, self.done_, self.t
 
     def save_portfolio(self, init=False):
         """
@@ -257,13 +298,13 @@ class Environment(Common):
         if self.t >= self.data_.shape[0]:
             return -1
 
-        self.update_mkt_price()
+        self.read_next_forecast()
         self.portfolio.latest_price = self.price_
         self.portfolio.forecast = self.forecast_
         self.portfolio.memory = self.memory
         self.portfolio.update(self.price_, self.forecast_, self.konkorde_)
         self.update_state()
-        self.memory.record_values(self.portfolio, self.t, self.ts_)
+        self.memory.record_state(self.portfolio, self.t, self.ts_)
 
         # latest state is the previous to the last int the table.
         return self.current_state_

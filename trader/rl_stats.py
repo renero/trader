@@ -7,7 +7,7 @@ class RLStats:
         self.avg_rewards = []
         self.avg_loss = []
         self.avg_mae = []
-        self.avg_profit = []
+        self.avg_balance = []
         self.last_avg: float = 0.0
         self.sum_rewards = 0
         self.sum_loss = 0
@@ -25,8 +25,8 @@ class RLStats:
         self.sum_mae += mae
         self.sum_rewards += reward
 
-    def update(self, num_episodes, last_profit):
+    def update(self, num_episodes, balance):
         self.avg_rewards.append(self.sum_rewards / num_episodes)
         self.avg_loss.append(self.sum_loss / num_episodes)
         self.avg_mae.append(self.sum_mae / num_episodes)
-        self.avg_profit.append(last_profit)
+        self.avg_balance.append(balance)

@@ -32,7 +32,7 @@ class Dictionary(MyDict):
         """
         super().__init__(**kwargs)
         params = {}
-        cwd = Path(getcwd())
+        cwd = Path(getcwd()).joinpath('config')
         params_path: str = str(cwd.joinpath(default_params_filename))
 
         with open(params_path, 'r') as stream:

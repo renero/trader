@@ -1,3 +1,5 @@
+import math
+
 from arguments import Arguments
 from display import Display
 from logger import Logger
@@ -7,7 +9,10 @@ from utils.my_dict import MyDict
 
 class RLDictionary(Dictionary):
 
-    def __init__(self, default_params_filename='params.yaml', *args, **kwargs):
+    def __init__(self,
+                 default_params_filename='params.yaml',
+                 *args,
+                 **kwargs):
 
         # Extend the dictionary with the values passed in arguments.
         # Call the Dictionary constructor once the parameters file is set.
@@ -26,6 +31,12 @@ class RLDictionary(Dictionary):
         setattr(self, 'debug', arguments.args.debug is not None)
         setattr(self, 'log_level',
                 arguments.args.debug[0] if arguments.args.debug else 3)
+
+        # Interactive or Stepwise mode, overrides debug and log_level
+        setattr(self, 'stepwise', arguments.args.stepwise)
+        if self.stepwise is True:
+            self.debug = True
+            self.log_level = 4
 
         # Start the logger
         if 'log_level' not in self:
@@ -66,6 +77,19 @@ class RLDictionary(Dictionary):
         else:
             setattr(self, 'num_episodes', 1)
 
+        if arguments.args.decay_factor is not None:
+            setattr(self, 'decay_factor', float(arguments.args.decay_factor[0]))
+        else:
+            setattr(self, 'decay_factor', 0.996)
+        self.log.info('Decay factor: {:.4f}'.format(self.decay_factor))
+
+        if arguments.args.initial_budget is not None:
+            setattr(self, 'initial_budget',
+                    float(arguments.args.initial_budget[0]))
+        else:
+            setattr(self, 'initial_budget', self.initial_budget)
+        self.log.info('Initial Budget: {:.0f}'.format(self.initial_budget))
+
         # Init portfolio
         if arguments.args.init_portfolio is not None:
             setattr(self, 'init_portfolio', True)
@@ -87,9 +111,10 @@ class RLDictionary(Dictionary):
                 'To generate a portfolio, `simulate` with `--init-portfolio`')
             raise ValueError('wrong parameters')
 
-        # Output filename specified
+        # Output filename specified. Save is implicit.
         if arguments.args.output is not None:
             setattr(self, 'output', arguments.args.output[0])
+            setattr(self, 'save_model', True)
         else:
             setattr(self, 'output', None)
 
@@ -113,16 +138,25 @@ class RLDictionary(Dictionary):
         # Build a list of lists with the names of all possible states.
         setattr(self, 'states_list', list())
         for state in self.state.keys():
-            self.states_list.append(self.state[state].names)
+            self.states_list.append(self.state[state])
 
         # Compute the total number of states as the multiplication of the
-        # number of substates in eachs posible state-stack
+        # number of substates in each possible state-stack
         setattr(self, 'num_states', int)
         self.num_states = 1
         for state in self.state.keys():
-            self.num_states = self.num_states * len(
-                self.state[state].names)
-        self.log.debug('{} possible states'.format(self.num_states))
+            self.num_states = self.num_states * len(self.state[state])
+        self.log.info('{} possible states'.format(self.num_states))
+
+        # Set the number of substates (values inside each state)
+        setattr(self, 'num_substates', int)
+        self.num_substates = 0
+        for _, v in self.state.items():
+            if isinstance(v, list):
+                self.num_substates += len(v)
+            else:
+                self.num_substates += 1
+        self.log.info('{} substates in all states'.format(self.num_substates))
 
         # Create a display property to centralize all reporting activity into
         # a single function. That way I can store it all in a single dataframe

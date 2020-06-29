@@ -1,31 +1,38 @@
+import itertools
 import os
 import random
 from os.path import splitext, basename
+from typing import List
 
 import numpy as np
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
-
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-
 from keras.callbacks import TensorBoard
 from keras.layers import Dense, InputLayer
 from keras.models import Sequential, model_from_json
 from keras.optimizers import Adam
 
-from common import Common
+from environment import Environment
 from file_io import valid_output_name
 from utils.dictionary import Dictionary
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
-class RL_NN(Common):
+
+class RL_NN:
     model = None
 
-    def __init__(self, configuration: Dictionary):
+    def __init__(self, configuration: Dictionary, env: Environment):
         self.params = configuration
         self.log = self.params.log
+        self.env = env
         self.model = None
+
+        # This structure is used by the onehot encoder.
+        all_substates = list(itertools.chain(*self.params.states_list))
+        self.position = {}
+        for idx, element in enumerate(all_substates):
+            self.position[element] = idx
 
         self.callback_args = {}
         if self.params.tensorboard is True:
@@ -40,7 +47,7 @@ class RL_NN(Common):
 
         # Input layer
         self.model.add(
-            InputLayer(batch_input_shape=(None, self.params.num_states)))
+            InputLayer(batch_input_shape=(None, self.params.num_substates)))
         first_layer = True
 
         # Create all the layers
@@ -48,7 +55,7 @@ class RL_NN(Common):
             if first_layer:
                 self.model.add(Dense(
                     num_cells,
-                    input_shape=(self.params.num_states,),
+                    input_shape=(self.params.num_substates,),
                     activation=self.params.deep_qnet.activation))
                 first_layer = False
             else:
@@ -139,11 +146,16 @@ class RL_NN(Common):
                             next states and done values.
         :return: input and output to the network.
         """
-        nn_input = np.empty((0, self.params.num_states), dtype=np.int32)
+        nn_input = np.empty((0, self.params.num_substates), dtype=np.int32)
         nn_output = np.empty((0, self.params.num_actions))
         for state, action, reward, next_state, done in mini_batch:
             y = self.prepare_nn_output(state, action, reward, next_state, done)
-            nn_input = np.append(nn_input, self.onehot(state), axis=0)
+            nn_input = np.append(
+                nn_input,
+                self.onehot(
+                    self.env.states.name(state),
+                    self.env.states.state_list),
+                axis=0)
             nn_output = np.append(nn_output, y, axis=0)
         return nn_input, nn_output
 
@@ -163,7 +175,10 @@ class RL_NN(Common):
         if not done:
             target = reward + self.params.gamma * self.predict_value(
                 next_state)
-        labeled_output = self.model.predict(self.onehot(state))[0]
+        labeled_output = self.model.predict(
+            self.onehot(
+                self.env.states.name(state),
+                self.env.states.state_list))[0]
         labeled_output[action] = target
         y = labeled_output.reshape(-1, self.params.num_actions)
         return y
@@ -175,19 +190,74 @@ class RL_NN(Common):
         """
         strategy = [
             np.argmax(
-                self.model.predict(self.onehot(i))[0])
-            for i in range(self.params.num_states)
+                self.model.predict(
+                    self.onehot(
+                        self.env.states.name(state),
+                        self.env.states.state_list))[0])
+            for state in range(self.params.num_states)
         ]
         return strategy
 
-    def onehot(self, state: int) -> np.ndarray:
-        return np.identity(self.params.num_states)[state:state + 1]
+    def onehot(self, state_name: str, state_list: List[str]):
+        """
+        OneHot (special) encoding.
+        Considering the total number of substates to represent (the nr. of
+        possible values that each `state` can be assigned to, like, for
+        example: the state `GAIN` reflects whether I'm currently gaining money
+        or not, can be in substates `YES` or `NOT`), this one hot encoding
+        assigns a position to each of them. The value will be 1 if it's set
+        or 0 if it's not set.
 
-    def predict(self, state) -> int:
-        return int(np.argmax(self.model.predict(self.onehot(state))))
+        A two-states scenario with
+        - `State1` valued as `A` or `B`, and
+        - `State2` valued as `C` or `D`,
+
+        will generate 2^2 possible combinations:
+        - A_C,
+        - A_D,
+        - B_C and
+        - B_D.
+
+        To encode this situation 4 bits will be used and the
+        encodings will be:
+        - [1010],
+        - [1001],
+        - [0110],
+        - [0101].
+
+        Where first position says if substate `A` is set or not, and so on...
+        """
+        enc = [0] * self.params.num_substates
+        for substate in state_name.split('_'):
+            enc[self.position[substate]] = 1
+        self.log.debug('  state: {}'.format(state_name))
+        self.log.debug('  encod: {}'.format(enc))
+        return np.array(enc).reshape(1, -1)
+
+    def predict(self, state, relax=True) -> int:
+        """
+        Produces a prediction.
+        Relax controls whether to allow random output instead of MAX value
+        at output layer. Relax MUST set to FALSE when called once TRAINED.
+        """
+        prediction = int(np.argmax(
+            self.model.predict(
+                self.onehot(
+                    self.env.states.name(state),
+                    self.env.states.state_list))))
+        if relax is not True:
+            return prediction
+        elif np.random.random() > self.params.rnd_output_prob:
+            return prediction
+        else:
+            return np.random.randint(0, self.params.num_actions)
 
     def predict_value(self, state):
-        return np.max(self.model.predict(self.onehot(state)))
+        return np.max(
+            self.model.predict(
+                self.onehot(
+                    self.env.states.name(state),
+                    self.env.states.state_list)))
 
     #
     # Saving and loading the model

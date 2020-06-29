@@ -32,6 +32,13 @@ class StatesCombiner:
         self.combine()
         return
 
+    def reset(self):
+        self.state_list = []
+        self.state = {}
+        self.ivd = {}
+        self.nr_substates = 0
+        self.max_id = 0
+
     def combine(self):
         states = [state for state in product(*self.state_list)]
         for i, t in enumerate(states):

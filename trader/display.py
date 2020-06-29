@@ -8,6 +8,7 @@ from pandas import DataFrame
 from tabulate import tabulate
 
 from common import Common
+from file_io import unscale_results
 from logger import Logger
 
 
@@ -57,18 +58,18 @@ class Display(Common):
         """
         # First, guess what do I need to show.
         if self.params.short:
-            to_remove = {'t', 'budget', 'investment', 'value', 'reward',
-                         'state', 'state_desc'}
+            to_remove = {'t', 'reward', 'konkorde', 'state', 'state_desc'}
             to_display = list(
                 set(results.columns) - to_remove)
         else:
             to_display = results.columns
-        df = results[to_display].copy()
+        df = unscale_results(results[to_display],
+                             self.params.fcast_file.max_support)
 
         # Recolor some columns
         self.recolor_ref(df, 'forecast', 'price')
-        # self.reformat(df, 'price')
         self.recolor_pref(df, 'price')
+        initial_budget = float(df.iloc[0]['budget'])
 
         if 'value' in df.columns:
             self.reformat(df, 'value')
@@ -78,8 +79,10 @@ class Display(Common):
             self.recolor(df, 'budget')
         if 'profit' in df.columns:
             self.recolor(df, 'profit')
-        if 'investment' in df.columns:
-            self.recolor(df, 'investment')
+        if 'balance' in df.columns:
+            self.recolor_value(df, 'balance', initial_budget)
+        if 'cost' in df.columns:
+            self.recolor(df, 'cost')
         if 'reward' in df.columns:
             self.recolor(df, 'reward')
         if 'konkorde' in df.columns:
@@ -100,33 +103,39 @@ class Display(Common):
                        showindex=False,
                        floatfmt=['.0f'] + ['.2f' for i in range(6)]))
         if totals:
-            self.report_totals(results, self.params.mode)
+            self.report_totals(results)
         if do_plot is True:
-            self.plot_results(results, self.params.have_konkorde)
+            self.plot_results(results, self.params.have_konkorde,
+                              self.params.fcast_file.max_support)
 
-    def report_totals(self, results, mode):
+    def report_totals(self, results):
+        df = unscale_results(results,
+                             self.params.fcast_file.max_support)
+
         # Extract Portfolio valuation from the table
-        initial_budget = results.iloc[0].budget
-        budget = results.iloc[-1].budget
-        value = results.iloc[-1].value
-        shares = results.iloc[-1].shares
-        profit = (budget + value) - initial_budget
-        no_action_perf = results.iloc[-1].price - results.iloc[0].price
-        if mode == 'bull':
-            performance = (profit - no_action_perf) / no_action_perf
-        else:
+        initial_budget = df.iloc[0].budget
+        budget = df.iloc[-1].budget
+        cost = df.iloc[-1].cost
+        last_profit = df.iloc[-1].profit
+        value = cost + last_profit
+        shares = df.iloc[-1].shares
+        balance = budget + cost + last_profit
+        profit = balance - initial_budget
+
+        # My performance vs. what would happen if I do nothing.
+        no_action_perf = df.iloc[-1].price - df.iloc[0].price
+        if self.params.mode == 'bear':
+            no_action_perf *= -1.
             performance = (no_action_perf - profit) / no_action_perf
+        else:
+            performance = (profit - no_action_perf) / no_action_perf
 
         print('P/L........: €{} [{:.1f}% over nop ({:.2f})]'.format(
-            self.color(profit), performance*100., no_action_perf))
-        if value != 0.0:
-            balance = budget + value
-        else:
-            balance = budget
+            self.color(profit), performance * 100., no_action_perf))
         percentage = 100. * ((balance / initial_budget) - 1.0)
         print('Balance....: €{} [{} %]'.format(
             self.cond_color(balance, initial_budget), self.color(percentage)))
-        print('Sh.Value...: {} shares = €{:.1f}'.format(int(shares), value))
+        print('Sh.Value...: {} share(s) = €{:.1f}'.format(int(shares), value))
 
     def progress(self, i, num_episodes, last_avg, start, end):
         """
@@ -185,8 +194,8 @@ class Display(Common):
         return
 
     @staticmethod
-    def plot_results(results, have_konkorde):
-        data = results.copy(deep=True)
+    def plot_results(results, have_konkorde, maximum_value):
+        data = unscale_results(results, maximum_value)
         data = data.dropna()
         ini_budget = data.iloc[0].budget
 
@@ -198,7 +207,7 @@ class Display(Common):
         data.head()
         colors = {0: 'green', 1: 'red', 2: '#E8D842', 3: '#BE5B11',
                   4: 'white', 5: 'white'}
-        fig, (ax1, ax2) = plt.subplots(2, sharex=True, figsize=(14, 10),
+        fig, (ax1, ax2) = plt.subplots(2, sharex=True, figsize=(12, 8),
                                        gridspec_kw={'height_ratios': [1, 3]})
         fig.suptitle(
             'Portfolio Value and Shares price ({})'.format(ts()))
@@ -207,10 +216,10 @@ class Display(Common):
         #
         ax1.axhline(y=0, color='red', alpha=0.4, linewidth=0.4)
         ax1.scatter(range(len(data.price)),
-                    (data.budget + data.investment + data.profit) - ini_budget,
+                    (data.budget + data.cost + data.profit) - ini_budget,
                     c=data.action_id.apply(lambda x: colors[x]),
                     marker='.')
-        ax1.plot((data.budget + data.investment + data.profit) - ini_budget,
+        ax1.plot((data.budget + data.cost + data.profit) - ini_budget,
                  linewidth=0.6)
         ax1.xaxis.set_ticks_position('none')
         #
@@ -219,8 +228,7 @@ class Display(Common):
         ax2.set_xticks(ax2.get_xticks()[::10])
         ax2.plot(data.price, c='black', linewidth=0.6)
         ax2.scatter(range(len(data.price)), data.price,
-                    c=data.action_id.apply(lambda x: colors[x]),
-                    marker='.')
+                    c=data.action_id.apply(lambda x: colors[x]), marker='.')
         ax2.plot(data.forecast, 'k--', linewidth=0.5)
         ax2.grid(True, which='major', axis='x')
         #

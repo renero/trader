@@ -60,6 +60,7 @@ class Logger:
         when = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
         print('{} - {}DEBUG - {:<31} - {}{}'.format(
             when, self.OKBLUE, who(1), what, self.ENDC, **kwargs))
+        sys.stdout.flush()
 
     def highlight(self, what):
         now = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())

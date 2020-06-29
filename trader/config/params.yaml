@@ -1,0 +1,155 @@
+#
+# Parameters to start a simulation with a trader
+# @renero
+#
+
+# Info on how to handle the forecast file.
+fcast_file:
+  delimiter: ','
+  dict:                 # Specify the mapping between column names
+    date: date
+    price: actual
+    forecast: forecast
+    green: verde
+    blue: azul
+  cols_to_scale:        # specify what columns from list above to scale
+    - actual
+    - forecast
+  min_support: 0.0   # Minimum price support recommended
+  max_support: 14000.0  # Maximum price support recommended
+
+initial_budget: 12000.
+
+# Wanna save the model after training?
+models_dir: ../output/0.2/^GDAXI/
+json_action: /tmp/trader/^GDAXI/tmp_action.json
+
+# Parameters for the Q-Learning function
+gamma: 0.95
+epsilon: 1.0
+epsilon_min: 0.1
+decay_factor: 0.997
+
+# 'train_steps' specify after how many steps call the 'fit' method.
+# 'batch_size' indicates how many experiences to be fit at once.
+# 'start_episodes' indicates how many steps to run before learn.
+train_steps: 2
+batch_size: 32
+start_episodes: 0
+
+# Experience Replay batch size.
+experience_replay: true
+exp_batch_size: 16
+
+# Konkorde threshold, above which we can consider an upward trend
+k_threshold: 0.15
+
+# Do I want to hijack actions when price drops?
+stop_drop: true
+stop_drop_rate: 0.1
+
+# TensorBoard?
+tensorboard: False
+tbdir: ./graphs/
+
+# Num. of episodes to run simulate and learn
+# Every how many episodes display the update in q-learning?
+num_episodes_update: 1
+
+# Different states in which the environment might be.
+state:
+  PriceTrend:
+    names:
+      - UP
+      - DW
+  PrevPriceTrend:
+    names:
+      - UP
+      - DW
+  PrevPrevPriceTrend:
+    names:
+      - UP
+      - DW
+  Gain:
+    names:
+      - GAIN
+      - LOSE
+  LastGain:
+    names:
+      - GAIN
+      - LOSE
+  PrevLastGain:
+    names:
+      - GAIN
+      - LOSE
+  HaveShares:
+    names:
+      - HAVE
+      - DONT
+  CanBuy:
+    names:
+      - BUY
+      - NOB
+  CanSell:
+    names:
+      - SELL
+      - NOS
+  PredUpward:
+    names:
+      - UPW
+      - DWN
+  LastPredOk:
+    names:
+      - LOK
+      - LNOK
+  Konkorde:
+    names:
+      - UPTREND
+      - DOWNTREND
+  LastKonkorde:
+    names:
+      - UPTREND
+      - DOWNTREND
+  PrevLastKonkorde:
+    names:
+      - UPTREND
+      - DOWNTREND
+
+# Actions to be accomplished by the agent (Portfolio class)
+action:
+  - wait
+  - buy
+  - sell
+
+# Log headers
+table_headers:
+  - t
+  - ts
+  - price
+  - forecast
+  - budget
+  - cost
+  - value
+  - profit
+  - shares
+  - konkorde
+  - action
+  - reward
+  - state
+  - state_desc
+
+# Seed to be used
+seed: 25
+
+# Network parameters
+deep_qnet:
+  hidden_layers:
+    - 64
+    - 32
+    - 8
+  activation: relu
+  loss: mse
+  optimizer: adam
+  lr: 0.001
+  metrics:
+    - mae
