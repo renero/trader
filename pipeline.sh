@@ -108,7 +108,7 @@ fi
 if [ "$RETRIEVE" = true ]; then
   echo "$LOGHEADER Retrieving latest OHLC data"
   cd retriever
-  python retriever.py --config "${CONFIG_FILE}" --symbol "${SYMBOL}" --file "${OHLC_FILE}"
+  python retriever/retrieve.py  --config "${CONFIG_FILE}" --symbol "${SYMBOL}" --file "${OHLC_FILE}"
   volume=`awk -F":" '{print $NF}' "${TMP_OHLC}"|tr -d '"'|tr -d '}'`
   if [ "$volume" = "0" ]; then
     echo "$LOGHEADER Volume is ZERO. Aborting pipeline."

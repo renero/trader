@@ -1,1 +1,1 @@
-__all__ = ['retriever']
+__all__ = ['retrieve']

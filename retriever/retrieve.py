@@ -1,5 +1,5 @@
 """
-    retriever.py
+    retrieve.py
     (c) J. Renero
 
     This module retrieves latest OHLCV info and updates corresponding file.
@@ -7,10 +7,9 @@
 """
 import sys
 from datetime import datetime
-
-from closing import closing
-from last import last
-from rt_dictionary import RTDictionary
+from retriever.closing import Closing
+from retriever.rt_dictionary import RTDictionary
+from utils.last import last
 
 
 def main(argv):
@@ -21,7 +20,7 @@ def main(argv):
     log = params.log
 
     # Call the proper service to retrieve stock info.
-    stock_data, stock_date = closing.retrieve_stock_data(params)
+    stock_data, stock_date = Closing.retrieve_stock_data(params)
 
     if params.file is None:
         print(stock_data)
@@ -29,14 +28,14 @@ def main(argv):
 
     today = datetime.today().strftime('%Y-%m-%d')
     last_date_in_file = last.row_date(params.file)
-    log.info('Retrieved data for {} by <{}>'.format(params.symbol, stock_date))
+    log.info('Retrieved data for {} by <{}>'.format(params.symbol, stock_date))
     log.info('Last date in file <{}>'.format(last_date_in_file))
 
     # If stock data date does not match last working day, we've a problem...
     last_working_day = last.working_day(country=params.country)
     if stock_date != last_working_day and stock_date != today:
         msg = 'Latest stock DATE does not match last working day\n'
-        msg += '  {} != {}'.format(stock_date, last_working_day)
+        msg += '  {} != {}'.format(stock_date, last_working_day)
         raise ValueError(msg)
 
     # If data coming in is from today, stop.
@@ -54,10 +53,10 @@ def main(argv):
     json_file = params.json_file.format(params.symbol)
 
     # Build the CSV row to be added to the OHLC file, with latest info.
-    row = closing.csv_row(stock_data, params.json_columns,
+    row = Closing.csv_row(stock_data, params.json_columns,
                           params.ohlc_columns, json_file, params.log)
     # Append that CSV row.
-    closing.append_to_file(row, params.file, last_working_day, params.log)
+    Closing.append_to_file(row, params.file, last_working_day, params.log)
 
 
 if __name__ == "__main__":
