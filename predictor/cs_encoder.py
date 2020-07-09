@@ -126,9 +126,11 @@ class CSEncoder:
         return self
 
     def add_ohencoder(self):
-        # Create the OneHot encoders associated to each part of the data
-        # which are the moment are 'body' and 'move'. Those names are extracted
-        # from the parameters file.
+        """
+        Create the OneHot encoders associated to each part of the data
+        which are the moment are 'body' and 'move'. Those names are extracted
+        from the parameters file.
+        """
         self.log.info(
             'Adding OneHot encoders for names {}'.format(self.params.subtypes))
         for name in self.params.subtypes:
@@ -463,6 +465,17 @@ class CSEncoder:
         result.columns = col_names
         return result
 
+    def ticks2cse(self, ticks):
+        """
+        Encodes a dataframe of Ticks, returning an array of CSE objects.
+        """
+        self.log.debug('Converting ticks dim{} to CSE.'.format(ticks.shape))
+        cse = []
+        for index in range(0, ticks.shape[0]):
+            cse.append(
+                self.encode_tick(ticks.iloc[index], previous(cse, index)))
+        return cse
+
     def encode_tick(self, tick, prev_cse):
         cse = CSEncoder(self.params, np.array(tick))
         self.log.debug(
@@ -473,17 +486,6 @@ class CSEncoder:
             cse.encode_movement(cse)
         else:
             cse.encode_movement(prev_cse)
-        return cse
-
-    def ticks2cse(self, ticks):
-        """
-        Encodes a dataframe of Ticks, returning an array of CSE objects.
-        """
-        self.log.debug('Converting ticks dim{} to CSE.'.format(ticks.shape))
-        cse = []
-        for index in range(0, ticks.shape[0]):
-            cse.append(
-                self.encode_tick(ticks.iloc[index], previous(cse, index)))
         return cse
 
     def read_cse(self, filename=None, col_names=None):

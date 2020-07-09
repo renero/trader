@@ -183,8 +183,7 @@ resources/slack/
 *.icloud
 *.aux
 *.pdf
-*.toc
 *.gz
+*.toc
 *.pygtex
 *.pygstyle
-
