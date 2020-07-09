@@ -181,3 +181,9 @@ params.???.yaml
 init_symbol.sh
 resources/slack/
 *.icloud
+*.aux
+*.pdf
+*.gz
+*.toc
+*.pygtex
+*.pygstyle
