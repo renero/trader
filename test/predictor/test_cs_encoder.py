@@ -25,21 +25,28 @@ class TestCSEncoder(TestCase):
             and store the result as class variable
         """
         super(TestCSEncoder, cls).setUpClass()
-        cls.data = pd.DataFrame({
-            'o': [9869.12, 9735.65, 9484.25, 9510.33, 9643.76],
-            'h': [9879.53, 9790.26, 9624.65, 9592.37, 9855.42],
-            'l': [9687.25, 9468.58, 9382.82, 9459.17, 9607.90],
-            'c': [9764.73, 9473.16, 9469.66, 9518.17, 9837.61],
-            'v': [67673900, 105538300, 96812300, 82466600, 114825000]
+        # Defining a type A, G, M, Q, W and Z
+        data = pd.DataFrame({
+            'o': [50., 70., 30., 45., 7, 100.],
+            'h': [90,  91., 92., 93., 94, 100.],
+            'l': [1., 2., 3., 4., 1., 2.],
+            'c': [51., 75., 15., 85., 62., 0.],
+            'v': [1000, 8300, 2300, 6600, 5000, 1241]
         })
+        datec = pd.DataFrame({
+            'Date': pd.date_range('2020-06-01', '2020-06-06', freq='D')
+        })
+        data = pd.concat([datec, data], axis=1)
+        data = data.set_index('Date')
+        cls.data = data
 
     def test_fit(self):
         encoder = CSEncoder(self.params)
         encoder = encoder.fit(self.data)
-        self.assertEqual(encoder.cse_zero_open, 9869.12)
-        self.assertEqual(encoder.cse_zero_high, 9879.53)
-        self.assertEqual(encoder.cse_zero_low, 9687.25)
-        self.assertEqual(encoder.cse_zero_close, 9764.73)
+        self.assertEqual(encoder.cse_zero_open, 50.)
+        self.assertEqual(encoder.cse_zero_high, 90.)
+        self.assertEqual(encoder.cse_zero_low, 1.)
+        self.assertEqual(encoder.cse_zero_close, 51.)
         self.assertIs(encoder.fitted, True)
         for subtype in self.params.subtypes:
             self.assertIsNotNone(encoder.onehot[subtype])
@@ -47,12 +54,12 @@ class TestCSEncoder(TestCase):
     def test_encode_tick(self):
         cse = CSEncoder(self.params, self.data.iloc[0])
 
-        self.assertEqual(cse.open, 9869.12, 'Open')
-        self.assertEqual(cse.close, 9764.73, 'Close')
-        self.assertEqual(cse.high, 9879.53, 'High')
-        self.assertEqual(cse.low, 9687.25, 'Low')
-        self.assertEqual(cse.min, 9764.73, 'Min between open and close')
-        self.assertEqual(cse.max, 9869.12, 'Max between open and close')
+        self.assertEqual(cse.open, 50., 'Open')
+        self.assertEqual(cse.close, 51., 'Close')
+        self.assertEqual(cse.high, 90., 'High')
+        self.assertEqual(cse.low, 1., 'Low')
+        self.assertEqual(cse.min, 50., 'Min between open and close')
+        self.assertEqual(cse.max, 51., 'Max between open and close')
 
         print()
         print(cse.min_percentile)
