@@ -22,7 +22,7 @@ def which_string(strings, letter, group_index=0):
       - strings: an array of strings.
       - letter: a single character to be found in strings
 
-    Retun values:
+    Return values:
       - Tuple with index of string containing the letter, and position within
         the string. In case the letter is not found, both values are -1.
     """

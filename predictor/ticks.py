@@ -33,9 +33,11 @@ class Ticks:
     def read_ohlc(self,
                   filepath=None,
                   do_normalize=True) -> DataFrame:
+        # Set the input filename as either the argument
+        # passed or the one found in the YAML file.
         _filepath = self.params.input_file if filepath is None else filepath
-
         filepath = file_exists(_filepath, dirname(realpath(__file__)))
+        # Read the OHLC file.
         df = pd.read_csv(filepath, delimiter=self.params.delimiter)
         date_column = df[self.params.csv_dict['d']]
         # Reorder and rename
@@ -43,13 +45,15 @@ class Ticks:
                  self.params.csv_dict['l'], self.params.csv_dict['c']]]
         df.columns = ['o', 'h', 'l', 'c']
 
+        # Set the max and min for the values found (all)
         self.max_value = df.values.max()
         self.min_value = df.values.min()
         if do_normalize is True:
             df = df.applymap(np.vectorize(self.normalize))
-
+        # Log info about what happened
         info_msg = 'Read ticks file: {}, output DF dim{}'
         self.log.info(info_msg.format(self.params.input_file, df.shape))
+
         return pd.concat((date_column, df), axis=1)
 
     @staticmethod
