@@ -12,7 +12,6 @@ def do_nothing(*args, **kwargs):
 
 
 class TestCSEncoder(TestCase):
-
     params = MyDict()
     params.log = MyDict()
     params.log.debug = do_nothing
