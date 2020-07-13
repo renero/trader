@@ -68,18 +68,8 @@ class OHEncoder(object):
         # Build the dict.
         self.log.debug('Onehot encoding with {} elements'.format(
             len(self.states)))
-        self.dictionary = {k: v for v, k in enumerate(sorted(list(self.states)))}
-        self.inv_dict = {v: k for k, v in self.dictionary.items()}
-        return self
-
-    def fit_from_dict(self, data):
-        """ DEPRECATED
-        """
-        if len(data.shape) == 1:
-            self.states.update(data)
-        else:
-            raise ValidationError('1D array expected as dictionary.', -1)
-        self.dictionary = {k: v for v, k in enumerate(sorted(list(self.states)))}
+        self.dictionary = {k: v for v, k in
+                           enumerate(sorted(list(self.states)))}
         self.inv_dict = {v: k for k, v in self.dictionary.items()}
         return self
 

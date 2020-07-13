@@ -1,9 +1,10 @@
 import unittest
 from unittest import TestCase
 
-import pandas as pd
+import numpy as np
 
 from my_dict import MyDict
+from oh_encoder import OHEncoder
 
 
 def do_nothing(*args, **kwargs):
@@ -22,21 +23,19 @@ class TestOHEncoder(TestCase):
     def setUpClass(cls):
         """ get_some_resource() is slow, to avoid calling it for each test
         use setUpClass() and store the result as class variable """
-        super(TestCSEncoder, cls).setUpClass()
-        # Defining a type A, G, M, Q, W and Z
-        data = pd.DataFrame({
-            'o': [50., 80., 10., 80., 10., 100],
-            'h': [100, 100, 100, 100, 100, 100],
-            'l': [00., 00., 00., 00., 00., 00.],
-            'c': [51., 70., 30., 40., 70., 00.],
-            'v': [100, 830, 230, 660, 500, 120]
-        })
-        date_column = pd.DataFrame({
-            'Date': pd.date_range('2020-06-01', '2020-06-06', freq='D')
-        })
-        data = pd.concat([date_column, data], axis=1)
-        data = data.set_index('Date')
-        cls.data = data
+        super(TestOHEncoder, cls).setUpClass()
+        cls.body_encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        cls.move_encodings = 'ABCDEFGHIJK'
+
+    def test_fit(self):
+        """It builds three dictionaries. Check that they're correctly built"""
+        oh = OHEncoder(self.params).fit(np.array(list(self.body_encodings)))
+        self.assertEqual(len(oh.states), len(self.body_encodings))
+        self.assertEqual(len(oh.dictionary), len(self.body_encodings))
+        self.assertEqual(len(oh.inv_dict), len(self.body_encodings))
+
+        self.assertEqual(len(oh.dictionary.keys()), len(self.body_encodings))
+        self.assertEqual(len(oh.inv_dict.keys()), len(self.body_encodings))
 
 
 if __name__ == '__main__':

@@ -204,7 +204,8 @@ class CSEncoder:
             self.body_in_upper_half = True
         if self.max_percentile < 0.5:
             self.body_in_lower_half = True
-        if self.shadows_symmetric is True and self.body_relative_size > self.min_relative_size:
+        if self.shadows_symmetric is True and \
+                self.body_relative_size > self.min_relative_size:
             self.body_in_center = True
         # None of the above is fulfilled...
         if any([
@@ -493,7 +494,8 @@ class CSEncoder:
             df = pd.read_csv(self.params.cse_file, sep=',')
         else:
             df = pd.read_csv(filename, sep=',')
-        df.columns = col_names if col_names is not None else self.params.cse_colnames
+        df.columns = col_names if col_names is not None \
+            else self.params.cse_colnames
         return df
 
     def save(self):
