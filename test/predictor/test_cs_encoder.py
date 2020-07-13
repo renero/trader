@@ -4,6 +4,7 @@ import pandas as pd
 
 from cs_encoder import CSEncoder
 from my_dict import MyDict
+from oh_encoder import OHEncoder
 
 
 def do_nothing(*args, **kwargs):
@@ -85,15 +86,23 @@ class TestCSEncoder(TestCase):
         test data. I use the second one to be able to compare it against
         the first one.
         """
-        encoder = CSEncoder(self.params, values=self.data.iloc[1])
-        encoder = encoder.fit(self.data)
-        self.assertEqual(encoder.cse_zero_open, 50.)
-        self.assertEqual(encoder.cse_zero_high, 100.)
-        self.assertEqual(encoder.cse_zero_low, 0.)
-        self.assertEqual(encoder.cse_zero_close, 51.)
-        self.assertTrue(encoder.fitted)
+        cs = CSEncoder(self.params).fit(self.data)
+        self.assertEqual(cs.cse_zero_open, 50.)
+        self.assertEqual(cs.cse_zero_high, 100.)
+        self.assertEqual(cs.cse_zero_low, 0.)
+        self.assertEqual(cs.cse_zero_close, 51.)
+        self.assertTrue(cs.fitted)
+        # Check that I've two css and they're the correct type
+        self.assertEqual(len(cs.onehot), 2)
         for subtype in self.params.subtypes:
-            self.assertIsNotNone(encoder.onehot[subtype])
+            self.assertIsNotNone(cs.onehot[subtype])
+
+    def test_add_ohencoder(self):
+        """ Check that a onehot encoder is created for every subtype """
+        cs = CSEncoder(self.params).fit(self.data)
+        # Check types
+        for subtype in self.params.subtypes:
+            self.assertIsInstance(cs.onehot[subtype], OHEncoder)
 
     def test_calc_parameters(self):
         """
