@@ -119,6 +119,7 @@ class OHEncoder(object):
             # decode_len = 2 if self.signed else 1
             decoded = []
             for i in range(num_arrays):
+                assert data[i].sum() == 1.0, 'OH vector encoding error.'
                 flags = np.isin(data[i], [1, -1])
                 flag_index = np.where(flags)[0][0]
                 invcode = self.inv_dict[flag_index]
