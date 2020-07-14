@@ -108,7 +108,6 @@ class OHEncoder(object):
 
         info_msg = 'Onehot encoded input {} -> {}'
         self.log.debug(info_msg.format(input_vector.shape, transformed.shape))
-
         return pd.DataFrame(transformed.reshape(len(input_vector), -1))
 
     def decode(self, data):
