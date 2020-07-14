@@ -68,18 +68,8 @@ class OHEncoder(object):
         # Build the dict.
         self.log.debug('Onehot encoding with {} elements'.format(
             len(self.states)))
-        self.dictionary = {k: v for v, k in enumerate(sorted(list(self.states)))}
-        self.inv_dict = {v: k for k, v in self.dictionary.items()}
-        return self
-
-    def fit_from_dict(self, data):
-        """ DEPRECATED
-        """
-        if len(data.shape) == 1:
-            self.states.update(data)
-        else:
-            raise ValidationError('1D array expected as dictionary.', -1)
-        self.dictionary = {k: v for v, k in enumerate(sorted(list(self.states)))}
+        self.dictionary = {k: v for v, k in
+                           enumerate(sorted(list(self.states)))}
         self.inv_dict = {v: k for k, v in self.dictionary.items()}
         return self
 
@@ -118,7 +108,6 @@ class OHEncoder(object):
 
         info_msg = 'Onehot encoded input {} -> {}'
         self.log.debug(info_msg.format(input_vector.shape, transformed.shape))
-
         return pd.DataFrame(transformed.reshape(len(input_vector), -1))
 
     def decode(self, data):
@@ -130,6 +119,7 @@ class OHEncoder(object):
             # decode_len = 2 if self.signed else 1
             decoded = []
             for i in range(num_arrays):
+                assert data[i].sum() == 1.0, 'OH vector encoding error.'
                 flags = np.isin(data[i], [1, -1])
                 flag_index = np.where(flags)[0][0]
                 invcode = self.inv_dict[flag_index]
