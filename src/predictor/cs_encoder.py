@@ -204,7 +204,8 @@ class CSEncoder:
             self.body_in_upper_half = True
         if self.max_percentile < 0.5:
             self.body_in_lower_half = True
-        if self.shadows_symmetric is True and self.body_relative_size > self.min_relative_size:
+        if self.shadows_symmetric is True and \
+                self.body_relative_size > self.min_relative_size:
             self.body_in_center = True
         # None of the above is fulfilled...
         if any([
@@ -493,7 +494,8 @@ class CSEncoder:
             df = pd.read_csv(self.params.cse_file, sep=',')
         else:
             df = pd.read_csv(filename, sep=',')
-        df.columns = col_names if col_names is not None else self.params.cse_colnames
+        df.columns = col_names if col_names is not None \
+            else self.params.cse_colnames
         return df
 
     def save(self):
@@ -598,16 +600,16 @@ class CSEncoder:
             self.open, self.high, self.low, self.close))
 
     @classmethod
-    def body(self, cse):
+    def body(cls, cse):
         """Returns the body element of an array of encoded candlesticks"""
         bodies = np.array([cse[i].encoded_body for i in range(len(cse))])
         return pd.DataFrame(bodies, columns=['body'])
 
     @classmethod
-    def move(self, cse):
+    def move(cls, cse):
         """Returns the body element of an array of encoded candlesticks"""
         ohlc = np.array([[
             cse[i].encoded_delta_open, cse[i].encoded_delta_high,
             cse[i].encoded_delta_low, cse[i].encoded_delta_close
         ] for i in range(len(cse))])
-        return pd.DataFrame(ohlc, columns=self.movement_columns)
+        return pd.DataFrame(ohlc, columns=cls.movement_columns)
