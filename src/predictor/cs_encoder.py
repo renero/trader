@@ -295,7 +295,7 @@ class CSEncoder:
             first_letter = 'n'
         encoding = first_letter + self._encode_body()
         setattr(self, 'encoded_body', encoding)
-        # return encoding
+        return encoding
 
     def encode_body_nosign(self):
         encoding = self._encode_body()

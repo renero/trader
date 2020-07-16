@@ -123,7 +123,6 @@ class TestCSEncoder(TestCase):
 
         # Check with the second tick. (80, 100, 0, 70)
         cse = CSEncoder(self.params, self.data.iloc[1])
-
         self.assertIsNot(cse.positive, cse.negative)
         self.assertFalse(cse.positive)
         self.assertTrue(cse.negative)
@@ -166,11 +165,40 @@ class TestCSEncoder(TestCase):
         cs = CSEncoder(self.params, self.data.iloc[2])
         self.assertEqual(cs._encode_with('KLMNO'), 'M')
 
+    def test__encode_body(self):
+        """Ensure a proper encoding of the sample ticks in test_utils"""
+        self.assertEqual(
+            CSEncoder(self.params, self.data.iloc[0])._encode_body(), 'A')
+        self.assertEqual(
+            CSEncoder(self.params, self.data.iloc[1])._encode_body(), 'G')
+        self.assertEqual(
+            CSEncoder(self.params, self.data.iloc[2])._encode_body(), 'M')
+        self.assertEqual(
+            CSEncoder(self.params, self.data.iloc[3])._encode_body(), 'Q')
+        self.assertEqual(
+            CSEncoder(self.params, self.data.iloc[4])._encode_body(), 'W')
+        self.assertEqual(
+            CSEncoder(self.params, self.data.iloc[5])._encode_body(), 'Z')
+
+    def test_encode_body(self):
+        """Ensure a proper encoding of the sample ticks in test_utils"""
+        cs = CSEncoder(self.params, self.data.iloc[0])
+        self.assertEqual(cs.encode_body(), 'pA')
+        cs = CSEncoder(self.params, self.data.iloc[1])
+        self.assertEqual(cs.encode_body(), 'nG')
+        cs = CSEncoder(self.params, self.data.iloc[2])
+        self.assertEqual(cs.encode_body(), 'pM')
+        cs = CSEncoder(self.params, self.data.iloc[3])
+        self.assertEqual(cs.encode_body(), 'nQ')
+        cs = CSEncoder(self.params, self.data.iloc[4])
+        self.assertEqual(cs.encode_body(), 'pW')
+        cs = CSEncoder(self.params, self.data.iloc[5])
+        self.assertEqual(cs.encode_body(), 'nZ')
 
     def test_ticks2cse(self):
         """
         Test the method in charge of transforming an entire list of
-        ticks into CSE format. It's only goal is to retun an array with
+        ticks into CSE format. It's only goal is to return an array with
         all of them.
         """
         encoder = CSEncoder(self.params).fit(self.data)
