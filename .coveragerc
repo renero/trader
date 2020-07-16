@@ -1,0 +1,5 @@
+[run]
+omit = /Users/renero/.virtualenvs/*
+
+[report]
+omit = /Users/renero/.virtualenvs/*

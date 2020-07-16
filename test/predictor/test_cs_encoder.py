@@ -201,8 +201,7 @@ class TestCSEncoder(TestCase):
         ticks into CSE format. It's only goal is to return an array with
         all of them.
         """
-        encoder = CSEncoder(self.params).fit(self.data)
-        cse = encoder.ticks2cse(self.data)
+        cse = CSEncoder(self.params).fit_transform(self.data)
         self.assertEqual(len(cse), 6)
         for i in range(len(cse)):
             self.assertIsInstance(cse[i], CSEncoder)

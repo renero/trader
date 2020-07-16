@@ -116,6 +116,14 @@ class CSEncoder:
         return cls(params, values)
 
     def fit(self, ticks):
+        """
+        Simply setup the first tick in the dataframe passed and the onehot
+        encoder.
+
+        :param ticks: A dataframe with OHLCV info.
+
+        :return: A CSEncoder object initially fit.
+        """
         self.log.info('Fitting CS encoder to ticks read.')
         self.cse_zero_open = ticks.loc[ticks.index[0], 'o']
         self.cse_zero_high = ticks.loc[ticks.index[0], 'h']
@@ -124,6 +132,36 @@ class CSEncoder:
         self.fitted = True
         self.add_ohencoder()
         return self
+
+    def transform(self, ticks):
+        """
+        Encodes a dataframe of Ticks, returning an array of CSE objects.
+        """
+        self.log.debug('Converting ticks dim{} to CSE.'.format(ticks.shape))
+        cse = []
+        for index in range(0, ticks.shape[0]):
+            cse.append(
+                self.encode_tick(ticks.iloc[index], previous(cse, index)))
+        return cse
+
+    def fit_transform(self, ticks):
+        """Perform fit and transform in the same call. Setup first tick
+        and build the series of ticks in a list which is returned.
+        """
+        self.fit(ticks)
+        return self.transform(ticks)
+
+    def encode_tick(self, tick, prev_cse):
+        cse = CSEncoder(self.params, np.array(tick))
+        self.log.debug(
+            'Tick encoding: [{:.2f}|{:.2f}|{:.2f}|{:.2f}]'.format(
+                cse.open, cse.high, cse.low, cse.close))
+        cse.encode_body()
+        if prev_cse is None:
+            cse.encode_movement(cse)
+        else:
+            cse.encode_movement(prev_cse)
+        return cse
 
     def add_ohencoder(self):
         """
@@ -485,29 +523,6 @@ class CSEncoder:
         result = pd.DataFrame(rec_ticks)
         result.columns = col_names
         return result
-
-    def ticks2cse(self, ticks):
-        """
-        Encodes a dataframe of Ticks, returning an array of CSE objects.
-        """
-        self.log.debug('Converting ticks dim{} to CSE.'.format(ticks.shape))
-        cse = []
-        for index in range(0, ticks.shape[0]):
-            cse.append(
-                self.encode_tick(ticks.iloc[index], previous(cse, index)))
-        return cse
-
-    def encode_tick(self, tick, prev_cse):
-        cse = CSEncoder(self.params, np.array(tick))
-        self.log.debug(
-            'Tick encoding: [{:.2f}|{:.2f}|{:.2f}|{:.2f}]'.format(
-                cse.open, cse.high, cse.low, cse.close))
-        cse.encode_body()
-        if prev_cse is None:
-            cse.encode_movement(cse)
-        else:
-            cse.encode_movement(prev_cse)
-        return cse
 
     def read_cse(self, filename=None, col_names=None):
         if filename is None:

@@ -26,7 +26,7 @@ class CSCore:
         ticks = data.copy(deep=True).drop([self.params.csv_dict['d']], axis=1)
         # Train
         encoder = CSEncoder(self.params).fit(ticks)
-        cse = encoder.ticks2cse(ticks)
+        cse = encoder.transform(ticks)
         dataset = self.prepare_input(encoder, cse, self.params.subtypes)
         nn = self.train_nn(dataset, self.params.subtypes)
         encoder.save()
