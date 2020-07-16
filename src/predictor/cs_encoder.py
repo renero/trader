@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from oh_encoder import OHEncoder
+from predictor.oh_encoder import OHEncoder
 from utils.file_io import file_exists, valid_output_name
 from utils.strings import which_string, previous
 
@@ -95,7 +95,7 @@ class CSEncoder:
             self.high = values[self.encoding.find('H')]
             self.low = values[self.encoding.find('L')]
             self.close = values[self.encoding.find('C')]
-            self.calc_parameters()
+            self._calc_parameters()
 
         # Assign default encodings for movement
         self.encoded_delta_close = 'pA'
@@ -142,7 +142,7 @@ class CSEncoder:
         b = b + 0.000001 if b == 0 else b
         return a / b
 
-    def calc_parameters(self):
+    def _calc_parameters(self):
         # positive or negative movement
         if self.close > self.open:
             self.max = self.close
@@ -204,8 +204,12 @@ class CSEncoder:
             self.body_in_upper_half = True
         if self.max_percentile < 0.5:
             self.body_in_lower_half = True
+        # Body in center if shadows are symmetric and difference between
+        # distance from 'O' and 'C' to mid point is less that min_relative_size
+        o_to_mid = abs(self.open - self.mid_body_point)
+        c_to_mid = abs(self.close - self.mid_body_point)
         if self.shadows_symmetric is True and \
-                self.body_relative_size > self.min_relative_size:
+                abs(o_to_mid - c_to_mid) < self.min_relative_size:
             self.body_in_center = True
         # None of the above is fulfilled...
         if any([
@@ -225,10 +229,26 @@ class CSEncoder:
         # check that we have all letters
         return all(self.encoding.find(c) != -1 for c in 'OHLC')
 
-    def encode_with(self, encoding_substring):
+    def _encode_with(self, encoding_substring: str):
+        """
+        This method encodes a candlestick in 5 different categories, depending
+        on whether:
+
+          - the two shadows are present
+            - body is centered        -> FIRST  CHAR IN ENCODING DICTIONARY
+            - body in upper half      -> SECOND CHAR IN ENCODING DICTIONARY
+            - body in lower half      -> THIRD  CHAR IN ENCODING DICTIONARY
+          - only lower shadow present -> FOURTH CHAR IN ENCODING DICTIONARY
+          - only upper shadow present -> FIFTH  CHAR IN ENCODING DICTIONARY
+
+        The dictionary is a string of 5 characters ('ABCDE') that will be used
+        to determine the encoding.
+        """
+        assert len(encoding_substring) == 5, \
+            'Encoding substr must be only 5 chars long.'
+
         err_msg = 'Body centered & 2 shadows but not in upper or lower halves'
         if self.body_in_center:
-            # print('  centered')
             return encoding_substring[0]
         else:
             if self.has_both_shadows:
@@ -245,25 +265,25 @@ class CSEncoder:
                 else:
                     return encoding_substring[4]
 
-    def __encode_body(self):
+    def _encode_body(self):
         if self.body_relative_size <= self.min_relative_size:
-            return self.encode_with('ABCDE')
+            return self._encode_with('ABCDE')
         else:
             if self.body_relative_size <= 0.1 + 0.05:
                 # print('  10%')
-                return self.encode_with('FGHIJ')
+                return self._encode_with('FGHIJ')
             else:
                 if self.body_relative_size <= 0.25 + 0.1:
                     # print('  25%')
-                    return self.encode_with('KLMNO')
+                    return self._encode_with('KLMNO')
                 else:
                     if self.body_relative_size <= 0.5 + 0.1:
                         # print('  50%')
-                        return self.encode_with('PQRST')
+                        return self._encode_with('PQRST')
                     else:
                         if self.body_relative_size <= 0.75 + 0.1:
                             # print('  75%')
-                            return self.encode_with('UVWXY')
+                            return self._encode_with('UVWXY')
                         else:
                             # print('  ~ 100%')
                             return 'Z'
@@ -273,22 +293,22 @@ class CSEncoder:
             first_letter = 'p'
         else:
             first_letter = 'n'
-        encoding = first_letter + self.__encode_body()
+        encoding = first_letter + self._encode_body()
         setattr(self, 'encoded_body', encoding)
         # return encoding
 
     def encode_body_nosign(self):
-        encoding = self.__encode_body()
+        encoding = self._encode_body()
         setattr(self, 'encoded_body', encoding)
         return encoding
 
-    def __encode_movement(self,
-                          value,
-                          encoding=None,
-                          upper_limits=def_mvmt_upper_limits,
-                          thresholds=def_mvmt_thresholds,
-                          encodings=def_prcntg_mvmt_encodings,
-                          pos=0):
+    def _encode_movement(self,
+                         value,
+                         encoding=None,
+                         upper_limits=def_mvmt_upper_limits,
+                         thresholds=def_mvmt_thresholds,
+                         encodings=def_prcntg_mvmt_encodings,
+                         pos=0):
         """Tail recursive function to encode a value in one of the possible
         encodings passed as list. The criteria is whether the value is lower
         than a given upper_limit + threshold to use that encoding position.
@@ -316,8 +336,8 @@ class CSEncoder:
             return encodings[pos]
         if value <= upper_limits[pos] + thresholds[pos]:
             encoding = encodings[pos]
-        return self.__encode_movement(value, encoding, upper_limits,
-                                      thresholds, encodings, pos + 1)
+        return self._encode_movement(value, encoding, upper_limits,
+                                     thresholds, encodings, pos + 1)
 
     def encode_movement(self, prev_cs):
         """Compute the percentage of change for the OHLC values with respect
@@ -327,7 +347,7 @@ class CSEncoder:
         for attr in self.diff_tags:
             delta = self.div((getattr(self, attr) - getattr(prev_cs, attr)),
                              prev_cs.hl_interval_width)
-            encoding = self.__encode_movement(delta)
+            encoding = self._encode_movement(delta)
             if delta >= 0.0:
                 sign_letter = 'p'
             else:

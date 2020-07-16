@@ -1,8 +1,9 @@
 from unittest import TestCase
-from cs_encoder import CSEncoder
-from my_dict import MyDict
-from oh_encoder import OHEncoder
-from test_utils import sample_ticks
+
+from predictor.cs_encoder import CSEncoder
+from predictor.oh_encoder import OHEncoder
+from utils.my_dict import MyDict
+from utils.test_utils import sample_ticks
 
 
 def do_nothing(*args, **kwargs):
@@ -72,7 +73,7 @@ class TestCSEncoder(TestCase):
         self.assertEqual(cs.cse_zero_open, 50.)
         self.assertEqual(cs.cse_zero_high, 100.)
         self.assertEqual(cs.cse_zero_low, 0.)
-        self.assertEqual(cs.cse_zero_close, 51.)
+        self.assertEqual(cs.cse_zero_close, 50.5)
         self.assertTrue(cs.fitted)
         # Check that I've two css and they're the correct type
         self.assertEqual(len(cs.onehot), 2)
@@ -90,6 +91,37 @@ class TestCSEncoder(TestCase):
         """
         Test if the parameters computed for a sample tick are correct.
         """
+        # Check with the first tick. (50, 100, 0, 50.5)
+        cse = CSEncoder(self.params, self.data.iloc[0])
+        self.assertTrue(cse.positive)
+        self.assertFalse(cse.negative)
+
+        # Percentiles, etc...
+        self.assertLessEqual(cse.body_relative_size, 0.05)
+        self.assertEqual(cse.hl_interval_width, 100.)
+        self.assertEqual(cse.oc_interval_width, 0.5)
+        self.assertEqual(cse.mid_body_point, 50.25)
+        self.assertEqual(cse.mid_body_percentile, 0.5025)
+        self.assertEqual(cse.min_percentile, 0.5)
+        self.assertEqual(cse.max_percentile, 0.505)
+        self.assertEqual(cse.upper_shadow_len, 49.5)
+        self.assertEqual(cse.upper_shadow_percentile, 0.495)
+        self.assertEqual(cse.lower_shadow_len, 50.)
+        self.assertEqual(cse.lower_shadow_percentile, 0.5)
+        self.assertAlmostEqual(cse.shadows_relative_diff, 0.005)
+        self.assertEqual(cse.body_relative_size, 0.005)
+        self.assertAlmostEqual(cse.shadows_relative_diff, 0.005)
+
+        # Body position.
+        self.assertTrue(cse.shadows_symmetric)
+        self.assertTrue(cse.body_in_center)
+        self.assertFalse(cse.body_in_lower_half)
+        self.assertFalse(cse.body_in_upper_half)
+        self.assertTrue(cse.has_both_shadows)
+        self.assertTrue(cse.has_lower_shadow)
+        self.assertTrue(cse.has_upper_shadow)
+
+        # Check with the second tick. (80, 100, 0, 70)
         cse = CSEncoder(self.params, self.data.iloc[1])
 
         self.assertIsNot(cse.positive, cse.negative)
@@ -119,6 +151,21 @@ class TestCSEncoder(TestCase):
         self.assertTrue(cse.has_lower_shadow)
         self.assertTrue(cse.has_upper_shadow)
         self.assertFalse(cse.shadows_symmetric)
+
+    def test_encode_with(self):
+        """
+        Ensure correct encoding with sample data in class and robust
+        type checking.
+        """
+        # Start checking that the first one is correctly encoded.
+        cs = CSEncoder(self.params, self.data.iloc[0])
+        with self.assertRaises(AssertionError):
+            cs._encode_with('123')
+        self.assertEqual(cs._encode_with('ABCDE'), 'A')
+        # Try with the third one
+        cs = CSEncoder(self.params, self.data.iloc[2])
+        self.assertEqual(cs._encode_with('KLMNO'), 'M')
+
 
     def test_ticks2cse(self):
         """

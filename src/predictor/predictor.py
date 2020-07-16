@@ -4,19 +4,19 @@ import sys
 
 import numpy as np
 
-from ensemble import Ensemble as ensemble
-from logger import Logger
+from predictor.ensemble import Ensemble as ensemble
+from utils.logger import Logger
 
 
 def main(argv):
-    from cs_dictionary import CSDictionary
+    from predictor.cs_dictionary import CSDictionary
 
     params = CSDictionary(args=argv)
     np.random.seed(params.seed)
     log: Logger = params.log
 
-    from cs_core import CSCore
-    from ticks import Ticks
+    from predictor.cs_core import CSCore
+    from predictor.ticks import Ticks
 
     if params.ensemble_predictions or params.ensemble:
         ensemble(params)

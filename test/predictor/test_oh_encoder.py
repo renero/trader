@@ -3,9 +3,9 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 
-from my_dict import MyDict
-from oh_encoder import OHEncoder
-from test_utils import sample_ticks
+from utils.my_dict import MyDict
+from predictor.oh_encoder import OHEncoder
+from utils.test_utils import sample_ticks
 
 
 def do_nothing(*args, **kwargs):
