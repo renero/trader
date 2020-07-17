@@ -53,15 +53,15 @@ class TestCSEncoder(TestCase):
         what the encoding is saying.
         """
         self.assertTrue(
-            CSEncoder(self.params, encoding='ohlc').correct_encoding())
+            CSEncoder(self.params, encoding='ohlc')._correct_encoding())
         self.assertTrue(
-            CSEncoder(self.params, encoding='OHLC').correct_encoding())
+            CSEncoder(self.params, encoding='OHLC')._correct_encoding())
         self.assertFalse(
-            CSEncoder(self.params, encoding='0hlc').correct_encoding())
+            CSEncoder(self.params, encoding='0hlc')._correct_encoding())
         self.assertFalse(
-            CSEncoder(self.params, encoding='ohl').correct_encoding())
+            CSEncoder(self.params, encoding='ohl')._correct_encoding())
         self.assertFalse(
-            CSEncoder(self.params, encoding='').correct_encoding())
+            CSEncoder(self.params, encoding='')._correct_encoding())
 
     def test_fit(self):
         """
@@ -181,7 +181,9 @@ class TestCSEncoder(TestCase):
             CSEncoder(self.params, self.data.iloc[5])._encode_body(), 'Z')
 
     def test_encode_body(self):
-        """Ensure a proper encoding of the sample ticks in test_utils"""
+        """
+        Ensure a proper encoding of the sample ticks in test_utils
+        """
         cs = CSEncoder(self.params, self.data.iloc[0])
         self.assertEqual(cs.encode_body(), 'pA')
         cs = CSEncoder(self.params, self.data.iloc[1])
@@ -195,7 +197,7 @@ class TestCSEncoder(TestCase):
         cs = CSEncoder(self.params, self.data.iloc[5])
         self.assertEqual(cs.encode_body(), 'nZ')
 
-    def test_ticks2cse(self):
+    def test_transform(self):
         """
         Test the method in charge of transforming an entire list of
         ticks into CSE format. It's only goal is to return an array with
@@ -205,3 +207,44 @@ class TestCSEncoder(TestCase):
         self.assertEqual(len(cse), 6)
         for i in range(len(cse)):
             self.assertIsInstance(cse[i], CSEncoder)
+
+    def test_encode_tick(self):
+        """
+        This one checks if the CSEncoder is built and encoded, given
+        that a tick is passed together with its previous one. If the previous
+        one is None, then movement is not encoded.
+        """
+        # Start with the first one, which has no previous tick
+        encoder = CSEncoder(self.params).fit(self.data)
+        cs0 = encoder._encode_tick(self.data.iloc[0], None)
+        self.assertIsInstance(cs0, CSEncoder)
+        self.assertAlmostEqual(cs0.delta_open, 0.)
+        self.assertAlmostEqual(cs0.delta_high, 0.)
+        self.assertAlmostEqual(cs0.delta_low, 0.)
+        self.assertAlmostEqual(cs0.delta_close, 0.)
+        self.assertEqual(cs0.encoded_delta_open, 'pA')
+        self.assertEqual(cs0.encoded_delta_high, 'pA')
+        self.assertEqual(cs0.encoded_delta_low, 'pA')
+        self.assertEqual(cs0.encoded_delta_close, 'pA')
+
+        # Check second one wrt first one.
+        cs1 = encoder._encode_tick(self.data.iloc[1], cs0)
+        self.assertAlmostEqual(cs1.delta_open, 0.3)
+        self.assertAlmostEqual(cs1.delta_high, 0.)
+        self.assertAlmostEqual(cs1.delta_low, 0.)
+        self.assertAlmostEqual(cs1.delta_close, 0.195)
+        self.assertEqual(cs1.encoded_delta_open, 'pD')
+        self.assertEqual(cs1.encoded_delta_high, 'pA')
+        self.assertEqual(cs1.encoded_delta_low, 'pA')
+        self.assertEqual(cs1.encoded_delta_close, 'pC')
+
+        # Check second one wrt first one.
+        cs2 = encoder._encode_tick(self.data.iloc[2], cs1)
+        self.assertAlmostEqual(cs2.delta_open, -0.7)
+        self.assertAlmostEqual(cs2.delta_high, 0.)
+        self.assertAlmostEqual(cs2.delta_low, 0.)
+        self.assertAlmostEqual(cs2.delta_close, -0.4)
+        self.assertEqual(cs2.encoded_delta_open, 'nH')
+        self.assertEqual(cs2.encoded_delta_high, 'pA')
+        self.assertEqual(cs2.encoded_delta_low, 'pA')
+        self.assertEqual(cs2.encoded_delta_close, 'nE')

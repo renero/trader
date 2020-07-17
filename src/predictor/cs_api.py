@@ -71,7 +71,7 @@ def predict_close(ticks, encoder, nn, params):
     ))
 
     # Convert the prediction to a real tick
-    pred = encoder.cse2ticks(prediction_df, cs_tick[-1])
+    pred = encoder.inverse_transform(prediction_df, cs_tick[-1])
     return pred['c'].values[-1]
 
 
