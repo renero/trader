@@ -286,3 +286,23 @@ class TestCSEncoder(TestCase):
         self.assertEqual(cs4.encoded_delta_high, 'pA')
         self.assertEqual(cs4.encoded_delta_low, 'pA')
         self.assertEqual(cs4.encoded_delta_close, 'pE')
+
+    def test_recursive_encode_movement(self):
+        """
+        A value is search within a range of discrete values(buckets).
+        Once found, the corresponding substring at the position of the
+        bucket is returned.
+        """
+        encoder = CSEncoder(self.params).fit(self.data)
+        # Check calls with default dictionaries
+        self.assertEqual(encoder._encode_movement(value=0.0), 'A')
+        self.assertEqual(encoder._encode_movement(value=0.1), 'B')
+        self.assertEqual(encoder._encode_movement(value=0.2), 'C')
+        self.assertEqual(encoder._encode_movement(value=0.3), 'D')
+        self.assertEqual(encoder._encode_movement(value=0.4), 'E')
+        self.assertEqual(encoder._encode_movement(value=0.5), 'F')
+        self.assertEqual(encoder._encode_movement(value=0.6), 'G')
+        self.assertEqual(encoder._encode_movement(value=0.7), 'H')
+        self.assertEqual(encoder._encode_movement(value=0.8), 'I')
+        self.assertEqual(encoder._encode_movement(value=0.9), 'J')
+        self.assertEqual(encoder._encode_movement(value=1.1), 'K')

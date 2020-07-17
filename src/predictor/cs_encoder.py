@@ -465,11 +465,13 @@ class CSEncoder:
 
         """
         if encoding is not None:
+            # End or recursion! Return the label
             return encoding
         if pos == len(encodings) - 1:
-            # print('>> beyond limimts')
+            # Beyond limits, return the last position.
             return encodings[pos]
         if value <= upper_limits[pos] + thresholds[pos]:
+            # Found upper limit for current value!
             encoding = encodings[pos]
         return self._encode_movement(value, encoding, upper_limits,
                                      thresholds, encodings, pos + 1)
