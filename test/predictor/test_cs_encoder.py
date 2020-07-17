@@ -213,6 +213,10 @@ class TestCSEncoder(TestCase):
         This one checks if the CSEncoder is built and encoded, given
         that a tick is passed together with its previous one. If the previous
         one is None, then movement is not encoded.
+        -------------------------------------------
+        0   10  20  30  40  50  60  70  80  90  100
+        A   B   C   D   E   F   G   H   I   J   K
+        -------------------------------------------
         """
         # Start with the first one, which has no previous tick
         encoder = CSEncoder(self.params).fit(self.data)
@@ -238,7 +242,7 @@ class TestCSEncoder(TestCase):
         self.assertEqual(cs1.encoded_delta_low, 'pA')
         self.assertEqual(cs1.encoded_delta_close, 'pC')
 
-        # Check second one wrt first one.
+        # Check third one wrt second one.
         cs2 = encoder._encode_tick(self.data.iloc[2], cs1)
         self.assertAlmostEqual(cs2.delta_open, -0.7)
         self.assertAlmostEqual(cs2.delta_high, 0.)
@@ -248,3 +252,37 @@ class TestCSEncoder(TestCase):
         self.assertEqual(cs2.encoded_delta_high, 'pA')
         self.assertEqual(cs2.encoded_delta_low, 'pA')
         self.assertEqual(cs2.encoded_delta_close, 'nE')
+
+    def test_encode_movement(self):
+        """
+        Given candlestick (CSEncoder) object, compute how is its movement
+        with respect to its previous one, which is passes as argument.
+        Since first, second and third are tested in test_encode_tick()
+        I will only test 4th against 3rd.
+        -------------------------------------------
+        0   10  20  30  40  50  60  70  80  90  100
+        A   B   C   D   E   F   G   H   I   J   K
+        -------------------------------------------
+        """
+        cs4 = CSEncoder(self.params, self.data.iloc[4])
+        cs3 = CSEncoder(self.params, self.data.iloc[3])
+        cs2 = CSEncoder(self.params, self.data.iloc[2])
+        cs3.encode_movement(cs2)
+        self.assertAlmostEqual(cs3.delta_open, 0.7)
+        self.assertAlmostEqual(cs3.delta_high, 0.)
+        self.assertAlmostEqual(cs3.delta_low, 0.)
+        self.assertAlmostEqual(cs3.delta_close, 0.1)
+        self.assertEqual(cs3.encoded_delta_open, 'pH')
+        self.assertEqual(cs3.encoded_delta_high, 'pA')
+        self.assertEqual(cs3.encoded_delta_low, 'pA')
+        self.assertEqual(cs3.encoded_delta_close, 'pB')
+
+        cs4.encode_movement(cs3)
+        self.assertAlmostEqual(cs4.delta_open, -0.7)
+        self.assertAlmostEqual(cs4.delta_high, 0.)
+        self.assertAlmostEqual(cs4.delta_low, 0.)
+        self.assertAlmostEqual(cs4.delta_close, 0.4)
+        self.assertEqual(cs4.encoded_delta_open, 'nH')
+        self.assertEqual(cs4.encoded_delta_high, 'pA')
+        self.assertEqual(cs4.encoded_delta_low, 'pA')
+        self.assertEqual(cs4.encoded_delta_close, 'pE')

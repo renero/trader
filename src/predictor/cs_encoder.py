@@ -392,7 +392,7 @@ class CSEncoder:
         setattr(self, 'encoded_body', encoding)
         return encoding
 
-    def encode_movement(self, prev_cs):
+    def encode_movement(self, prev_cs: "CSEncoder"):
         """
         Compute the percentage of change for the OHLC values with respect
         to the relative range of the previous candlestick object (passed as
