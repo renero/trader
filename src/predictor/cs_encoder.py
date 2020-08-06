@@ -173,9 +173,9 @@ class CSEncoder:
             self.log.debug('Decoding: {}|{}|{}|{}|{}'.format(
                 this_cse['b'], this_cse['o'], this_cse['h'], this_cse['l'],
                 this_cse['c']))
-            this_tick = self.decode_cse(this_cse, cse_decoded[-1], col_names)
+            this_tick = self._decode_cse(this_cse, cse_decoded[-1], col_names)
             cse_decoded.append(self.build_new(self.params, this_tick))
-            this_tick = self.adjust_body(this_cse['b'][1], this_tick)
+            this_tick = self._decode_body(this_cse['b'][1], this_tick)
             self.log.debug(
                 'Adjusted CS body: {:.2f}|{:.2f}|{:.2f}|{:.2f}'.format(
                     this_tick[0], this_tick[1], this_tick[2], this_tick[3]))
@@ -285,13 +285,20 @@ class CSEncoder:
         """
         cse = CSEncoder(self.params, np.array(tick))
         self.log.debug(
-            'Tick encoding: [{:.2f}|{:.2f}|{:.2f}|{:.2f}]'.format(
+            'Encoding: [{:.2f}|{:.2f}|{:.2f}|{:.2f}]'.format(
                 cse.open, cse.high, cse.low, cse.close))
         cse.encode_body()
         if prev_cse is None:
             cse.encode_movement(cse)
         else:
             cse.encode_movement(prev_cse)
+        self.log.debug(
+            'Tick encoded as: {}:{}|{}|{}|{}'.format(
+                cse.encoded_body,
+                cse.encoded_delta_open,
+                cse.encoded_delta_high,
+                cse.encoded_delta_low,
+                cse.encoded_delta_close))
         return cse
 
     def _add_ohencoder(self):
@@ -310,6 +317,44 @@ class CSEncoder:
     def div(a, b):
         b = b + 0.000001 if b == 0 else b
         return a / b
+
+    def encode_body(self):
+        if self.positive:
+            first_letter = 'p'
+        else:
+            first_letter = 'n'
+        encoding = first_letter + self._encode_body()
+        setattr(self, 'encoded_body', encoding)
+        self.log.debug(f'Enc. body as <{encoding}>')
+        return encoding
+
+    def encode_body_nosign(self):
+        encoding = self._encode_body()
+        setattr(self, 'encoded_body', encoding)
+        return encoding
+
+    def _encode_body(self):
+        if self.body_relative_size <= self.min_relative_size:
+            return self._encode_with('ABCDE')
+        else:
+            if self.body_relative_size <= 0.1 + 0.05:
+                # print('  10%')
+                return self._encode_with('FGHIJ')
+            else:
+                if self.body_relative_size <= 0.25 + 0.1:
+                    # print('  25%')
+                    return self._encode_with('KLMNO')
+                else:
+                    if self.body_relative_size <= 0.5 + 0.1:
+                        # print('  50%')
+                        return self._encode_with('PQRST')
+                    else:
+                        if self.body_relative_size <= 0.75 + 0.1:
+                            # print('  75%')
+                            return self._encode_with('UVWXY')
+                        else:
+                            # print('  ~ 100%')
+                            return 'Z'
 
     def _correct_encoding(self):
         """
@@ -354,43 +399,6 @@ class CSEncoder:
                     return encoding_substring[3]
                 else:
                     return encoding_substring[4]
-
-    def _encode_body(self):
-        if self.body_relative_size <= self.min_relative_size:
-            return self._encode_with('ABCDE')
-        else:
-            if self.body_relative_size <= 0.1 + 0.05:
-                # print('  10%')
-                return self._encode_with('FGHIJ')
-            else:
-                if self.body_relative_size <= 0.25 + 0.1:
-                    # print('  25%')
-                    return self._encode_with('KLMNO')
-                else:
-                    if self.body_relative_size <= 0.5 + 0.1:
-                        # print('  50%')
-                        return self._encode_with('PQRST')
-                    else:
-                        if self.body_relative_size <= 0.75 + 0.1:
-                            # print('  75%')
-                            return self._encode_with('UVWXY')
-                        else:
-                            # print('  ~ 100%')
-                            return 'Z'
-
-    def encode_body(self):
-        if self.positive:
-            first_letter = 'p'
-        else:
-            first_letter = 'n'
-        encoding = first_letter + self._encode_body()
-        setattr(self, 'encoded_body', encoding)
-        return encoding
-
-    def encode_body_nosign(self):
-        encoding = self._encode_body()
-        setattr(self, 'encoded_body', encoding)
-        return encoding
 
     def encode_movement(self, prev_cs: "CSEncoder"):
         """
@@ -476,14 +484,74 @@ class CSEncoder:
         return self._encode_movement(value, encoding, upper_limits,
                                      thresholds, encodings, pos + 1)
 
-    def adjust_body(self, letter, tick):
-        """Given an encoding letter used for the body of the CS, return the
+    #
+    # Decoding methods
+    #
+
+    def _decode_cse(self,
+                    this_cse,
+                    prev_cse,
+                    col_names):
+        """
+        From a CSE numpy array and its previous CSE numpy array in the
+        time series, returns the reconstructed tick (OHLC).
+
+        Params:
+            this_cse: A Pandas Series with 4 columns corresponding to OHLC
+            prev_cse: A CSE object with the previous CS to this one.
+            col_names: The names of the columns used for the OHLC values.
+
+        """
+        self.log.debug(
+            'Decoding CS {}:{}|{}|{}|{}; prev: {}|{}|{}|{}'.format(
+                this_cse['b'],
+                this_cse[col_names[0]], this_cse[col_names[1]],
+                this_cse[col_names[2]], this_cse[col_names[3]],
+                prev_cse.open, prev_cse.high, prev_cse.low, prev_cse.close
+            ))
+
+        mm = prev_cse.hl_interval_width
+        # Set the columns names that contain the values in my date
+        amount_shift = [(self._decode_movement(this_cse[column]) * mm)
+                        for column in col_names]
+        self.log.debug(
+            'Amount of movement: {:.02f};{:.02f};{:.02f};{:.02f}'.format(
+                amount_shift[0], amount_shift[1], amount_shift[2],
+                amount_shift[3]))
+        rec_tick = [
+            prev_cse.open + (amount_shift[0] * mm / 100.0),
+            prev_cse.high + (amount_shift[1] * mm / 100.0),
+            prev_cse.low + (amount_shift[2] * mm / 100.0),
+            prev_cse.close + (amount_shift[3] * mm / 100.0)
+        ]
+        self.log.debug(
+            f' * Min.: {prev_cse.open} + {(amount_shift[0] * mm / 100.0)}')
+        self.log.debug(
+            f' * High: {prev_cse.high} + {(amount_shift[1] * mm / 100.0)}')
+        self.log.debug(
+            f' * Low.: {prev_cse.low} + {(amount_shift[2] * mm / 100.0)}')
+        self.log.debug(
+            f' * Max.: {prev_cse.close} + {(amount_shift[3] * mm / 100.0)}')
+
+        # If this CSE is negative, swap the open and close values
+        if this_cse['b'][0] == 'n':
+            self.log.debug('This CS seems to be negative')
+            # rec_tick[0], rec_tick[3] = rec_tick[3], rec_tick[0]
+        self.log.debug(
+            '>> Reconstructed tick: {:.02f}|{:.02f}|{:.02f}|{:.02f}'.format(
+                rec_tick[0], rec_tick[1], rec_tick[2], rec_tick[3]))
+        return rec_tick
+
+    def _decode_body(self, letter, tick):
+        """
+        Given an encoding letter used for the body of the CS, return the
         expected positions of the upper and lower parts of the body, according
         to the encoding rules.
+
         Parameters:
-          - letter: the letter of the body encoding that determines the size
+            letter: the letter of the body encoding that determines the size
                     of the CS as a percentage of the total height of the candle
-          - tick: the tick that needs to be adjusted with the body encoding
+            tick: the tick that needs to be adjusted with the body encoding
                   information.
         """
         # the letter is the second character in the string.
@@ -512,51 +580,18 @@ class CSEncoder:
             tick[0], tick[1], tick[2], tick[3]))
         return tick
 
-    def decode_movement_code(self, code):
+    def _decode_movement(self, code):
         sign = code[0]
         letter = code[1]
         pos = self.def_prcntg_mvmt_encodings.index(letter)
-        self.log.debug('Percentage position <{}={}>'.format(letter, pos))
+        self.log.debug('Percentage shift <{}={}>'.format(letter, pos))
         value = self.def_mvmt_upper_limits[pos] if pos < len(
             self.def_mvmt_upper_limits) else self.def_mvmt_upper_limits[len(
             self.def_mvmt_upper_limits)]
-        self.log.debug('New value = {:.2f}'.format(value))
         if sign == 'n':
             value *= -1.0
-        self.log.debug('Decoding <{}> with value: {:.2f}'.format(code, value))
+        self.log.debug('Decoding <{}> as shift = {:.2f}'.format(code, value))
         return value
-
-    def decode_cse(self, this_cse, prev_cse, col_names):
-        """
-        From a CSE numpy array and its previous CSE numpy array in the
-        time series, returns the reconstructed tick (OHLC).
-        """
-        mm = prev_cse.hl_interval_width
-        # Set the columns names that contain the values in my date
-        amount_shift = [(self.decode_movement_code(this_cse[column]) * mm)
-                        for column in col_names]
-        self.log.debug(
-            'Amount of movement: {:.04f}|{:.04f}|{:.04f}|{:.04f}'.format(
-                amount_shift[0], amount_shift[1], amount_shift[2],
-                amount_shift[3]))
-        reconstructed_tick = [
-            prev_cse.min + amount_shift[0],
-            prev_cse.high + amount_shift[0],
-            prev_cse.low + amount_shift[0],
-            prev_cse.max + amount_shift[0]
-        ]
-        # If this CSE is negative, swap the open and close values
-        if this_cse['b'][0] == 'n':
-            self.log.debug('This CS seems to be negative')
-            open = reconstructed_tick[3]
-            close = reconstructed_tick[0]
-            reconstructed_tick[0] = open
-            reconstructed_tick[3] = close
-        self.log.debug(
-            '>> Reconstructed tick: {:.02f}|{:.02f}|{:.02f}|{:.02f}'.format(
-                reconstructed_tick[0], reconstructed_tick[1],
-                reconstructed_tick[2], reconstructed_tick[3]))
-        return reconstructed_tick
 
     @classmethod
     def build_new(cls, params, values):

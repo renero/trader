@@ -2,8 +2,9 @@ from unittest import TestCase
 
 from predictor.cs_encoder import CSEncoder
 from predictor.oh_encoder import OHEncoder
+from utils.logger import Logger
 from utils.my_dict import MyDict
-from utils.test_utils import sample_ticks
+from utils.test_utils import sample_ticks, encoded_cs_to_df
 
 
 def do_nothing(*args, **kwargs):
@@ -12,11 +13,18 @@ def do_nothing(*args, **kwargs):
 
 class TestCSEncoder(TestCase):
     params = MyDict()
-    params.log = MyDict()
-    params.log.debug = do_nothing
-    params.log.info = do_nothing
+    params.log = Logger(4)
+    # params.log = MyDict()
+    # params.log.debug = do_nothing
+    # params.log.info = do_nothing
     params.input_file = 'DAX100.csv'
     params.subtypes = ['body', 'move']
+    params.csv_dict = {'d': 'Date',
+                       'o': 'Open',
+                       'h': 'High',
+                       'l': 'Low',
+                       'c': 'Close'}
+    params.cse_tags = ['b', 'o', 'h', 'l', 'c']
 
     @classmethod
     def setUpClass(cls):
@@ -306,3 +314,27 @@ class TestCSEncoder(TestCase):
         self.assertEqual(encoder._encode_movement(value=0.8), 'I')
         self.assertEqual(encoder._encode_movement(value=0.9), 'J')
         self.assertEqual(encoder._encode_movement(value=1.1), 'K')
+
+    def test_decode_cse(self):
+        """
+        Check that decodes correctly a tick, given the previous one.
+        """
+        col_names = list(self.params.csv_dict.keys())
+        if 'd' in col_names:
+            col_names.remove('d')
+        encoder = CSEncoder(self.params).fit(self.data)
+        cs = encoder.transform(self.data)
+
+        # Check every tick
+        for i in range(self.data.shape[0]):
+            cs_df = encoded_cs_to_df(cs[i], self.params.cse_tags)
+            prev_cs = cs[0] if i == 0 else cs[i-1]
+            # Define tolerance as 10% of the min-max range when reconstructing
+            tol = prev_cs.hl_interval_width * 0.1
+            # Decode the CS, and check
+            tick = encoder._decode_cse(cs_df, prev_cs, col_names)
+            self.assertLessEqual(abs(tick[0] - self.data.iloc[i]['o']), tol)
+            self.assertLessEqual(abs(tick[1] - self.data.iloc[i]['h']), tol)
+            self.assertLessEqual(abs(tick[2] - self.data.iloc[i]['l']), tol)
+            self.assertLessEqual(abs(tick[3] - self.data.iloc[i]['c']), tol)
+
