@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def sample_ticks():
@@ -26,3 +27,14 @@ def encoded_cs_to_df(cs, cols):
                         cs.encoded_delta_close]],
                       columns=cols)
     return df.iloc[0]
+
+
+def cs_to_df(cse, cols):
+    """Returns the body element of an array of encoded candlesticks"""
+    ohlc = np.array([[
+        cse[i].encoded_body,
+        cse[i].encoded_delta_open, cse[i].encoded_delta_high,
+        cse[i].encoded_delta_low, cse[i].encoded_delta_close
+    ] for i in range(len(cse))])
+    return pd.DataFrame(ohlc, columns=cols)
+

@@ -105,6 +105,10 @@ class CSEncoder:
         self.encoded_delta_min = 'pA'
         self.encoded_delta_open = 'pA'
 
+    def _ohlc(self):
+        # Return the OHLC values of a CS.
+        return [self.open, self.high, self.low, self.close]
+
     def fit(self, ticks):
         """
         Simply setup the first tick in the dataframe passed and the onehot
@@ -142,18 +146,18 @@ class CSEncoder:
         return self.transform(ticks)
 
     # TODO: Clarify when 'd' is present in
-    def inverse_transform(self, cse_codes, first_cse, col_names=None):
-        """Reconstruct CSE codes read from a CSE file into ticks
-        Arguments
-          - cse_codes: DataFrame with columns 'b', 'o', 'h', 'l', 'c',
-            representing the body of the candlestick, the open, high, low and
-            close encoded values as two-letter strings.
-        Returns:
-          - A DataFrame with the open, high, low and close values decoded.
-          :param cse_codes: the list of CSEs to convert back to Ticks
-          :param first_cse: the first CSE to use as reference
-          :param col_names: the names of column headers to use with ticks
-          :return: the ticks as a dataframe.
+    def inverse_transform(self, encoded_cse, first_cse, col_names=None):
+        """
+        Reconstruct CSE codes read from a CSE file into ticks
+
+        :param cse_codes: DataFrame with columns 'b', 'o', 'h', 'l', 'c',
+          representing the body of the candlestick, the open, high, low and
+          close encoded values as two letters strings.
+        :param encoded_cse: the list of CSEs to convert back to Ticks
+        :param first_cse: the first CSE to use as reference
+        :param col_names: the names of column headers to use with ticks
+
+        :returns: A DataFrame with the open, high, low and close values decoded.
         """
         assert self.fitted, "The encoder has not been fit with data yet!"
         if col_names is None:
@@ -165,23 +169,20 @@ class CSEncoder:
         self.log.debug('Zero CS created: {:.2f}|{:.2f}|{:.2f}|{:.2f}'.format(
             self.cse_zero_open, self.cse_zero_high, self.cse_zero_low,
             self.cse_zero_close))
-        rec_ticks = [[
-            first_cse.open, first_cse.high, first_cse.low, first_cse.close
-        ]]
-        for i in range(0, len(cse_codes)):
-            this_cse = cse_codes.loc[cse_codes.index[i]]
+
+        for i, this_cse in encoded_cse.iloc[1:].iterrows():
             self.log.debug('Decoding: {}|{}|{}|{}|{}'.format(
                 this_cse['b'], this_cse['o'], this_cse['h'], this_cse['l'],
                 this_cse['c']))
             this_tick = self._decode_cse(this_cse, cse_decoded[-1], col_names)
             cse_decoded.append(self.build_new(self.params, this_tick))
-            this_tick = self._decode_body(this_cse['b'][1], this_tick)
-            self.log.debug(
-                'Adjusted CS body: {:.2f}|{:.2f}|{:.2f}|{:.2f}'.format(
-                    this_tick[0], this_tick[1], this_tick[2], this_tick[3]))
-            rec_ticks.append(this_tick)
 
-        result = pd.DataFrame(rec_ticks)
+            self.log.debug(
+                'Reconstructed CS: {:.2f}|{:.2f}|{:.2f}|{:.2f}'.format(
+                    this_tick[0], this_tick[1], this_tick[2], this_tick[3]))
+
+        # I must return a DataFrame with the OHLC values only.
+        result = pd.DataFrame([cs._ohlc() for cs in cse_decoded])
         result.columns = col_names
         return result
 
@@ -489,9 +490,9 @@ class CSEncoder:
     #
 
     def _decode_cse(self,
-                    this_cse,
+                    this_cse: pd.Series,
                     prev_cse,
-                    col_names):
+                    col_names: list) -> list:
         """
         From a CSE numpy array and its previous CSE numpy array in the
         time series, returns the reconstructed tick (OHLC).
@@ -524,25 +525,16 @@ class CSEncoder:
             prev_cse.low + (amount_shift[2] * mm / 100.0),
             prev_cse.close + (amount_shift[3] * mm / 100.0)
         ]
-        self.log.debug(
-            f' * Min.: {prev_cse.open} + {(amount_shift[0] * mm / 100.0)}')
-        self.log.debug(
-            f' * High: {prev_cse.high} + {(amount_shift[1] * mm / 100.0)}')
-        self.log.debug(
-            f' * Low.: {prev_cse.low} + {(amount_shift[2] * mm / 100.0)}')
-        self.log.debug(
-            f' * Max.: {prev_cse.close} + {(amount_shift[3] * mm / 100.0)}')
-
         # If this CSE is negative, swap the open and close values
-        if this_cse['b'][0] == 'n':
-            self.log.debug('This CS seems to be negative')
-            # rec_tick[0], rec_tick[3] = rec_tick[3], rec_tick[0]
+        # if this_cse['b'][0] == 'n':
+        #     self.log.debug('This CS seems to be negative')
+        #     # rec_tick[0], rec_tick[3] = rec_tick[3], rec_tick[0]
         self.log.debug(
             '>> Reconstructed tick: {:.02f}|{:.02f}|{:.02f}|{:.02f}'.format(
                 rec_tick[0], rec_tick[1], rec_tick[2], rec_tick[3]))
         return rec_tick
 
-    def _decode_body(self, letter, tick):
+    def _decode_body(self, letter: str, tick: list) -> list:
         """
         Given an encoding letter used for the body of the CS, return the
         expected positions of the upper and lower parts of the body, according
@@ -558,12 +550,13 @@ class CSEncoder:
         self.log.debug(
             '>> Adjusting tick: {:.02f}|{:.02f}|{:.02f}|{:.02f}'.format(
                 tick[0], tick[1], tick[2], tick[3]))
+        new_tick = tick.copy()
         (block, pos) = which_string(self.def_enc_body_groups, letter)
         body_size = self.def_enc_body_sizes[block]
         self.log.debug('   letter ({}) => body size: {:.2f}'.format(
             letter, body_size))
         # High - Low is the height range the adjustment refers to.
-        tick_range = tick[1] - tick[2]
+        tick_range = new_tick[1] - new_tick[2]
         M = 0.5 + (body_size / 2.0)
         m = 0.5 - (body_size / 2.0)
         self.log.debug('   tick range: {:.2f}, M: {:.2f}, m: {:.2f}'.format(
@@ -571,16 +564,16 @@ class CSEncoder:
         shift = ((1.0 - M) / 2.0) * self.cs_shift[pos]
         self.log.debug('   shift = {:.2f}'.format(shift))
         if tick[0] < tick[3]:
-            tick[0] = tick[2] + (m + shift) * tick_range
-            tick[3] = tick[2] + (M + shift) * tick_range
+            new_tick[0] = new_tick[2] + (m + shift) * tick_range
+            new_tick[3] = new_tick[2] + (M + shift) * tick_range
         else:
-            tick[3] = tick[2] + (m + shift) * tick_range
-            tick[0] = tick[2] + (M + shift) * tick_range
+            new_tick[3] = new_tick[2] + (m + shift) * tick_range
+            new_tick[0] = new_tick[2] + (M + shift) * tick_range
         self.log.debug('<< New tick: {:.02f}|{:.02f}|{:.02f}|{:.02f}'.format(
-            tick[0], tick[1], tick[2], tick[3]))
-        return tick
+            new_tick[0], new_tick[1], new_tick[2], new_tick[3]))
+        return new_tick
 
-    def _decode_movement(self, code):
+    def _decode_movement(self, code: str) -> float:
         sign = code[0]
         letter = code[1]
         pos = self.def_prcntg_mvmt_encodings.index(letter)

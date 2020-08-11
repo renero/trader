@@ -4,7 +4,7 @@ from predictor.cs_encoder import CSEncoder
 from predictor.oh_encoder import OHEncoder
 from utils.logger import Logger
 from utils.my_dict import MyDict
-from utils.test_utils import sample_ticks, encoded_cs_to_df
+from utils.test_utils import sample_ticks, encoded_cs_to_df, cs_to_df
 
 
 def do_nothing(*args, **kwargs):
@@ -216,6 +216,18 @@ class TestCSEncoder(TestCase):
         for i in range(len(cse)):
             self.assertIsInstance(cse[i], CSEncoder)
 
+    def test_inverse_transform(self):
+        """
+        Test that we can reverse a transformation to the original values.
+        """
+        encoder = CSEncoder(self.params)
+        cse = encoder.fit_transform(self.data)
+        # Inverse transform needs a dataframe as input, and the first CS.
+        df = cs_to_df(cse, self.params.cse_tags)
+        inv_cse = encoder.inverse_transform(df, cse[0])
+        for i in range(inv_cse.shape[0]):
+            self.assertEqual(inv_cse.iloc[i]['o'], self.data.iloc[i]['o'])
+
     def test_encode_tick(self):
         """
         This one checks if the CSEncoder is built and encoded, given
@@ -328,7 +340,7 @@ class TestCSEncoder(TestCase):
         # Check every tick
         for i in range(self.data.shape[0]):
             cs_df = encoded_cs_to_df(cs[i], self.params.cse_tags)
-            prev_cs = cs[0] if i == 0 else cs[i-1]
+            prev_cs = cs[0] if i == 0 else cs[i - 1]
             # Define tolerance as 10% of the min-max range when reconstructing
             tol = prev_cs.hl_interval_width * 0.1
             # Decode the CS, and check
@@ -337,4 +349,3 @@ class TestCSEncoder(TestCase):
             self.assertLessEqual(abs(tick[1] - self.data.iloc[i]['h']), tol)
             self.assertLessEqual(abs(tick[2] - self.data.iloc[i]['l']), tol)
             self.assertLessEqual(abs(tick[3] - self.data.iloc[i]['c']), tol)
-

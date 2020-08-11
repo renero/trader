@@ -3,11 +3,11 @@ from os.path import splitext, basename
 import pandas as pd
 from pandas import DataFrame
 
-from cs_api import single_prediction
-from cs_encoder import CSEncoder
-from cs_nn import CS_NN
-from dataset import Dataset
-from file_io import valid_output_name
+from predictor.cs_api import single_prediction
+from predictor.cs_encoder import CSEncoder
+from predictor.cs_nn import CS_NN
+from predictor.dataset import Dataset
+from utils.file_io import valid_output_name
 
 
 class CSCore:
