@@ -4,7 +4,7 @@ from predictor.cs_encoder import CSEncoder
 from predictor.oh_encoder import OHEncoder
 from utils.logger import Logger
 from utils.my_dict import MyDict
-from utils.test_utils import sample_ticks, encoded_cs_to_df, cs_to_df
+from utils.test_utils import *
 
 
 def do_nothing(*args, **kwargs):
@@ -175,35 +175,21 @@ class TestCSEncoder(TestCase):
 
     def test__encode_body(self):
         """Ensure a proper encoding of the sample ticks in test_utils"""
-        self.assertEqual(
-            CSEncoder(self.params, self.data.iloc[0])._encode_body(), 'A')
-        self.assertEqual(
-            CSEncoder(self.params, self.data.iloc[1])._encode_body(), 'G')
-        self.assertEqual(
-            CSEncoder(self.params, self.data.iloc[2])._encode_body(), 'M')
-        self.assertEqual(
-            CSEncoder(self.params, self.data.iloc[3])._encode_body(), 'Q')
-        self.assertEqual(
-            CSEncoder(self.params, self.data.iloc[4])._encode_body(), 'W')
-        self.assertEqual(
-            CSEncoder(self.params, self.data.iloc[5])._encode_body(), 'Z')
+        tags = encoded_tags()
+        for i in range(self.data.shape[0]):
+            self.assertEqual(
+                CSEncoder(self.params,
+                          self.data.iloc[i])._encode_body(),
+                tags.iloc[i]['body'][1])
 
     def test_encode_body(self):
         """
         Ensure a proper encoding of the sample ticks in test_utils
         """
-        cs = CSEncoder(self.params, self.data.iloc[0])
-        self.assertEqual(cs.encode_body(), 'pA')
-        cs = CSEncoder(self.params, self.data.iloc[1])
-        self.assertEqual(cs.encode_body(), 'nG')
-        cs = CSEncoder(self.params, self.data.iloc[2])
-        self.assertEqual(cs.encode_body(), 'pM')
-        cs = CSEncoder(self.params, self.data.iloc[3])
-        self.assertEqual(cs.encode_body(), 'nQ')
-        cs = CSEncoder(self.params, self.data.iloc[4])
-        self.assertEqual(cs.encode_body(), 'pW')
-        cs = CSEncoder(self.params, self.data.iloc[5])
-        self.assertEqual(cs.encode_body(), 'nZ')
+        tags = encoded_tags()
+        for i in range(self.data.shape[0]):
+            cs = CSEncoder(self.params, self.data.iloc[i])
+            self.assertEqual(cs.encode_body(), tags.iloc[i]['body'])
 
     def test_transform(self):
         """
@@ -240,38 +226,26 @@ class TestCSEncoder(TestCase):
         """
         # Start with the first one, which has no previous tick
         encoder = CSEncoder(self.params).fit(self.data)
-        cs0 = encoder._encode_tick(self.data.iloc[0], None)
-        self.assertIsInstance(cs0, CSEncoder)
-        self.assertAlmostEqual(cs0.delta_open, 0.)
-        self.assertAlmostEqual(cs0.delta_high, 0.)
-        self.assertAlmostEqual(cs0.delta_low, 0.)
-        self.assertAlmostEqual(cs0.delta_close, 0.)
-        self.assertEqual(cs0.encoded_delta_open, 'pA')
-        self.assertEqual(cs0.encoded_delta_high, 'pA')
-        self.assertEqual(cs0.encoded_delta_low, 'pA')
-        self.assertEqual(cs0.encoded_delta_close, 'pA')
+        tags = encoded_tags()
+        deltas = encoded_deltas()
 
-        # Check second one wrt first one.
-        cs1 = encoder._encode_tick(self.data.iloc[1], cs0)
-        self.assertAlmostEqual(cs1.delta_open, 0.3)
-        self.assertAlmostEqual(cs1.delta_high, 0.)
-        self.assertAlmostEqual(cs1.delta_low, 0.)
-        self.assertAlmostEqual(cs1.delta_close, 0.195)
-        self.assertEqual(cs1.encoded_delta_open, 'pD')
-        self.assertEqual(cs1.encoded_delta_high, 'pA')
-        self.assertEqual(cs1.encoded_delta_low, 'pA')
-        self.assertEqual(cs1.encoded_delta_close, 'pC')
-
-        # Check third one wrt second one.
-        cs2 = encoder._encode_tick(self.data.iloc[2], cs1)
-        self.assertAlmostEqual(cs2.delta_open, -0.7)
-        self.assertAlmostEqual(cs2.delta_high, 0.)
-        self.assertAlmostEqual(cs2.delta_low, 0.)
-        self.assertAlmostEqual(cs2.delta_close, -0.4)
-        self.assertEqual(cs2.encoded_delta_open, 'nH')
-        self.assertEqual(cs2.encoded_delta_high, 'pA')
-        self.assertEqual(cs2.encoded_delta_low, 'pA')
-        self.assertEqual(cs2.encoded_delta_close, 'nE')
+        previous_row = None
+        for i, row in self.data.iterrows():
+            cs = encoder._encode_tick(row, previous_row)
+            self.assertIsInstance(cs, CSEncoder)
+            self.assertEqual(cs.encoded_delta_open,
+                             tags.at[i, 'delta_open'])
+            self.assertEqual(cs.encoded_delta_high,
+                             tags.at[i, 'delta_high'])
+            self.assertEqual(cs.encoded_delta_low,
+                             tags.at[i, 'delta_low'])
+            self.assertEqual(cs.encoded_delta_close,
+                             tags.at[i, 'delta_close'])
+            self.assertAlmostEqual(cs.delta_open, deltas.at[i, 'delta_open'])
+            self.assertAlmostEqual(cs.delta_high, deltas.at[i, 'delta_high'])
+            self.assertAlmostEqual(cs.delta_low, deltas.at[i, 'delta_low'])
+            self.assertAlmostEqual(cs.delta_close, deltas.at[i, 'delta_close'])
+            previous_row = cs
 
     def test_encode_movement(self):
         """
@@ -284,28 +258,21 @@ class TestCSEncoder(TestCase):
         A   B   C   D   E   F   G   H   I   J   K
         -------------------------------------------
         """
-        cs4 = CSEncoder(self.params, self.data.iloc[4])
-        cs3 = CSEncoder(self.params, self.data.iloc[3])
-        cs2 = CSEncoder(self.params, self.data.iloc[2])
-        cs3.encode_movement(cs2)
-        self.assertAlmostEqual(cs3.delta_open, 0.7)
-        self.assertAlmostEqual(cs3.delta_high, 0.)
-        self.assertAlmostEqual(cs3.delta_low, 0.)
-        self.assertAlmostEqual(cs3.delta_close, 0.1)
-        self.assertEqual(cs3.encoded_delta_open, 'pH')
-        self.assertEqual(cs3.encoded_delta_high, 'pA')
-        self.assertEqual(cs3.encoded_delta_low, 'pA')
-        self.assertEqual(cs3.encoded_delta_close, 'pB')
-
-        cs4.encode_movement(cs3)
-        self.assertAlmostEqual(cs4.delta_open, -0.7)
-        self.assertAlmostEqual(cs4.delta_high, 0.)
-        self.assertAlmostEqual(cs4.delta_low, 0.)
-        self.assertAlmostEqual(cs4.delta_close, 0.4)
-        self.assertEqual(cs4.encoded_delta_open, 'nH')
-        self.assertEqual(cs4.encoded_delta_high, 'pA')
-        self.assertEqual(cs4.encoded_delta_low, 'pA')
-        self.assertEqual(cs4.encoded_delta_close, 'pE')
+        tags = encoded_tags()
+        deltas = encoded_deltas()
+        prev_cs = CSEncoder(self.params, self.data.iloc[0])
+        for i in range(1, self.data.shape[0]):
+            cs = CSEncoder(self.params, self.data.iloc[i])
+            cs.encode_movement(prev_cs)
+            self.assertAlmostEqual(cs.delta_open, deltas.iloc[i].delta_open)
+            self.assertAlmostEqual(cs.delta_high,deltas.iloc[i].delta_high)
+            self.assertAlmostEqual(cs.delta_low,deltas.iloc[i].delta_low)
+            self.assertAlmostEqual(cs.delta_close, deltas.iloc[i].delta_close)
+            self.assertEqual(cs.encoded_delta_open,  tags.iloc[i].delta_open)
+            self.assertEqual(cs.encoded_delta_high,  tags.iloc[i].delta_high)
+            self.assertEqual(cs.encoded_delta_low,   tags.iloc[i].delta_low)
+            self.assertEqual(cs.encoded_delta_close, tags.iloc[i].delta_close)
+            prev_cs = cs
 
     def test_recursive_encode_movement(self):
         """

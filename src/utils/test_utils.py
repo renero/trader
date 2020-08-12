@@ -19,6 +19,39 @@ def sample_ticks():
     return data
 
 
+def encoded_tags():
+    data = pd.DataFrame({
+        'body':        ['pA', 'nG', 'pM', 'nQ', 'pW', 'nZ'],
+        'delta_open':  ['pA', 'pD', 'nH', 'pH', 'nH', 'pJ'],
+        'delta_high':  ['pA', 'pA', 'pA', 'pA', 'pA', 'pA'],
+        'delta_low':   ['pA', 'pA', 'pA', 'pA', 'pA', 'pA'],
+        'delta_close': ['pA', 'pC', 'nE', 'pB', 'pE', 'nI']
+    })
+    data = pd.concat(
+        [pd.DataFrame({
+            'Date': pd.date_range('2020-06-01', '2020-06-06', freq='D')
+        }), data
+        ], axis=1)
+    data = data.set_index('Date')
+    return data
+
+
+def encoded_deltas():
+    data = pd.DataFrame({
+        'delta_open':  [0.0, 0.3,   -0.7, 0.7, -0.7,  0.9],
+        'delta_high':  [0.0, 0.0,    0.0, 0.0,  0.0,  0.0],
+        'delta_low':   [0.0, 0.0,    0.0, 0.0,  0.0,  0.0],
+        'delta_close': [0.0, 0.195, -0.4, 0.1,  0.4, -0.8]
+    })
+    data = pd.concat(
+        [pd.DataFrame({
+            'Date': pd.date_range('2020-06-01', '2020-06-06', freq='D')
+        }), data
+        ], axis=1)
+    data = data.set_index('Date')
+    return data
+
+
 def encoded_cs_to_df(cs, cols):
     df = pd.DataFrame([[cs.encoded_body,
                         cs.encoded_delta_open,

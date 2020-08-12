@@ -109,6 +109,14 @@ class CSEncoder:
         # Return the OHLC values of a CS.
         return [self.open, self.high, self.low, self.close]
 
+    def _tags(self):
+        # Return the encoded tags of a CS.
+        return [self.encoded_body,
+                self.encoded_delta_open,
+                self.encoded_delta_high,
+                self.encoded_delta_low,
+                self.encoded_delta_close]
+
     def fit(self, ticks):
         """
         Simply setup the first tick in the dataframe passed and the onehot
