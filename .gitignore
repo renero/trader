@@ -16,6 +16,9 @@ s3/
 params.yaml
 params.*.yaml
 
+# Some files not necessary to keep in github
+./git-sequence.md
+
 # macOS generic defaults
 # General
 .DS_Store
@@ -187,3 +190,4 @@ resources/slack/
 *.toc
 *.pygtex
 *.pygstyle
+git-sequence.md
