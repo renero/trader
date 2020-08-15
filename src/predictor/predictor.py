@@ -4,8 +4,8 @@ import sys
 
 import numpy as np
 
+from utils.logger import Logger
 from ensemble import Ensemble as ensemble
-from logger import Logger
 
 
 def main(argv):
@@ -16,13 +16,13 @@ def main(argv):
     log: Logger = params.log
 
     from cs_core import CSCore
-    from ticks import Ticks
+    from ticks_reader import TicksReader
 
     if params.ensemble_predictions or params.ensemble:
         ensemble(params)
     else:
-        ticks = Ticks(params)
-        data = ticks.read_ohlc()
+        ticks_reader = TicksReader(params)
+        data = ticks_reader.read_ohlc()
         predictor = CSCore(params)
         if params.train:
             predictor.train(data)
@@ -31,10 +31,10 @@ def main(argv):
             nn, encoder = predictor.prepare_predict()
             if params.predict_training:
                 predictions = predictor.predict_training(
-                    data, nn, encoder, ticks)
+                    data, nn, encoder, ticks_reader)
             elif params.predict:
                 predictions = predictor.predict_newdata(
-                    data, nn, encoder, ticks)
+                    data, nn, encoder, ticks_reader)
 
             predictions = predictor.reorder_predictions(predictions, params)
             if params.save_predictions is True:

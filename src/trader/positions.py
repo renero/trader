@@ -1,7 +1,7 @@
 from typing import List
 
-from dictionary import Dictionary
-from share import share
+from utils.dictionary import Dictionary
+from trader.share import share
 
 
 class Positions:

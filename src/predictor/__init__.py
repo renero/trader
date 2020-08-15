@@ -1,1 +1,1 @@
-__all__ = ['predictor']
+__all__ = ['predictor', 'ensemble']

@@ -29,7 +29,7 @@ def predict_close(ticks, encoder, nn, params):
         ticks.reset_index()
 
     # encode the tick in CSE and OH. Reshape it to the expected LSTM format.
-    cs_tick = encoder.ticks2cse(ticks)
+    cs_tick = encoder.transform(ticks)
     cs_tick_body_oh = encoder.onehot['body'].encode(encoder.body(cs_tick))
     cs_tick_move_oh = encoder.onehot['move'].encode(encoder.move(cs_tick))
 
@@ -71,7 +71,7 @@ def predict_close(ticks, encoder, nn, params):
     ))
 
     # Convert the prediction to a real tick
-    pred = encoder.cse2ticks(prediction_df, cs_tick[-1])
+    pred = encoder.inverse_transform(prediction_df, cs_tick[-1])
     return pred['c'].values[-1]
 
 

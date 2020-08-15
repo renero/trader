@@ -5,8 +5,8 @@ import pandas as pd
 from pandas import DataFrame, Series
 
 from cs_dictionary import CSDictionary
-from file_io import save_dataframe
-from logger import Logger
+from utils.file_io import save_dataframe
+from utils.logger import Logger
 
 
 class Ensemble:
