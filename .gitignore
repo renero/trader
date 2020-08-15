@@ -187,3 +187,4 @@ resources/slack/
 *.toc
 *.pygtex
 *.pygstyle
+git-sequence.md
