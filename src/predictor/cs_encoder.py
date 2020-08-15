@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from predictor.oh_encoder import OHEncoder
+from oh_encoder import OHEncoder
 from utils.file_io import file_exists, valid_output_name
 from utils.strings import which_string, previous
 

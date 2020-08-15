@@ -7,7 +7,7 @@ from pandas import DataFrame
 from utils.file_io import file_exists
 
 
-class Ticks:
+class TicksReader:
     min_value = 0.
     max_value = 0.
 
@@ -21,7 +21,7 @@ class Ticks:
     def denormalize(self, x):
         return (x * (self.max_value - self.min_value)) + self.min_value
 
-    def scale_back(self, df):
+    def scale_back(self, df: DataFrame) -> DataFrame:
         num_models = len(list(self.params['model_names'].keys()))
         if num_models == 1:
             return df.applymap(np.vectorize(self.denormalize))

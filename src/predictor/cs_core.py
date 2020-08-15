@@ -1,12 +1,14 @@
 from os.path import splitext, basename
+from typing import Dict, List
 
 import pandas as pd
 from pandas import DataFrame
 
-from predictor.cs_api import single_prediction
-from predictor.cs_encoder import CSEncoder
-from predictor.cs_nn import CS_NN
-from predictor.dataset import Dataset
+from cs_api import single_prediction
+from cs_encoder import CSEncoder
+from cs_nn import CS_NN
+from dataset import Dataset
+from ticks_reader import TicksReader
 from utils.file_io import valid_output_name
 
 
@@ -49,7 +51,9 @@ class CSCore:
 
         return nn
 
-    def load_nn(self, model_names, subtypes):
+    def load_nn(self,
+                model_names: Dict[str, str],
+                subtypes: List) -> Dict[str, Dict]:
         """
         """
         nn = {}
@@ -60,7 +64,7 @@ class CSCore:
                 nn[name][subtype].load(model_names[name][subtype])
         return nn
 
-    def load_encoders(self, model_names):
+    def load_encoders(self, model_names: List[str]) -> Dict[str, CSEncoder]:
         """Load a encoder for each network"""
         encoder = {}
         for name in model_names:
@@ -68,13 +72,17 @@ class CSCore:
                 model_names[name]['encoder'])
         return encoder
 
-    def prepare_predict(self):
+    def prepare_predict(self) -> (Dict[str, Dict], ):
         nn = self.load_nn(self.params.model_names, self.params.subtypes)
         encoder = self.load_encoders(self.params.model_names)
 
         return nn, encoder
 
-    def predict_training(self, data, nn, encoder, ticks) -> DataFrame:
+    def predict_training(self,
+                         data,
+                         nn,
+                         encoder,
+                         ticks_reader: TicksReader) -> DataFrame:
         self.log.info('Performing prediction over TRAINING set')
         predictions = pd.DataFrame([])
         date_column = self.params.csv_dict['d']
@@ -101,7 +109,7 @@ class CSCore:
             predictions = predictions.append(prediction)
         predictions = pd.concat((
             predictions[date_column],
-            ticks.scale_back(
+            ticks_reader.scale_back(
                 predictions.loc[:, predictions.columns != date_column])),
             axis=1)
 

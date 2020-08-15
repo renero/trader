@@ -1,4 +1,4 @@
-from predictor.arguments import Arguments
+from arguments import Arguments
 from utils.dictionary import Dictionary
 from utils.logger import Logger
 
