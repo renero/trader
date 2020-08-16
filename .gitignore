@@ -192,3 +192,4 @@ resources/slack/
 *.pygstyle
 git-sequence.md
 /resources/logs/fit/20200816-205016/train/events.out.tfevents.1597603816.JesusMBP16.local.22280.260328.v2
+resources/logs
