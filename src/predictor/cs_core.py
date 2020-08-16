@@ -225,7 +225,10 @@ class CSCore:
             pd.set_option('display.max_rows', -1)
             print(predictions.to_string(index=False))
 
-    def prepare_input(self, encoder, cse, subtypes):
+    def prepare_input(self,
+                      encoder: CSEncoder,
+                      cse: List[CSEncoder],
+                      subtypes: List[str]) -> Dict[str, Dataset]:
         """
         Prepare the training and test datasets from an list of existing CSE, for
         each of the model names considered (body and move).

@@ -1,9 +1,13 @@
+from __future__ import annotations  # https://stackoverflow.com/a/33533514
+
 import pickle
 from os.path import basename, join, splitext, dirname, realpath
 from pathlib import Path
+from typing import List
 
 import numpy as np
 import pandas as pd
+from pandas import DataFrame
 
 from oh_encoder import OHEncoder
 from utils.file_io import file_exists, valid_output_name
@@ -117,7 +121,7 @@ class CSEncoder:
                 self.encoded_delta_low,
                 self.encoded_delta_close]
 
-    def fit(self, ticks):
+    def fit(self, ticks: DataFrame) -> CSEncoder:
         """
         Simply setup the first tick in the dataframe passed and the onehot
         encoder.
@@ -135,7 +139,7 @@ class CSEncoder:
         self._add_ohencoder()
         return self
 
-    def transform(self, ticks):
+    def transform(self, ticks: DataFrame) -> List[CSEncoder]:
         """
         Encodes a dataframe of Ticks, returning an array of CSE objects.
         """
@@ -146,7 +150,7 @@ class CSEncoder:
                 self._encode_tick(ticks.iloc[index], previous(cse, index)))
         return cse
 
-    def fit_transform(self, ticks):
+    def fit_transform(self, ticks: DataFrame) -> List[CSEncoder]:
         """Perform fit and transform in the same call. Setup first tick
         and build the series of ticks in a list which is returned.
         """
