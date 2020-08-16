@@ -38,7 +38,7 @@ class Arguments(object):
             '-d', '--debug', nargs=1, type=int,
             help='Debug level (0..4), default 3.')
 
-        self.args = self.parser.parse_args()
+        self.args = self.parser.parse_args(args[1]['args'][1:])
         action_name = 'arg_{}'.format(self.args.action)
         setattr(self, action_name, True)
         for action in set(self.possible_actions) - {action_name[1:]}:

@@ -5,6 +5,7 @@ import numpy as np
 from keras.layers import LSTM, Dense, Dropout
 from keras.models import Sequential, model_from_json
 from keras.regularizers import l2
+import tensorflow as tf
 
 from utils.plots import plot_history
 from utils.file_io import file_exists
@@ -41,6 +42,7 @@ class CS_NN(object):
             self.name = self.metadata['dataset']
         self.subtype = subtype
         self.metadata['subtype'] = subtype
+        tf.random.set_seed(self.params.seed)
         self.log.debug(
             'NN {}.{} created'.format(self.name, self.metadata['subtype']))
 
@@ -86,13 +88,23 @@ class CS_NN(object):
         Train the model and put the history in an internal state.
         Metadata is updated with the accuracy
         """
+        callbacks = []
+        if self.params.tensorboard is True:
+            import datetime
+            import tensorflow as tf
+            log_dir = "logs/fit/" + datetime.datetime.now().strftime(
+                "%Y%m%d-%H%M%S")
+            callbacks.append(tf.keras.callbacks.TensorBoard(
+                log_dir=log_dir, histogram_freq=1))
+
         self.history = self.model.fit(
             X_train,
             y_train,
             epochs=self.params.epochs,
             batch_size=self.params.batch_size,
             verbose=self.params.verbose,
-            validation_split=self.params.validation_split)
+            validation_split=self.params.validation_split,
+            callbacks=callbacks)
         self.metadata[self.params.metrics[0]] = self.history.history['accuracy']
 
         if self.params.do_plot is True:
