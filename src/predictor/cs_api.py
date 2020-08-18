@@ -1,12 +1,20 @@
+from typing import Dict
+
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
 
 # log = Logger(3)
+from cs_dictionary import CSDictionary
+from cs_encoder import CSEncoder
+from cs_nn import CS_NN
 
 
-def predict_close(ticks, encoder, nn, params):
+def predict_close(ticks: DataFrame,
+                  encoder: CSEncoder,
+                  nn: Dict[str, CS_NN],
+                  params: CSDictionary) -> float:
     """
     From a list of ticks, make a prediction of what will be the next CS.
 
@@ -60,9 +68,8 @@ def predict_close(ticks, encoder, nn, params):
     prediction_cs = np.concatenate((pred_body_cs, pred_move_cs), axis=0)
     this_prediction = dict(zip(params.cse_tags, prediction_cs))
     prediction_df = prediction_df.append(this_prediction, ignore_index=True)
-    params.log.info('Net {} ID {} -> {}:{}|{}|{}|{}'.format(
+    params.log.info('Net {} -> {}:{}|{}|{}|{}'.format(
         nn['body'].name,
-        hex(id(nn)),
         prediction_df[params.cse_tags[0]].values[0],
         prediction_df[params.cse_tags[1]].values[0],
         prediction_df[params.cse_tags[2]].values[0],

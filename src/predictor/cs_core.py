@@ -222,7 +222,7 @@ class CSCore:
             self.log.info('Save json file: {}'.format(
                 self.params.json_prediction))
         else:
-            pd.set_option('display.max_rows', -1)
+            pd.set_option('display.max_rows', None)
             print(predictions.to_string(index=False))
 
     def prepare_input(self,
