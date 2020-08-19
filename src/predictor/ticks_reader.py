@@ -43,7 +43,7 @@ class TicksReader:
         # Reorder and rename
         df = df[[self.params.csv_dict['o'], self.params.csv_dict['h'],
                  self.params.csv_dict['l'], self.params.csv_dict['c']]]
-        df.columns = ['o', 'h', 'l', 'c']
+        df.columns = self.params.ohlc_tags
 
         # Set the max and min for the values found (all)
         self.max_value = df.values.max()

@@ -42,6 +42,7 @@ class CSDictionary(Dictionary):
         # Extend the dictionary with custom meta-parameters
         #
         setattr(self, 'num_models', len(self.model_names.keys()))
+        setattr(self, 'ohlc_tags', list(list(self.csv_dict.keys())[1:]))
 
         #
         # Set log_level and start the logger

@@ -158,7 +158,10 @@ class CSEncoder:
         return self.transform(ticks)
 
     # TODO: Clarify when 'd' is present in
-    def inverse_transform(self, encoded_cse, first_cse, col_names=None):
+    def inverse_transform(self,
+                          encoded_cse: DataFrame,
+                          first_cse: CSEncoder,
+                          col_names: List[str] = None) -> DataFrame:
         """
         Reconstruct CSE codes read from a CSE file into ticks
 
@@ -166,7 +169,8 @@ class CSEncoder:
           representing the body of the candlestick, the open, high, low and
           close encoded values as two letters strings.
         :param encoded_cse: the list of CSEs to convert back to Ticks
-        :param first_cse: the first CSE to use as reference
+        :param first_cse: the first CSE to use as reference, or the previous
+                          one if we're only decoding a single CSE.
         :param col_names: the names of column headers to use with ticks
 
         :returns: A DataFrame with the open, high, low and close values decoded.
@@ -182,10 +186,13 @@ class CSEncoder:
             self.cse_zero_open, self.cse_zero_high, self.cse_zero_low,
             self.cse_zero_close))
 
-        for i, this_cse in encoded_cse.iloc[1:].iterrows():
+        # Start decoding in row 0 if only one CS present.
+        first_row = 0 if encoded_cse.shape[0] == 1 else 1
+        for i, this_cse in encoded_cse.iloc[first_row:].iterrows():
             self.log.debug('Decoding: {}|{}|{}|{}|{}'.format(
                 this_cse['b'], this_cse['o'], this_cse['h'], this_cse['l'],
                 this_cse['c']))
+
             this_tick = self._decode_cse(this_cse, cse_decoded[-1], col_names)
             cse_decoded.append(self.build_new(self.params, this_tick))
 
@@ -537,10 +544,6 @@ class CSEncoder:
             prev_cse.low + (amount_shift[2] * mm / 100.0),
             prev_cse.close + (amount_shift[3] * mm / 100.0)
         ]
-        # If this CSE is negative, swap the open and close values
-        # if this_cse['b'][0] == 'n':
-        #     self.log.debug('This CS seems to be negative')
-        #     # rec_tick[0], rec_tick[3] = rec_tick[3], rec_tick[0]
         self.log.debug(
             '>> Reconstructed tick: {:.02f}|{:.02f}|{:.02f}|{:.02f}'.format(
                 rec_tick[0], rec_tick[1], rec_tick[2], rec_tick[3]))
