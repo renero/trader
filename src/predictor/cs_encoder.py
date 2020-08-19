@@ -532,17 +532,17 @@ class CSEncoder:
 
         mm = prev_cse.hl_interval_width
         # Set the columns names that contain the values in my date
-        amount_shift = [(self._decode_movement(this_cse[column]) * mm)
+        amount_shift = [(self._decode_movement(this_cse[column]))
                         for column in col_names]
         self.log.debug(
             'Amount of movement: {:.02f};{:.02f};{:.02f};{:.02f}'.format(
                 amount_shift[0], amount_shift[1], amount_shift[2],
                 amount_shift[3]))
         rec_tick = [
-            prev_cse.open + (amount_shift[0] * mm / 100.0),
-            prev_cse.high + (amount_shift[1] * mm / 100.0),
-            prev_cse.low + (amount_shift[2] * mm / 100.0),
-            prev_cse.close + (amount_shift[3] * mm / 100.0)
+            prev_cse.open + (amount_shift[0] * mm),
+            prev_cse.high + (amount_shift[1] * mm),
+            prev_cse.low + (amount_shift[2] * mm),
+            prev_cse.close + (amount_shift[3] * mm)
         ]
         self.log.debug(
             '>> Reconstructed tick: {:.02f}|{:.02f}|{:.02f}|{:.02f}'.format(
