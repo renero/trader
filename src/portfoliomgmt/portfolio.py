@@ -2,22 +2,29 @@ import pandas as pd
 from .stock import Stock
 
 
-class Portfolio(object):
+class Portfolio:
+
     _stocks: pd.Series
 
     def __init__(self):
-        _stocks = pd.Series(dtype='object', name="Portfolio")
+        self._stocks = pd.Series(dtype='object', name="Portfolio")
 
     def add(self, stock_name, stock_package):
         if self._stocks.get(stock_name) is None:  # stock_name is not in the portfolio
             stock = Stock(stock_name, stock_package)
-            self._stocks.add(pd.Series(stock, index=stock_name))
+            self._stocks[stock_name] = stock
         else:  # stock_name already exists
             stock = self._stocks.get(stock_name)
             stock.add(stock_package)
 
-    def getStock(self, stock_name):
-         return  self._stocks.get(stock_name)
+    def getstock(self, stock_name):
+        return self._stocks.get(stock_name)
 
     def __str__(self):
-        return self._stocks.__str__()
+        out: str = ""
+
+        out += "Portfolio ->\n"
+        for value in self._stocks:
+            out += "\t" + value.__str__() + "\n\n"
+
+        return out

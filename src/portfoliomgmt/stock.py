@@ -1,5 +1,7 @@
 import pandas as pd
 
+from .tstrategy import TStrategy
+
 
 class Stock:
 
@@ -20,7 +22,7 @@ class Stock:
         return self._operations.size
 
     def get_active_packages(self):
-        i : int = 0
+        i: int = 0
 
         for value in self._operations:
             if not value.closed:
@@ -37,25 +39,28 @@ class Stock:
 
         return total_shares
 
-    def sell(self, num, sell_price_share):
-        package_num: int = 0
-        package_profit: float = 0.
+    def sell(self, num, sell_price_share, strategy=TStrategy.fifo, simulation=False):
         total_profit: float = 0.
 
-        if self.get_num_active_operations () < num:
+        if self.get_num_active_operations() < num:
             raise Exception("There aren't enough stocks of "+self._name+" to sell, currently there are "+str(self.get_num_active_operations()))
 
-        # for index, value in self._operations.items()[::-1]:
-        for value in self._operations:
+        if strategy is TStrategy.fifo:
+            step = 1
+        else:
+            step = -1
+
+        # for index, value in self._operations.items()[::step]:
+        for value in self._operations[::step]:
             if not value.closed:
-                package_num, package_profit = value.sell(num, sell_price_share)
+                package_num, package_profit = value.sell(num, sell_price_share, simulation)
                 total_profit += package_profit
                 num -= package_num
                 if num == 0:
                     return total_profit
 
-    def get_num_active_operations (self):
-        actives: int=0
+    def get_num_active_operations(self):
+        actives: int = 0
 
         for value in self._operations:
             if not value.closed:
@@ -64,12 +69,4 @@ class Stock:
         return actives
 
     def __str__(self):
-        return self._operations.__str__()
-
-
-
-
-
-
-
-
+        return self._name+"->\n"+self._operations.__str__()

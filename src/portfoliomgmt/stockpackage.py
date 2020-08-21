@@ -26,8 +26,7 @@ class StockPackage(object):
         self._profit = 0
 
     def __str__(self):
-        return self._buy_date + "," + "{:.4f}".format(self._buy_price) + "," + str(self._num) + "," + "{:.4f}".format(
-            (self._buy_price * self._num)) + "," + str(self._mode)
+        return self._buy_date + "," + "{:.4f}".format(self._buy_price) + "," + str(self._num) + "," + "{:.4f}".format((self._buy_price * self._num)) + "," + str(self._mode)
 
     @property  # when you do Stock.closed, it will call this function
     def buy_date(self):
@@ -72,15 +71,17 @@ class StockPackage(object):
 
         self._buy_price = buy_price
 
-    def sell(self, num, sell_price_share):
+    def sell(self, num, sell_price_share, simulation):
         sold_shares: int
         sell_profit: float = 0.
 
         if num >= self._num:  # all shares are sold
-            self._closed = True
+            if not simulation:
+                self._closed = True
             sold_shares = self._num
         else:
-            self._num -= num  # num shares are sold
+            if not simulation:
+                self._num -= num  # num shares are sold
             sold_shares = num
 
         if self._mode is TOperation.bull:
@@ -88,7 +89,8 @@ class StockPackage(object):
         else:
             sell_profit += (sold_shares * self._buy_price) - (sold_shares * sell_price_share)
 
-        self._profit += sell_profit
+        if not simulation:
+            self._profit += sell_profit
 
         return num, sell_profit
 

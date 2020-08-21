@@ -1,3 +1,4 @@
-__all__ = ['TestStock']
+__all__ = ['TestStock', 'TestPortfolio']
 
 from .test_stock import TestStock
+from .test_portfolio import TestPortfolio
