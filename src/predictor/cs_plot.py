@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-from mpl_finance import candlestick_ohlc
+from mplfinance import candlestick_ohlc
 
 
 class CSPlot(object):
@@ -22,7 +22,7 @@ class CSPlot(object):
         self.log = params.log
 
     @classmethod
-    def candlesticks(cls, data, title=None, ohlc_names=_default_ohlc_names):
+    def candlesticks(cls, data, title=None, ohlc_names=default_ohlc_names):
         """
         Plot a candlestick diagram from a Dataframe. The colum names that
         contains the OHLC values can be specified as an array of strings

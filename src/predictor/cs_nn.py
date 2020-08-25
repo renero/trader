@@ -2,12 +2,13 @@ from os.path import join, basename, splitext, dirname, realpath
 from pathlib import Path
 
 import numpy as np
+import tensorflow as tf
 from keras.layers import LSTM, Dense, Dropout
 from keras.models import Sequential, model_from_json
 from keras.regularizers import l2
 
-from utils.plots import plot_history
 from utils.file_io import file_exists
+from utils.plots import plot_history
 
 
 class ValidationException(Exception):
@@ -15,7 +16,6 @@ class ValidationException(Exception):
 
 
 class CS_NN(object):
-
     metadata = {'period': 'unk', 'epochs': 'unk', 'accuracy': 'unk'}
     output_dir = ''
     history = None
@@ -41,6 +41,7 @@ class CS_NN(object):
             self.name = self.metadata['dataset']
         self.subtype = subtype
         self.metadata['subtype'] = subtype
+        tf.random.set_seed(self.params.seed)
         self.log.debug(
             'NN {}.{} created'.format(self.name, self.metadata['subtype']))
 
@@ -86,13 +87,23 @@ class CS_NN(object):
         Train the model and put the history in an internal state.
         Metadata is updated with the accuracy
         """
+        callbacks = []
+        if self.params.tensorboard is True:
+            import datetime
+            import tensorflow as tf
+            log_dir = "logs/fit/" + f"ws{self.params.window_size:02d}_" + \
+                      datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+            callbacks.append(tf.keras.callbacks.TensorBoard(
+                log_dir=log_dir, histogram_freq=1))
+
         self.history = self.model.fit(
             X_train,
             y_train,
             epochs=self.params.epochs,
             batch_size=self.params.batch_size,
             verbose=self.params.verbose,
-            validation_split=self.params.validation_split)
+            validation_split=self.params.validation_split,
+            callbacks=callbacks)
         self.metadata[self.params.metrics[0]] = self.history.history['accuracy']
 
         if self.params.do_plot is True:
@@ -189,4 +200,3 @@ class CS_NN(object):
             output_filepath = '{}_{:d}'.format(base_filepath, idx)
             idx += 1
         return output_filepath
-

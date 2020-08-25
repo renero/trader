@@ -110,7 +110,12 @@ class OHEncoder(object):
         self.log.debug(info_msg.format(input_vector.shape, transformed.shape))
         return pd.DataFrame(transformed.reshape(len(input_vector), -1))
 
-    def decode(self, data):
+    def decode(self, data: np.ndarray) -> np.ndarray:
+        """
+        Given one or several arrays of 1.0/0.0 values, it returns the decoded
+        version of it, according to the inverse dictionary contained in this
+        class.
+        """
         if len(data.shape) == 1 or len(data.shape) == 2:
             num_arrays = data.shape[0] if len(data.shape) == 2 else 1
             num_strings = data.shape[1] if len(
@@ -119,7 +124,7 @@ class OHEncoder(object):
             # decode_len = 2 if self.signed else 1
             decoded = []
             for i in range(num_arrays):
-                assert data[i].sum() == 1.0, 'OH vector encoding error.'
+                assert np.abs(data[i].sum()) == 1.0, 'OH vector encoding error.'
                 flags = np.isin(data[i], [1, -1])
                 flag_index = np.where(flags)[0][0]
                 invcode = self.inv_dict[flag_index]
