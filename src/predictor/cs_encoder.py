@@ -1,9 +1,13 @@
+from __future__ import annotations  # https://stackoverflow.com/a/33533514
+
 import pickle
 from os.path import basename, join, splitext, dirname, realpath
 from pathlib import Path
+from typing import List
 
 import numpy as np
 import pandas as pd
+from pandas import DataFrame
 
 from oh_encoder import OHEncoder
 from utils.file_io import file_exists, valid_output_name
@@ -117,7 +121,7 @@ class CSEncoder:
                 self.encoded_delta_low,
                 self.encoded_delta_close]
 
-    def fit(self, ticks):
+    def fit(self, ticks: DataFrame) -> CSEncoder:
         """
         Simply setup the first tick in the dataframe passed and the onehot
         encoder.
@@ -135,7 +139,7 @@ class CSEncoder:
         self._add_ohencoder()
         return self
 
-    def transform(self, ticks):
+    def transform(self, ticks: DataFrame) -> List[CSEncoder]:
         """
         Encodes a dataframe of Ticks, returning an array of CSE objects.
         """
@@ -146,7 +150,7 @@ class CSEncoder:
                 self._encode_tick(ticks.iloc[index], previous(cse, index)))
         return cse
 
-    def fit_transform(self, ticks):
+    def fit_transform(self, ticks: DataFrame) -> List[CSEncoder]:
         """Perform fit and transform in the same call. Setup first tick
         and build the series of ticks in a list which is returned.
         """
@@ -154,7 +158,10 @@ class CSEncoder:
         return self.transform(ticks)
 
     # TODO: Clarify when 'd' is present in
-    def inverse_transform(self, encoded_cse, first_cse, col_names=None):
+    def inverse_transform(self,
+                          encoded_cse: DataFrame,
+                          first_cse: CSEncoder,
+                          col_names: List[str] = None) -> DataFrame:
         """
         Reconstruct CSE codes read from a CSE file into ticks
 
@@ -162,7 +169,8 @@ class CSEncoder:
           representing the body of the candlestick, the open, high, low and
           close encoded values as two letters strings.
         :param encoded_cse: the list of CSEs to convert back to Ticks
-        :param first_cse: the first CSE to use as reference
+        :param first_cse: the first CSE to use as reference, or the previous
+                          one if we're only decoding a single CSE.
         :param col_names: the names of column headers to use with ticks
 
         :returns: A DataFrame with the open, high, low and close values decoded.
@@ -178,10 +186,13 @@ class CSEncoder:
             self.cse_zero_open, self.cse_zero_high, self.cse_zero_low,
             self.cse_zero_close))
 
-        for i, this_cse in encoded_cse.iloc[1:].iterrows():
+        # Start decoding in row 0 if only one CS present.
+        first_row = 0 if encoded_cse.shape[0] == 1 else 1
+        for i, this_cse in encoded_cse.iloc[first_row:].iterrows():
             self.log.debug('Decoding: {}|{}|{}|{}|{}'.format(
                 this_cse['b'], this_cse['o'], this_cse['h'], this_cse['l'],
                 this_cse['c']))
+
             this_tick = self._decode_cse(this_cse, cse_decoded[-1], col_names)
             cse_decoded.append(self.build_new(self.params, this_tick))
 
@@ -521,22 +532,18 @@ class CSEncoder:
 
         mm = prev_cse.hl_interval_width
         # Set the columns names that contain the values in my date
-        amount_shift = [(self._decode_movement(this_cse[column]) * mm)
+        amount_shift = [(self._decode_movement(this_cse[column]))
                         for column in col_names]
         self.log.debug(
             'Amount of movement: {:.02f};{:.02f};{:.02f};{:.02f}'.format(
                 amount_shift[0], amount_shift[1], amount_shift[2],
                 amount_shift[3]))
         rec_tick = [
-            prev_cse.open + (amount_shift[0] * mm / 100.0),
-            prev_cse.high + (amount_shift[1] * mm / 100.0),
-            prev_cse.low + (amount_shift[2] * mm / 100.0),
-            prev_cse.close + (amount_shift[3] * mm / 100.0)
+            prev_cse.open + (amount_shift[0] * mm),
+            prev_cse.high + (amount_shift[1] * mm),
+            prev_cse.low + (amount_shift[2] * mm),
+            prev_cse.close + (amount_shift[3] * mm)
         ]
-        # If this CSE is negative, swap the open and close values
-        # if this_cse['b'][0] == 'n':
-        #     self.log.debug('This CS seems to be negative')
-        #     # rec_tick[0], rec_tick[3] = rec_tick[3], rec_tick[0]
         self.log.debug(
             '>> Reconstructed tick: {:.02f}|{:.02f}|{:.02f}|{:.02f}'.format(
                 rec_tick[0], rec_tick[1], rec_tick[2], rec_tick[3]))

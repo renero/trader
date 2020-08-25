@@ -37,7 +37,7 @@ class Dataset(object):
         self.X_train, self.y_train = self.reshape(np.array(train))
         self.X_test, self.y_test = self.reshape(np.array(test))
 
-        self.log.info('Dataset split in train {} and test {}'.format(
+        self.log.info('Dataset split in train {} and test {}'.format(
             self.X_train.shape[0], self.X_test.shape[0]))
 
         return self

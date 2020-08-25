@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from predictor.cs_encoder import CSEncoder
-from predictor.oh_encoder import OHEncoder
+from cs_encoder import CSEncoder
+from oh_encoder import OHEncoder
 from utils.logger import Logger
 from utils.my_dict import MyDict
 from utils.test_utils import *
