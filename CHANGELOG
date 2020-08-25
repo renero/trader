@@ -1,0 +1,7 @@
+v0.2.1
+======
+
+- Added TensorBoard option in `predictor`
+- Bug fixes and explicit typing in `predictor`
+- Notebooks to run EDA encoding results and LSTM training.
+
