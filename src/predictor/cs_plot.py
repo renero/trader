@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-from mplfinance import candlestick_ohlc
+import mplfinance as mpf
 
 
 class CSPlot(object):
@@ -35,24 +35,28 @@ class CSPlot(object):
         - ohlc_names: The names of the columns in the dataframe that contain
                 the values for the open, high, low and close.
         """
-        plt.style.use(cls.default_style)
-        fig, ax = plt.subplots(
-            figsize=(cls.default_width, cls.default_height))
-        ax.set_axisbelow(True)
-        ax.set_title('{}'.format(title))
-        ax.grid(color='#d7d7d7', linestyle='dashed', linewidth=0.5, axis='y')
-        fig.subplots_adjust(bottom=0.2)
-        index_field = list(map(int, data.index))
-        candlestick_ohlc(
-            ax,
-            zip(index_field, data[ohlc_names[0]], data[ohlc_names[1]],
-                data[ohlc_names[2]], data[ohlc_names[3]]),
-            colorup=cls.default_color_up,
-            colordown=cls.default_color_down,
-            width=0.6)
-        plt.setp(
-            plt.gca().get_xticklabels(),
-            rotation=45,
-            horizontalalignment='right')
-        plt.show()
+        mpf.plot(data,
+                 type='candle',
+                 columns=ohlc_names,
+                 figsize=(cls.default_width, cls.default_height))
+        # plt.style.use(cls.default_style)
+        # fig, ax = plt.subplots(
+        #     figsize=(cls.default_width, cls.default_height))
+        # ax.set_axisbelow(True)
+        # ax.set_title('{}'.format(title))
+        # ax.grid(color='#d7d7d7', linestyle='dashed', linewidth=0.5, axis='y')
+        # fig.subplots_adjust(bottom=0.2)
+        # index_field = list(map(int, data.index))
+        # candlestick_ohlc(
+        #     ax,
+        #     zip(index_field, data[ohlc_names[0]], data[ohlc_names[1]],
+        #         data[ohlc_names[2]], data[ohlc_names[3]]),
+        #     colorup=cls.default_color_up,
+        #     colordown=cls.default_color_down,
+        #     width=0.6)
+        # plt.setp(
+        #     plt.gca().get_xticklabels(),
+        #     rotation=45,
+        #     horizontalalignment='right')
+        # plt.show()
         return plt
