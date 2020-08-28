@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 from src.portfoliomgmt import Portfolio
-from src.portfoliomgmt import Stock
 from src.portfoliomgmt import StockPackage
 from src.portfoliomgmt.toperation import TOperation
 
@@ -44,4 +43,21 @@ class TestPortfolio(TestCase):
         self.assertIsNotNone(stock)
         self.assertTrue(stock.get_total_packages() == 1)
         self.assertTrue(stock.get_total_shares() == 2)
+
+        stock = portfolio.getstock("IBEX")
+        stock.sell_all(30);
+        print(portfolio)
+
+        self.assertIsNotNone(stock)
+        self.assertTrue(stock.get_active_packages() == 0)
+        self.assertTrue(stock.get_total_shares() == 0)
+
+        stock = portfolio.getstock("DAX")
+        stock.sell_all(51);
+        print(portfolio)
+
+        self.assertIsNotNone(stock)
+        self.assertTrue(stock.get_active_packages() == 0)
+        self.assertTrue(stock.get_total_shares() == 0)
+
 

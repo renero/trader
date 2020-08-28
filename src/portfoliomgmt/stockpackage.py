@@ -14,7 +14,6 @@ class StockPackage(object):
     # _current_price: float = 0.
     _profit: float = 0.  # Accumulated profit  by all shares in the package
 
-
     def __init__(self, date, price, num, mode=TOperation.bull):
         self._buy_date = date
         self.buy_price = price
@@ -22,11 +21,11 @@ class StockPackage(object):
         self._original_num = num
         self._mode = mode
         self._closed = False
-        #self._current_price = 0
+        # self._current_price = 0
         self._profit = 0
 
     def __str__(self):
-        return self._buy_date + "," + "{:.4f}".format(self._buy_price) + "," + str(self._num) + "," + "{:.4f}".format((self._buy_price * self._num)) + "," + str(self._mode)
+        return "buy date: " + self._buy_date.__str__() + ", share price: " + "{:.4f}".format(self._buy_price) + ", number of shares: " + str(self._num) + ", total: " + "{:.4f}".format((self._buy_price * self._num)) + ", " + str(self._mode) + ", closed: " + self._closed.__str__()
 
     @property  # when you do Stock.closed, it will call this function
     def buy_date(self):
@@ -55,7 +54,6 @@ class StockPackage(object):
     @property  # when you do Stock.closed, it will call this function
     def profit(self):
         return self.profit
-
 
     @num.setter
     def num(self, num):
@@ -92,38 +90,4 @@ class StockPackage(object):
         if not simulation:
             self._profit += sell_profit
 
-        return num, sell_profit
-
-    def update(self, new_price=None):
-        """
-        Updates position according to the new price.
-
-        :param new_price:   the new price at which the position is re-evaluated.
-        :return:            value and profit
-        """
-        if new_price is None:
-            new_price = self.current_price_
-        self.current_price_ = new_price
-        self.value_ = self.num_ * new_price
-        if self.mode_ == 'bull':
-            self.performance_ = (self.current_price_ - self.buy_price_) / \
-                                self.buy_price_
-        else:
-            self.performance_ = (self.buy_price_ - self.current_price_) / \
-                                self.buy_price_
-        self.profit_ = self.performance_ * self.cost_
-        return self.value_, self.profit_
-
-    def valuate(self, num=None):
-        """
-        Returns the value and profit represented by a given number of shares
-        on this current position. If no `num` is given, the current number
-        of shares in the position is considered. If no `price` is given, the
-        current price is considered.
-        """
-        if num is None:
-            num = self.num_
-
-        value = num * self.buy_price_
-        profit = self.performance_ * num * self.buy_price_
-        return value, profit
+        return sold_shares, sell_profit

@@ -23,8 +23,8 @@ class Portfolio:
     def __str__(self):
         out: str = ""
 
-        out += "Portfolio ->\n"
+        out += "Portfolio\n"
         for value in self._stocks:
-            out += "\t" + value.__str__() + "\n\n"
+            out += "\t" + value.__str__() + "\n"
 
         return out

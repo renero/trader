@@ -59,6 +59,9 @@ class Stock:
                 if num == 0:
                     return total_profit
 
+    def sell_all(self, sell_price_share, strategy=TStrategy.fifo, simulation=False):
+        return self.sell(self.get_num_active_operations(), sell_price_share, strategy, simulation)
+
     def get_num_active_operations(self):
         actives: int = 0
 
@@ -68,5 +71,11 @@ class Stock:
 
         return actives
 
+# return self._name+"->\n"+self._operations.__str__()
     def __str__(self):
-        return self._name+"->\n"+self._operations.__str__()
+        out: str = self._name+"\n"
+
+        for value in self._operations:
+            out += "\t\t"+value.__str__()+"\n"
+
+        return out
