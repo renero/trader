@@ -1,3 +1,4 @@
+from pandas import DataFrame
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
@@ -22,7 +23,11 @@ class Dataset(object):
         self.params = params
         self.log = params.log
 
-    def train_test_split(self, data):
+    def train_test_split(self, data: DataFrame) -> "Dataset":
+        """Divide data into multiple input/output patterns called samples,
+        where three time steps are used as input and one time step is used as
+        output for the one-step prediction that is being learned.
+        """
         self.data = data.copy()
         self.num_categories = data.shape[1]
         series = data.copy()
@@ -42,7 +47,16 @@ class Dataset(object):
 
         return self
 
-    def reshape(self, data):
+    def reshape(self, data: np.ndarray) -> (np.ndarray, np.ndarray):
+        """
+        From the window_size+1 columns dataframe, return X (window_size) and
+        y (1) separated in two different numpy arrays. "y" is tipically the
+        last column of the dataframe ––the part to be learned.
+
+        :param data: An numpy array with the values of the dataframe already
+        arranged in rolling timesteps.
+        :return: X and y.
+        """
         num_entries = data.shape[0] * data.shape[1]
         timesteps = self.params.window_size + 1
         num_samples = int((num_entries / self.num_categories) / timesteps)
