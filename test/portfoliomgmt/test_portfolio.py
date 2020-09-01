@@ -45,7 +45,7 @@ class TestPortfolio(TestCase):
         self.assertTrue(stock.get_total_shares() == 2)
 
         stock = portfolio.getstock("IBEX")
-        stock.sell_all(30);
+        stock.sell_all(30)
         print(portfolio)
 
         self.assertIsNotNone(stock)
@@ -53,11 +53,11 @@ class TestPortfolio(TestCase):
         self.assertTrue(stock.get_total_shares() == 0)
 
         stock = portfolio.getstock("DAX")
-        stock.sell_all(51);
+        stock.sell_all(51)
         print(portfolio)
 
         self.assertIsNotNone(stock)
         self.assertTrue(stock.get_active_packages() == 0)
         self.assertTrue(stock.get_total_shares() == 0)
 
-
+        portfolio.save()

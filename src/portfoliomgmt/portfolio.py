@@ -25,6 +25,10 @@ class Portfolio:
 
         out += "Portfolio\n"
         for value in self._stocks:
-            out += "\t" + value.__str__() + "\n"
+            out += "\t" + str(value) + "\n"
 
         return out
+
+    def save(self):
+        for value in self._stocks:
+            print(value.save()+"\n")

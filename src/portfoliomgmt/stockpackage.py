@@ -16,8 +16,8 @@ class StockPackage(object):
 
     def __init__(self, date, price, num, mode=TOperation.bull):
         self._buy_date = date
-        self.buy_price = price
-        self.num = num
+        self._buy_price = price
+        self._num = num
         self._original_num = num
         self._mode = mode
         self._closed = False
@@ -25,7 +25,7 @@ class StockPackage(object):
         self._profit = 0
 
     def __str__(self):
-        return "buy date: " + self._buy_date.__str__() + ", share price: " + "{:.4f}".format(self._buy_price) + ", number of shares: " + str(self._num) + ", total: " + "{:.4f}".format((self._buy_price * self._num)) + ", " + str(self._mode) + ", closed: " + self._closed.__str__()
+        return "buy date: " + str(self._buy_date) + ", share price: " + "{:.4f}".format(self._buy_price) + ", number of shares: " + str(self._num) + ", total: " + "{:.4f}".format((self._buy_price * self._num)) + ", " + str(self._mode) + ", closed: " + str(self._closed)
 
     @property  # when you do Stock.closed, it will call this function
     def buy_date(self):
@@ -41,11 +41,11 @@ class StockPackage(object):
 
     @property  # when you do Stock.num, it will call this function
     def original_num(self):
-        return self.original_num
+        return self._original_num
 
     @property  # when you do Stock.num, it will call this function
     def mode(self):
-        return self.mode
+        return self._mode
 
     @property  # when you do Stock.closed, it will call this function
     def closed(self):
@@ -69,18 +69,19 @@ class StockPackage(object):
 
         self._buy_price = buy_price
 
-    def sell(self, num, sell_price_share, simulation):
+    def sell(self, num_shares, sell_price_share, simulation):
         sold_shares: int
         sell_profit: float = 0.
 
-        if num >= self._num:  # all shares are sold
+        if num_shares >= self._num:  # all shares are sold
+            sold_shares = self._num
             if not simulation:
                 self._closed = True
-            sold_shares = self._num
-        else:
+                self._num = 0
+        else:  # num_shares are sold
+            sold_shares = num_shares
             if not simulation:
-                self._num -= num  # num shares are sold
-            sold_shares = num
+                self._num -= num_shares  # num shares are sold
 
         if self._mode is TOperation.bull:
             sell_profit += (sold_shares * sell_price_share) - (sold_shares * self._buy_price)

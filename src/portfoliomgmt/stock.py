@@ -71,11 +71,13 @@ class Stock:
 
         return actives
 
-# return self._name+"->\n"+self._operations.__str__()
     def __str__(self):
         out: str = self._name+"\n"
 
         for value in self._operations:
-            out += "\t\t"+value.__str__()+"\n"
+            out += "\t\t"+str(value)+"\n"
 
         return out
+
+    def save_to(self):
+        return self._operations.to_json(orient="split")
