@@ -55,7 +55,7 @@ class metrics:
         plt.show()
 
     @classmethod
-    def trend_performance(cls, df: DataFrame) -> float:
+    def trend_accuracy(cls, df: DataFrame) -> float:
         fails = 0
         for i in range(1, df.shape[0]):
             if i > 0:

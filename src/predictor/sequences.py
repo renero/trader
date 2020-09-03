@@ -105,6 +105,16 @@ class sequences:
         return X, y
 
     @classmethod
+    def get_num_features(cls, X_train):
+        assert len(X_train.shape) == 3, "Training set must be a 3D tensor"
+        return X_train.shape[2]
+
+    @classmethod
+    def get_num_target_labels(cls, y_train):
+        assert len(y_train.shape)==2, "Training labels must be a 2D tensor"
+        return y_train.shape[1]
+
+    @classmethod
     def _last_index_in_training(
         cls, df: DataFrame, timesteps: int, test_size: float = 0.1
     ) -> int:

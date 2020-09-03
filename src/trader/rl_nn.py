@@ -175,7 +175,7 @@ class RL_NN:
         if not done:
             target = reward + self.params.gamma * self.predict_value(
                 next_state)
-        labeled_output = self.model.predict(
+        labeled_output = self.model._predict(
             self.onehot(
                 self.env.states.name(state),
                 self.env.states.state_list))[0]
@@ -190,7 +190,7 @@ class RL_NN:
         """
         strategy = [
             np.argmax(
-                self.model.predict(
+                self.model._predict(
                     self.onehot(
                         self.env.states.name(state),
                         self.env.states.state_list))[0])
@@ -241,7 +241,7 @@ class RL_NN:
         at output layer. Relax MUST set to FALSE when called once TRAINED.
         """
         prediction = int(np.argmax(
-            self.model.predict(
+            self.model._predict(
                 self.onehot(
                     self.env.states.name(state),
                     self.env.states.state_list))))
@@ -254,7 +254,7 @@ class RL_NN:
 
     def predict_value(self, state):
         return np.max(
-            self.model.predict(
+            self.model._predict(
                 self.onehot(
                     self.env.states.name(state),
                     self.env.states.state_list)))

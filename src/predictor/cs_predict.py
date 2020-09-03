@@ -41,7 +41,7 @@ class CSPredict(object):
         positive_shape = 0
 
         for j in range((self.X_test.shape[0]) - 2):
-            y = nn.predict(self.X_test[j:j + 1, :, :])
+            y = nn._predict(self.X_test[j:j + 1, :, :])
             y_pred = nn.hardmax(y[0])
             cse_predicted = self.oh_encoder.decode(y_pred)[0]
             cse_actual = self.oh_encoder.decode(
@@ -88,7 +88,7 @@ class CSPredict(object):
         num_predictions = int(self.y_test.shape[1] / self.pred_length)
 
         for j in range((self.X_test.shape[0]) - 2):
-            y = nn.predict(self.X_test[j:j + 1, :, :])
+            y = nn._predict(self.X_test[j:j + 1, :, :])
             #
             # TODO: Check if:
             #   y[0][i * pred_length:(i * pred_length) + pred_length - 1])

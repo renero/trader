@@ -120,7 +120,7 @@ class CS_NN(object):
         """
         info_msg = 'Network {}/{} making prediction'
         self.log.debug(info_msg.format(self.name, self.subtype))
-        self.yhat = self.model.predict(test_set)
+        self.yhat = self.model._predict(test_set)
         return self.yhat
 
     def hardmax(self, y):

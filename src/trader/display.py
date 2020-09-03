@@ -44,7 +44,7 @@ class Display(Common):
             print(strategy_string.format(
                 env.states.name(i),
                 trader.configuration.action_name[strategy[i]],
-                model.predict(np.identity(num_states)[i:i + 1])))
+                model._predict(np.identity(num_states)[i:i + 1])))
         print()
 
     def summary(self, results: DataFrame, totals=True, do_plot=False) -> None:
