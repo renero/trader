@@ -50,7 +50,7 @@ class metrics:
         hits_pct = 100 * (hits / df.shape[0])
         plt.title(
             f"""Aciertos ({hits}/{hits_pct:.2f}%) 
-             y fallos ({fails}/{1 - hits_pct:.2f}%) de tendencia"""
+             y fallos ({fails}/{100. - hits_pct:.2f}%) de tendencia"""
         )
         plt.show()
 

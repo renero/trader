@@ -7,6 +7,9 @@ import pandas as pd
 import tensorflow as tf
 from numpy import ndarray
 from pandas import DataFrame
+from tensorflow.python.keras.layers import LSTM, Dense
+from tensorflow.python.keras.optimizer_v2.adam import Adam
+from tensorflow.python.keras.regularizers import L2, l2
 
 from metrics import metrics
 
@@ -97,3 +100,49 @@ class nn:
     @staticmethod
     def end_experiment():
         mlflow.end_run()
+
+    def add_single_lstm_layer(self, model):
+        """Single layer LSTM must use this layer."""
+        model.add(
+            LSTM(
+                input_shape=(self.window_size, self.params.num_features),
+                dropout=self.params.dropout,
+                units=self.params.l1units,
+                kernel_regularizer=l2(0.0000001),
+                activity_regularizer=l2(0.0000001)))
+
+    def add_output_lstm_layer(self, model):
+        """Use this layer, when stacking severeal ones."""
+        model.add(
+            LSTM(
+                self.params.l2units,
+                dropout=self.params.dropout,
+                kernel_regularizer=l2(0.0000001),
+                activity_regularizer=l2(0.0000001)))
+
+    def add_stacked_lstm_layer(self, model):
+        """Use N-1 of this layer to stack N LSTM layers."""
+        model.add(
+            LSTM(
+                input_shape=(self.window_size, self.params.num_features),
+                return_sequences=True,
+                dropout=self.params.dropout,
+                units=self.params.l1units,
+                kernel_regularizer=l2(0.0000001),
+                activity_regularizer=l2(0.0000001)))
+
+    def close_network(self, model):
+        """Adds a dense layer, and compiles the model with the selected
+        optimzer, returning a summary of the model, if set to True in params"""
+        model.add(
+            Dense(self.params.num_target_labels,
+                  activation=self.params.activation))
+        optimizer = Adam(lr=self.params.learning_rate)
+        model.compile(
+            loss=self.params.loss,
+            optimizer=optimizer,
+            metrics=self.params.metrics)
+
+        if self.params.summary is True:
+            model.summary()
+
