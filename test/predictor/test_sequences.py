@@ -1,4 +1,5 @@
 import unittest
+from typing import Tuple
 
 import numpy as np
 
@@ -6,9 +7,8 @@ from predictor.cs_dictionary import CSDictionary
 from predictor.sequences import sequences
 from predictor.ticks import Ticks
 
-from typing import Tuple
-
 DataTuple = Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+
 
 class TestSequences(unittest.TestCase):
 
@@ -31,6 +31,8 @@ class TestSequences(unittest.TestCase):
 
     def test_prepare(self):
         X, y, Xt, yt = sequences.prepare(self.ticks.data,
+                                         train_columns=self.ticks.data.columns,
+                                         y_label="close",
                                          timesteps=self.params.window_size)
         self.assertIsInstance(X, np.ndarray)
         self.check_shape((X, y, Xt, yt))
@@ -55,12 +57,10 @@ class TestSequences(unittest.TestCase):
     def check_ytest_shape(self, yt, t_samples):
         # Check that shape in y (test) is correct
         self.assertEqual(yt.shape[0], t_samples)
-        self.assertEqual(yt.shape[1], 1)
 
     def check_ytrain_shape(self, y, T_samples):
         # Check that shape in y (training) is correct
         self.assertEqual(y.shape[0], T_samples - self.params.window_size)
-        self.assertEqual(y.shape[1], 1)
 
     def check_Xtest_shape(self, Xt, t_samples):
         # Check that shape in X (test) is correct
@@ -74,6 +74,12 @@ class TestSequences(unittest.TestCase):
         self.assertEqual(X.shape[1], self.params.window_size)
         self.assertEqual(X.shape[2], self.ticks.raw.shape[1])
 
+    def test_last_in_training(self):
+        lit = sequences._last_index_in_training(
+            self.ticks.data, self.params.window_size, self.params.test_size)
+        self.assertEqual(lit, 6)
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_first_in_test(self):
+        fit = sequences._last_index_in_training(
+            self.ticks.data, self.params.window_size, self.params.test_size) + 1
+        self.assertEqual(fit, 7)

@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Union, List, Tuple
 
 import joblib
 import numpy as np
@@ -7,6 +7,10 @@ from pandas import DataFrame
 from sklearn.preprocessing import RobustScaler
 
 from cs_dictionary import CSDictionary
+from sequences import sequences
+
+TrainTestVectors = Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+TrainVectors = Union[TrainTestVectors, Tuple[np.ndarray, np.ndarray]]
 
 
 class Ticks:
@@ -20,7 +24,6 @@ class Ticks:
     _volatility = 0.0
 
     def __init__(self, params: CSDictionary, url: str):
-
         self.params = params
         self.data = pd.read_csv(url).round(2)
         self.data = self._fix_datetime_index(self.data)
@@ -40,7 +43,7 @@ class Ticks:
         data.columns = self.params.ohlc
         return data
 
-    def transform(self) -> DataFrame:
+    def scale(self) -> DataFrame:
         """Scales the OHLC ticks from the dataframe read"""
         self._scaler = RobustScaler().fit(self.data[self.params.ohlc])
         self.data = pd.DataFrame(
@@ -54,7 +57,7 @@ class Ticks:
     def _update_internal_attributes(self) -> None:
         self._volatility = self.data.close.std()
 
-    def inverse_transform(self, scaled_df: DataFrame) -> DataFrame:
+    def scale_back(self, scaled_df: DataFrame) -> DataFrame:
         """Scales back a dataframe with the scaler stored in filename"""
         assert self._scaler is not None, "Scaler must be set first (scale())"
         return pd.DataFrame(
@@ -63,8 +66,39 @@ class Ticks:
             index=scaled_df.index,
         ).round(2)
 
-    def get_trend_sign(self,
-                       values: Tuple[float, float] = (0., 1.)) -> pd.Series:
+    def to_timewindows(
+            self,
+            predict: str,
+            train_columns: List[str] = None) -> TrainVectors:
+        return sequences.prepare(
+            self.data,
+            self._training_columns(train_columns),
+            predict,
+            timesteps=self.params.window_size,
+            test_size=self.params.test_size
+        )
+
+    def _training_columns(self, train_columns):
+        """Return the list of columns to be used for training.
+        Depends on whether the value of train_columns is None."""
+        if train_columns is None:
+            training_columns = list(self.data.columns)
+        else:
+            training_columns = train_columns
+        return training_columns
+
+    def append_indicator(self, indicators: Union[str, List[str]]) -> None:
+        """Append the listed indicators to the back of the data dataframe"""
+        if isinstance(indicators, str):
+            indicators = [indicators]
+        for indicator in indicators:
+            method_name = f'_append_{indicator}'
+            try:
+                getattr(self, method_name)()
+            except AttributeError:
+                raise AttributeError
+
+    def _get_trend_sign(self) -> pd.Series:
         """
         Computes the trend as positive or negative, and return it as a Series
         :param values: default values for negative and positive trend
@@ -74,15 +108,15 @@ class Ticks:
         y_trend = np.sign(y[1:] - y[:-1])
         y_trend = np.insert(y_trend, 0, 1., axis=0)
         return pd.Series(
-            map(lambda x: values[0] if x == -1 else values[1], y_trend))
+            map(lambda x: 0. if x == -1 else 1., y_trend))
 
-    def append_trend(self, values: Tuple[float, float] = (0., 1.)):
+    def _append_trend(self):
         """
         Append the column trend to the end of the dataframe
         :param values: default values for negative and positive trend
         :return: None
         """
-        trend = self.get_trend_sign(values)
+        trend = self._get_trend_sign()
         self.data = self.data.assign(trend=pd.Series(trend).values)
 
     def save_scaler(self, filename: str) -> None:

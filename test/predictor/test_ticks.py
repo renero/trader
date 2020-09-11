@@ -2,6 +2,7 @@ import unittest
 
 from predictor.cs_dictionary import CSDictionary
 from predictor.ticks import Ticks
+from sequences import sequences
 
 
 class TestTicks(unittest.TestCase):
@@ -33,8 +34,8 @@ class TestTicks(unittest.TestCase):
         self.check_shape(ticks.data)
         self.check_data_is_not_scaled(ticks.data)
 
-    def test_transform(self):
-        self.ticks.transform()
+    def test_scale(self):
+        self.ticks.scale()
         self.check_shape(self.ticks.data)
         self.check_data_is_scaled(self.ticks.data)
         self.check_data_is_not_scaled(self.ticks.raw)
@@ -61,10 +62,11 @@ class TestTicks(unittest.TestCase):
 
         return all(almost_equal(*values, acc) for values in zip(list1, list2))
 
-    def test_inverse_transform(self):
+    def test_scale_back(self):
         """Check that inverse transform is almost equal with 0.5 tolerance"""
-        self.ticks.transform()
-        inv = self.ticks.inverse_transform(self.ticks.data)
+        self.setUpClass()
+        self.ticks.scale()
+        inv = self.ticks.scale_back(self.ticks.data)
         self.check_data_is_not_scaled(inv)
         self.assertTrue(self.ListAlmostEqual(
             inv.iloc[0].values,
@@ -72,10 +74,42 @@ class TestTicks(unittest.TestCase):
 
     def test_get_trend_sign(self):
         """Check that the trend is correctly computed"""
-        trend = self.ticks.get_trend_sign()
+        trend = self.ticks._get_trend_sign()
         self.assertListEqual(list(trend),
                              [1., 0., 1., 1., 1., 0., 1., 1., 0., 1.])
 
+    def test_append_indicator(self):
+        # Check that incorrect indicator name raise exception
+        self.assertRaises(AttributeError, self.ticks.append_indicator, 'kk')
+        # Check that trend is correctly built
+        self.ticks.append_indicator('trend')
+        self.assertEqual(self.ticks.data.shape[1], 5)
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_training_columns(self):
+        tc = self.ticks._training_columns(None)
+        self.assertListEqual(list(self.ticks.data.columns), tc)
+
+    def test_to_timewindows(self):
+        self.setUpClass()
+        self.ticks.append_indicator('trend')
+        print(self.ticks.data)
+        X, y, Xt, yt = self.ticks.to_timewindows(predict='trend')
+        self.assertListEqual(list(X[0][0]), list(self.ticks.data.iloc[0]))
+        self.assertEqual(
+            y[0],
+            self.ticks.data.iloc[self.params.window_size]['trend'])
+
+        first = sequences.first_in_test(
+            self.ticks.data,
+            self.params.window_size,
+            self.params.test_size)
+        self.assertListEqual(list(Xt[0][0]), list(first))
+        self.assertEqual(
+            yt[0],
+            self.ticks.data.iloc[-1]['trend'])
+
+        print("\n\n--X[0]--\n", X[0], "\n---------\n\n")
+        print("--y[0]--\n", y, "\n--------\n\n")
+
+        print("--Xt[0]--\n", Xt[0], "\n---------\n\n")
+        print("--yt[0]--\n", yt, "\n--------\n\n")

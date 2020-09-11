@@ -1,5 +1,5 @@
 from math import ceil, floor
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 
 import numpy as np
 import pandas as pd
@@ -8,7 +8,7 @@ from pandas import DataFrame, Series
 from sklearn.model_selection import train_test_split
 
 TrainTestVectors = Tuple[ndarray, ndarray, ndarray, ndarray]
-TrainVectors = Tuple[ndarray, ndarray]
+TrainVectors = [TrainTestVectors, Tuple[ndarray, ndarray]]
 
 
 class sequences:
@@ -52,26 +52,34 @@ class sequences:
 
     @classmethod
     def prepare(
-            cls, df: DataFrame, timesteps: int, test_size: float = 0.1
-    ) -> Union[TrainTestVectors, TrainVectors]:
+            cls,
+            df: DataFrame,
+            train_columns: List[str],
+            y_label: str,
+            timesteps: int,
+            test_size: float = 0.1
+    ) -> TrainVectors:
         """
         Prepare the input dataframe (OHLC) converting it into an ndarray
         of (num_samples x timesteps x num_categories), also splitting it
         into training and test sets.
         """
-        df = cls.aggrupate_in_timesteps(df.values, timesteps)
+        X_indices, y_index = cls._get_indices(df, train_columns, y_label)
+        df = cls._aggrupate_in_timesteps(df.values, timesteps)
         if test_size != 0.0:
-            train, test = train_test_split(df,
-                                           test_size=test_size,
-                                           shuffle=False)
-            X_train, y_train = cls.split_Xy(train, timesteps)
-            X_test, y_test = cls.split_Xy(test, timesteps)
+            train, test = train_test_split(
+                df,
+                test_size=test_size,
+                shuffle=False)
+            X_train, y_train = cls._split(train, X_indices, y_index, timesteps)
+            X_test, y_test = cls._split(test, X_indices, y_index, timesteps)
             return X_train, y_train, X_test, y_test
 
-        return cls.split_Xy(df.values, timesteps)
+        return cls._split(df.values, X_indices, y_index, timesteps)
 
     @classmethod
-    def aggrupate_in_timesteps(cls, data: ndarray, timesteps: int) -> DataFrame:
+    def _aggrupate_in_timesteps(cls, data: ndarray,
+                                timesteps: int) -> DataFrame:
         """
         Given a dataframe, divide the sequence into multiple input/output
         patterns called samples, where a number of time steps are used as
@@ -87,7 +95,38 @@ class sequences:
         return series
 
     @classmethod
-    def split_Xy(cls, data: ndarray, timesteps) -> TrainVectors:
+    def _get_indices(
+            cls,
+            df: DataFrame,
+            train_columns: List[str],
+            y_label: str) -> Tuple[List[int], int]:
+
+        X_indices = [df.columns.get_loc(col_name) for col_name in train_columns]
+        y_index = df.columns.get_loc(y_label)
+        return X_indices, y_index
+
+    @classmethod
+    def _split(
+            cls,
+            data: ndarray,
+            X_indices: List[int],
+            y_index: int,
+            timesteps: int) -> TrainVectors:
+        """
+        Take num_samples from data, and separate X and y from it into two
+        new tensors that will be used to feed the LSTM.
+        """
+        num_samples = data.shape[0]
+        num_categories = int(data.shape[1] / (timesteps + 1))
+        subset = np.array(data).reshape(
+            (num_samples, timesteps + 1, num_categories))
+
+        X = subset[:, 0:timesteps, X_indices]
+        y = subset[:, -1, y_index]
+        return X, y
+
+    @classmethod
+    def _split_Xy(cls, data: ndarray, timesteps) -> TrainVectors:
         """
         Take num_samples from data, and separate X and y from it into two
         new tensors that will be used to feed the LSTM.
