@@ -1,11 +1,14 @@
+from math import ceil, floor
+from typing import Tuple, Union
+
 import numpy as np
 import pandas as pd
-
-from sklearn.model_selection import train_test_split
-from pandas import DataFrame, Series
-from math import ceil, floor
 from numpy import ndarray
-from typing import Tuple, Union
+from pandas import DataFrame, Series
+from sklearn.model_selection import train_test_split
+
+TrainTestVectors = Tuple[ndarray, ndarray, ndarray, ndarray]
+TrainVectors = Tuple[ndarray, ndarray]
 
 
 class sequences:
@@ -49,23 +52,23 @@ class sequences:
 
     @classmethod
     def prepare(
-        cls, df: DataFrame, timesteps: int, test_size: float = 0.1
-    ) -> Union[Tuple[ndarray, ndarray, ndarray, ndarray], Tuple[ndarray, ndarray]]:
+            cls, df: DataFrame, timesteps: int, test_size: float = 0.1
+    ) -> Union[TrainTestVectors, TrainVectors]:
         """
         Prepare the input dataframe (OHLC) converting it into an ndarray
         of (num_samples x timesteps x num_categories), also splitting it
         into training and test sets.
         """
-        num_categories = df.shape[1]
-
-        df = cls.aggrupate_in_timesteps(df, timesteps)
+        df = cls.aggrupate_in_timesteps(df.values, timesteps)
         if test_size != 0.0:
-            train, test = train_test_split(df, test_size=test_size, shuffle=False)
+            train, test = train_test_split(df,
+                                           test_size=test_size,
+                                           shuffle=False)
             X_train, y_train = cls.split_Xy(train, timesteps)
             X_test, y_test = cls.split_Xy(test, timesteps)
             return X_train, y_train, X_test, y_test
 
-        return cls.split_Xy(df, timesteps)
+        return cls.split_Xy(df.values, timesteps)
 
     @classmethod
     def aggrupate_in_timesteps(cls, data: ndarray, timesteps: int) -> DataFrame:
@@ -84,14 +87,15 @@ class sequences:
         return series
 
     @classmethod
-    def split_Xy(cls, data: ndarray, timesteps) -> Tuple[ndarray, ndarray]:
+    def split_Xy(cls, data: ndarray, timesteps) -> TrainVectors:
         """
         Take num_samples from data, and separate X and y from it into two
         new tensors that will be used to feed the LSTM.
         """
         num_samples = data.shape[0]
         num_categories = int(data.shape[1] / (timesteps + 1))
-        subset = np.array(data).reshape((num_samples, timesteps + 1, num_categories))
+        subset = np.array(data).reshape(
+            (num_samples, timesteps + 1, num_categories))
 
         X = subset[:, 0:timesteps, :]
 
@@ -111,14 +115,15 @@ class sequences:
 
     @classmethod
     def get_num_target_labels(cls, y_train):
-        assert len(y_train.shape)==2, "Training labels must be a 2D tensor"
+        assert len(y_train.shape) == 2, "Training labels must be a 2D tensor"
         return y_train.shape[1]
 
     @classmethod
     def _last_index_in_training(
-        cls, df: DataFrame, timesteps: int, test_size: float = 0.1
+            cls, df: DataFrame, timesteps: int, test_size: float = 0.1
     ) -> int:
-        """Returns the last value in the training set, from the original dataframe"""
+        """Returns the last value in the training set, from the original
+        dataframe"""
         train_size = 1.0 - test_size
         n_samples = df.shape[0]
         n_test = ceil(test_size * n_samples)
@@ -128,14 +133,20 @@ class sequences:
 
     @classmethod
     def last_in_training(
-        cls, df: DataFrame, timesteps: int, test_size: float = 0.1
+            cls, df: DataFrame, timesteps: int, test_size: float = 0.1
     ) -> Series:
-        return ticks.data.iloc[cls._last_index_in_training(df, timesteps, test_size)]
+        return df.iloc[
+            cls._last_index_in_training(df, timesteps, test_size)]
 
     @classmethod
     def first_in_test(
-        cls, df: DataFrame, timesteps: int, test_size: float = 0.1
+            cls, df: DataFrame, timesteps: int, test_size: float = 0.1
     ) -> Series:
-        return ticks.data.iloc[
+        return df.iloc[
             cls._last_index_in_training(df, timesteps, test_size) + 1
-        ]
+            ]
+
+    @classmethod
+    def previous_to_first_prediction(cls, df: DataFrame, timesteps: int
+                                     ) -> Series:
+        return df.iloc[timesteps - 1]

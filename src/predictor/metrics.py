@@ -18,14 +18,10 @@ class metrics:
         plt.figure(figsize=(14, 8))
         for i in range(1, df.shape[0]):
             segment_color = "red"
-            lw = 0.8
-            alpha = 0.6
             if i > 0:
                 if not cls.fail(df.iloc[i].y, df.iloc[i - 1].y,
                                 df.iloc[i].yhat):
                     segment_color = "green"
-                    lw = 1.0
-                    alpha = 1.0
                 else:
                     fails += 1
 
@@ -42,15 +38,14 @@ class metrics:
                 [i - 1, i],
                 [df.y.iloc[i - 1], df.yhat.iloc[i]],
                 linewidth=1.0,
-                # alpha=alpha,
                 color=segment_color,
             )
 
         hits = df.shape[0] - fails
         hits_pct = 100 * (hits / df.shape[0])
         plt.title(
-            f"""Aciertos ({hits}/{hits_pct:.2f}%) 
-             y fallos ({fails}/{100. - hits_pct:.2f}%) de tendencia"""
+            f"""Trend hits ({hits}/{hits_pct:.2f}%) 
+             and fails ({fails}/{100. - hits_pct:.2f}%)"""
         )
         plt.show()
 
