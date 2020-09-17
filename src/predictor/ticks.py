@@ -1,3 +1,4 @@
+from importlib import import_module
 from typing import Union, List, Tuple
 
 import joblib
@@ -87,37 +88,48 @@ class Ticks:
             training_columns = train_columns
         return training_columns
 
-    def append_indicator(self, indicators: Union[str, List[str]]) -> None:
+    def compute_indicator(
+            self,
+            indicators: Union[str, List[str]],
+            *args,
+            **kwargs) -> DataFrame:
+        """Compute the listed indicators and return them as a dataframe"""
+        if isinstance(indicators, str):
+            indicators = [indicators]
+        for indicator in indicators:
+            return self._try_indicator(indicator, *args, **kwargs)
+
+    def append_indicator(
+            self,
+            indicators: Union[str, List[str]],
+            *args,
+            **kwargs) -> DataFrame:
         """Append the listed indicators to the back of the data dataframe"""
         if isinstance(indicators, str):
             indicators = [indicators]
         for indicator in indicators:
-            method_name = f'_append_{indicator}'
-            try:
-                getattr(self, method_name)()
-            except AttributeError:
-                raise AttributeError
+            self._try_indicator(indicator, append=True, *args, **kwargs)
 
-    def _get_trend_sign(self) -> pd.Series:
-        """
-        Computes the trend as positive or negative, and return it as a Series
-        :param values: default values for negative and positive trend
-        :return: A Series with the trend values.
-        """
-        y = self.data.close.values
-        y_trend = np.sign(y[1:] - y[:-1])
-        y_trend = np.insert(y_trend, 0, 1., axis=0)
-        return pd.Series(
-            map(lambda x: 0. if x == -1 else 1., y_trend))
-
-    def _append_trend(self):
-        """
-        Append the column trend to the end of the dataframe
-        :param values: default values for negative and positive trend
-        :return: None
-        """
-        trend = self._get_trend_sign()
-        self.data = self.data.assign(trend=pd.Series(trend).values)
+    def _try_indicator(
+            self,
+            indicator,
+            append=False,
+            *args,
+            **kwargs) -> DataFrame:
+        try:
+            module = import_module(indicator, package='indicators')
+            ix = getattr(module, indicator)(
+                self.data,
+                self.params,
+                *args,
+                **kwargs)
+            if append:
+                for ix_column in ix.values.columns:
+                    self.data[ix_column] = ix.values[ix_column].values
+                return self.data
+            return ix.values
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(f"Indicator {indicator} does not exist")
 
     def save_scaler(self, filename: str) -> None:
         """

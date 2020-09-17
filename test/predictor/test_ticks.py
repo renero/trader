@@ -72,15 +72,9 @@ class TestTicks(unittest.TestCase):
             inv.iloc[0].values,
             self.ticks.raw.iloc[0].values, acc=5e-1))
 
-    def test_get_trend_sign(self):
-        """Check that the trend is correctly computed"""
-        trend = self.ticks._get_trend_sign()
-        self.assertListEqual(list(trend),
-                             [1., 0., 1., 1., 1., 0., 1., 1., 0., 1.])
-
     def test_append_indicator(self):
         # Check that incorrect indicator name raise exception
-        self.assertRaises(AttributeError, self.ticks.append_indicator, 'kk')
+        self.assertRaises(ModuleNotFoundError, self.ticks.append_indicator, 'kk')
         # Check that trend is correctly built
         self.ticks.append_indicator('trend')
         self.assertEqual(self.ticks.data.shape[1], 5)
