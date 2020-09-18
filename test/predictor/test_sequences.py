@@ -30,10 +30,10 @@ class TestSequences(unittest.TestCase):
         cls.ticks = Ticks(cls.params, cls.params['input_file'])
 
     def test_prepare(self):
-        X, y, Xt, yt = sequences.prepare(self.ticks.data,
-                                         train_columns=self.ticks.data.columns,
-                                         y_label="close",
-                                         timesteps=self.params.window_size)
+        X, y, Xt, yt = sequences.to_time_windows(self.ticks.data,
+                                                 train_columns=self.ticks.data.columns,
+                                                 y_label="close",
+                                                 timesteps=self.params.window_size)
         self.assertIsInstance(X, np.ndarray)
         self.check_shape((X, y, Xt, yt))
 

@@ -16,7 +16,29 @@ TrainVectors = Union[TrainTestVectors, Tuple[np.ndarray, np.ndarray]]
 
 class Ticks:
     """Ticks data read from file with all the relevant parameters and metadata
-    from it"""
+    from it
+    The way it should be:
+
+    # to predict close and use OHLC values
+>>> ticks.prepare_for_training(predict='close')
+>>> X, y, Xt, yt = ticks.split(test_size=0.1)
+
+    # To generate X and y without test set
+>>> ticks.prepare_for_training(predict='close')
+>>> X, y = ticks.split(test_size=0.0)
+
+    # if we want to predict "trend"
+>>> ticks.append_indicator('trend')
+>>> ticks.prepare_for_training(predict='trend')
+>>> X, y , Xt, yt = split(test_size=0.1)
+
+    # if we want to use less variables in prediction
+>>> ticks.append_indicator(['moving_average', 'trend'])
+>>> ticks.prepare_for_training(predict='trend',
+        train_columns=['close', 'moving_average'])
+
+    So, let's work on it.
+    """
 
     data = None
     _scaler = None
@@ -67,17 +89,28 @@ class Ticks:
             index=scaled_df.index,
         ).round(2)
 
-    def to_timewindows(
+    def prepare_for_training(
             self,
             predict: str,
             train_columns: List[str] = None) -> TrainVectors:
-        return sequences.prepare(
+        """
+        Prepare the input dataframe (OHLC) converting it in a 3D tensor
+        and update internal parameters.
+        """
+        data_vectors = sequences.to_time_windows(
             self.data,
             self._training_columns(train_columns),
             predict,
             timesteps=self.params.window_size,
             test_size=self.params.test_size
         )
+        # First and second elements in tuple are the training vectors
+        # Third and fourth are the test set (if any).
+        # I use the first two to update parameters
+        self.params.num_features = sequences.get_num_features(data_vectors[0])
+        self.params.num_target_labels = sequences.get_num_target_labels(
+            data_vectors[1])
+        return data_vectors
 
     def _training_columns(self, train_columns):
         """Return the list of columns to be used for training.

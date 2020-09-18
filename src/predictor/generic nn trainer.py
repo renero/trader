@@ -16,23 +16,19 @@ def main(argv):
 
     params = CSDictionary(args=argv)
     np.random.seed(params.seed)
-    log: Logger = params.log
 
     params = CSDictionary(args=argv)
-    ticks = Ticks(params, params.input_file, scale=True)
+    ticks = Ticks(params, params.input_file).scale()
+    ticks.append_indicator(["trend", "median_filter"])
+    ticks.data.head()
 
-    X_train, y_train, X_test, y_test = sequences.prepare(
-        ticks.data, timesteps=params.window_size, test_size=params.test_size
+    X_train, y_train, X_test, y_test = ticks.prepare_for_training(
+        predict="trend", train_columns=["close", "trend"]
     )
 
-    params.num_features = sequences.get_num_features(X_train)
-    params.num_target_labels = sequences.get_num_target_labels(y_train)
     nn = lstm_1layer(params)
-
-    print(nn.metadata)
-
-    exp_id = nn.start_experiment(X_train, y_train)
-    nn.evaluate_experiment(X_test, y_test)
+    nn.start_training(X_train, y_train)
+    nn.evaluate(X_test, y_test)
     nn.end_experiment()
 
 

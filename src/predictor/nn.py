@@ -3,6 +3,7 @@ from collections import defaultdict
 from os.path import basename, splitext
 
 import mlflow
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 from numpy import ndarray
@@ -48,12 +49,10 @@ class nn:
 
         tf.random.set_seed(self.params.seed)
 
-    def start_experiment(self, X_train: ndarray, y_train: ndarray,
-                         name=None) -> str:
-        exp_name = self._set_experiment(name)
-        mlflow.start_run()
-        mlflow.keras.autolog()
-        self.log.info(f'MLFlow experiment ({exp_name}) started')
+    def start_training(self, X_train: ndarray, y_train: ndarray,
+                       name=None) -> str:
+
+        exp_name = self._set_experiment(name) if self.params.mlflow else None
         self._train(X_train, y_train)
         return exp_name
 
@@ -62,6 +61,8 @@ class nn:
         if name is None:
             name = f'{random.getrandbits(32):x}'
         mlflow.set_experiment(name)
+        mlflow.start_run()
+        mlflow.keras.autolog()
         return name
 
     def _train(self, X_train: ndarray, y_train: ndarray) -> "nn":
@@ -78,12 +79,16 @@ class nn:
             verbose=self.params.verbose,
             validation_split=self.params.validation_split)
 
-        mlflow.log_params(nn.metadata)
+        if self.params.mlflow:
+            mlflow.log_params(nn.metadata)
+
         return self
 
-    def evaluate_experiment(self, X_test: ndarray,
-                            y_test: ndarray) -> DataFrame:
+    def evaluate(self, X_test: ndarray,
+                 y_test: ndarray) -> DataFrame:
         yhat = self.model.predict(X_test)
+        if self.metadata['binary'] is True:
+            yhat = np.argmax(yhat, axis=1)
         self.log.info(f"Predictions (yhat): {yhat.shape}")
 
         n_predictions = int(X_test.shape[0])
@@ -92,14 +97,15 @@ class nn:
         result = pd.DataFrame({"y": Y, "yhat": Yhat, }).round(2)
 
         ta = metrics.trend_accuracy(result)
-        mlflow.log_metric("trend_accuracy", ta)
+        if self.params.mlflow:
+            mlflow.log_metric("trend_accuracy", ta)
         self.log.info(f"Trend acc.: {ta:4.2f}")
 
         return result
 
-    @staticmethod
-    def end_experiment():
-        mlflow.end_run()
+    def end_experiment(self):
+        if self.params.mlflow:
+            mlflow.end_run()
 
     def add_single_lstm_layer(self, model):
         """Single layer LSTM must use this layer."""
@@ -112,7 +118,7 @@ class nn:
                 activity_regularizer=l2(0.0000001)))
 
     def add_output_lstm_layer(self, model):
-        """Use this layer, when stacking severeal ones."""
+        """Use this layer, when stacking several ones."""
         model.add(
             LSTM(
                 self.params.l2units,
@@ -142,6 +148,18 @@ class nn:
             loss=self.params.loss,
             optimizer=optimizer,
             metrics=self.params.metrics)
+
+        if self.params.summary is True:
+            model.summary()
+
+    def close_binary_network(self, model):
+        """ Last layer to predict binary outputs """
+        model.add(Dense(2, activation='softmax'))
+        optimizer = Adam(lr=self.params.learning_rate)
+        model.compile(
+            loss='binary_crossentropy',
+            optimizer=optimizer,
+            metrics='accuracy')
 
         if self.params.summary is True:
             model.summary()

@@ -83,11 +83,11 @@ class TestTicks(unittest.TestCase):
         tc = self.ticks._training_columns(None)
         self.assertListEqual(list(self.ticks.data.columns), tc)
 
-    def test_to_timewindows(self):
+    def test_prepare_for_training(self):
         self.setUpClass()
         self.ticks.append_indicator('trend')
         print(self.ticks.data)
-        X, y, Xt, yt = self.ticks.to_timewindows(predict='trend')
+        X, y, Xt, yt = self.ticks.prepare_for_training(predict='trend')
         self.assertListEqual(list(X[0][0]), list(self.ticks.data.iloc[0]))
         self.assertEqual(
             y[0],

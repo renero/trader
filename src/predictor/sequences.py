@@ -14,8 +14,8 @@ TrainVectors = [TrainTestVectors, Tuple[ndarray, ndarray]]
 class sequences:
     """
     From a dataframe with four categories (OHLC) in a multivariate timeseries,
-    aggrupate it in timesteps windows, split it in training and testing subsets, and
-    finally, aggrupate X and y values together.
+    aggrupate it in timesteps windows, split it in training and testing subsets,
+    and finally, aggrupate X and y values together.
 
     Consider a given multi-variate sequence (num_categories = 3):
 
@@ -27,9 +27,9 @@ class sequences:
          ...
         ]
 
-    We can divide the sequence into multiple input/output patterns called samples,
-    where three time steps are used as input and one time step is used as output for
-    the one-step prediction that is being learned.
+    We can divide the sequence into multiple input/output patterns called
+    samples, where three time steps are used as input and one time step is
+    used as output for the one-step prediction that is being learned.
 
          X,             y_3
         --------------------
@@ -51,7 +51,7 @@ class sequences:
         pass
 
     @classmethod
-    def prepare(
+    def to_time_windows(
             cls,
             df: DataFrame,
             train_columns: List[str],
@@ -123,28 +123,9 @@ class sequences:
 
         X = subset[:, 0:timesteps, X_indices]
         y = subset[:, -1, y_index]
-        return X, y
 
-    @classmethod
-    def _split_Xy(cls, data: ndarray, timesteps) -> TrainVectors:
-        """
-        Take num_samples from data, and separate X and y from it into two
-        new tensors that will be used to feed the LSTM.
-        """
-        num_samples = data.shape[0]
-        num_categories = int(data.shape[1] / (timesteps + 1))
-        subset = np.array(data).reshape(
-            (num_samples, timesteps + 1, num_categories))
-
-        X = subset[:, 0:timesteps, :]
-
-        # maybe, data is encoded. In that case I must keep, NOT the last column
-        # but the last $ num_categories / 4 $, which corresponds to the encoded
-        # values of the last column, corresponding to the "close" value.
-        from_column_index = int(num_categories - (num_categories / 4))
-        to_column_index = num_categories
-        y = subset[:, -1, from_column_index:to_column_index]
-
+        if len(y.shape) == 1:
+            y = y.reshape(-1, 1)
         return X, y
 
     @classmethod
