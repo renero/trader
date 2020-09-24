@@ -16,10 +16,10 @@ TrainVectors = Union[TrainTestVectors, Tuple[np.ndarray, np.ndarray]]
 
 class Ticks:
     """Ticks data read from file with all the relevant parameters and metadata
-    from it
-    The way it should be:
+from it. The way it should be:
 
     # to predict close and use OHLC values
+
 >>> ticks.prepare_for_training(predict='close')
 >>> X, y, Xt, yt = ticks.split(test_size=0.1)
 
@@ -57,13 +57,19 @@ class Ticks:
     def _fix_datetime_index(self, data: DataFrame):
         """Set the index in the proper `datetime` type """
         format = "%Y-%m-%d %H:%M:%S"
-        data["Datetime"] = pd.to_datetime(data["Date"] + " 00:00:00",
+        date_column = self.params.csv_dict['d']
+        data["Datetime"] = pd.to_datetime(data[date_column] + " 00:00:00",
                                           format=format)
         data = data.set_index(pd.DatetimeIndex(data["Datetime"]))
-        data = data.drop(
-            ["Datetime", self.params.csv_dict['d'], self.params.csv_dict['v']],
-            axis=1)
+        data = self._drop_unused_columns(data)
         data.columns = self.params.ohlc
+        return data
+
+    def _drop_unused_columns(self, data):
+        cols_to_drop = ["Datetime", self.params.csv_dict['d']]
+        if self.params.csv_dict['v'] in data.columns:
+            cols_to_drop.append(self.params.csv_dict['v'])
+        data = data.drop(cols_to_drop, axis=1)
         return data
 
     def scale(self) -> DataFrame:

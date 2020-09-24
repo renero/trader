@@ -13,9 +13,9 @@ class median_filter(Indicator):
     values: DataFrame = None
 
     # The name of the signal/indicator
-    name = 'median_filter'
+    name = 'med_filter'
     # The columns that will be generated, and that must be saved/appended
-    ix_columns = ['median_filter']
+    ix_columns = ['med_filter']
 
     def __init__(self,
                  data,
