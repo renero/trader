@@ -23,18 +23,12 @@ class Indicator:
     final_columns = None
     values: DataFrame = None
 
-    def __init__(self, params):
+    def __init__(self, data, params):
         self.params = params
         self.log = params.log
 
-        # Read the input file specified in arguments (params)
-        self.data = read_ohlc(params.input_file, params.csv_dict,
-                              delimiter=params.delimiter,
-                              parse_dates=False, index_col=False)
-        # self.data.reset_index(level='date', inplace=True)
-        self.log.info('Read file: {}, {} rows, {} cols.'.format(
-            params.input_file, self.data.shape[0], self.data.shape[1]))
-
+        # Point to data passed in creation argument
+        self.data = data
         self.final_columns = list(self.data.columns) + self.ix_columns
 
         # Initialize result, index name, and column names for this indicator
@@ -114,7 +108,7 @@ class Indicator:
         """
         scaler = joblib.load(self.params.scaler_name)
         self.log.info('Scaler loaded: {}'.format(self.params.scaler_name))
-        ix_scaled = scaler.transform(self.values[self.ix_columns])
+        ix_scaled = scaler.scale(self.values[self.ix_columns])
         last_row = np.array([[ix_scaled[-1, 0]], [ix_scaled[-1, 1]]])
         ix_row = pd.DataFrame(data=last_row.T,
                               columns=self.ix_columns,

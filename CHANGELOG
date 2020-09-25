@@ -1,3 +1,12 @@
+v0.2.2
+======
+
+- Added MLFlow
+- Ticks replace old readers for OHLC and Candlesticks
+- New signals: GMF, change, returns and median filter
+- Portfolio Mgmt
+- Fixes
+
 v0.2.1
 ======
 

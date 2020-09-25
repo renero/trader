@@ -453,10 +453,7 @@ class CSEncoder:
                 (getattr(self, attr) - getattr(prev_cs, attr)),
                 prev_cs.hl_interval_width)
             encoding = self._encode_movement(abs(delta))
-            if delta >= 0.0:
-                sign_letter = 'p'
-            else:
-                sign_letter = 'n'
+            sign_letter = 'p' if delta >= 0.0 else 'n'
             self.log.debug(
                 'Enc. {}; Delta={:.2f} ({:.2f} -> {:.2f}) as <{}>'.format(
                     attr, delta, getattr(prev_cs, attr), getattr(self, attr),
