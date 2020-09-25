@@ -144,7 +144,7 @@ class Agent:
             self.log.debug('Action (random): {}({}) - ε={:.2f}<{:.2f}'.format(
                 self.params.action_name[action], action, rn, epsilon))
         else:
-            action = self.nn.predict(state)
+            action = self.nn._predict(state)
             self.log.debug('Action (predicted): {}({}) - {:.2f}>{:.2f}'.format(
                 self.params.action_name[action], action, rn, epsilon))
         return action

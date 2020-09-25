@@ -1,0 +1,37 @@
+#
+# Predictor Test Parameters
+#
+
+# delimiter used in the CSV file for the OHLC+V information.
+# and dictionary to understand CSV columns
+delimiter: ','
+csv_dict:
+  d: 'Date'
+  o: 'Open'
+  h: 'High'
+  l: 'Low'
+  c: 'Close'
+  v: 'Volume'
+ohlc: ['open','high','low','close']
+
+# Seed to be used to initialize the whole system.
+seed: 1
+
+# Keras parameters
+verbose: 0
+mlflow: False
+summary: False
+
+# training parameters
+loss: mean_squared_error
+metrics: ['mse']
+batch_size: 8
+validation_split: 0.1
+test_size: 0.1
+learning_rate: 0.01
+
+# model parameters
+l1units: 128
+l2units: 128
+activation: tanh
+dropout: 0.1

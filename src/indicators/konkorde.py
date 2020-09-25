@@ -50,9 +50,9 @@ class Konkorde(Indicator):
     # The columns that will be generated, and that must be saved/appended
     ix_columns = ['verde', 'azul']
 
-    def __init__(self, configuration):
-        super(Konkorde, self).__init__(configuration)
-        self.configuration = configuration
+    def __init__(self, params):
+        super(Konkorde, self).__init__(params)
+        self.params = params
         self.values = self.compute()
 
     def compute(self, fill_na: bool = True) -> DataFrame:

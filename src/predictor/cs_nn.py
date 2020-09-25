@@ -3,9 +3,9 @@ from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
-from keras.layers import LSTM, Dense, Dropout
-from keras.models import Sequential, model_from_json
-from keras.regularizers import l2
+from tensorflow.keras.layers import LSTM, Dense, Dropout
+from tensorflow.keras.models import Sequential, model_from_json
+from tensorflow.keras.regularizers import l2
 
 from utils.file_io import file_exists
 from utils.plots import plot_history
@@ -45,23 +45,34 @@ class CS_NN(object):
         self.log.debug(
             'NN {}.{} created'.format(self.name, self.metadata['subtype']))
 
-    def build_model(self, window_size=None, num_categories=None, summary=True):
+    def build_model(self,
+                    window_size=None,
+                    num_features=None,
+                    num_target_labels=None,
+                    summary=True):
         """
         Builds the model according to the parameters specified for
         the network in the params, or as arguments.
         """
+        assert window_size is not None and \
+               num_features is not None and \
+               num_target_labels is not None, \
+            "All parameters to build_model *must* be specified."
+
         # Override, if necessary, the input and window sizes with the values
         # passed as arguments.
         if window_size is not None:
             self.window_size = window_size
-        if num_categories is not None:
-            self.num_categories = num_categories
+        if num_features is not None:
+            self.num_features = num_features
+        if num_target_labels is not None:
+            self.num_target_labels = num_target_labels
 
         # Build the LSTM
         model = Sequential()
         model.add(
             LSTM(
-                input_shape=(self.window_size, self.num_categories),
+                input_shape=(self.window_size, self.num_features),
                 return_sequences=True,
                 units=self.params.l1units,
                 kernel_regularizer=l2(0.0000001),
@@ -73,7 +84,8 @@ class CS_NN(object):
                 kernel_regularizer=l2(0.0000001),
                 activity_regularizer=l2(0.0000001)))
         model.add(Dropout(self.params.dropout))
-        model.add(Dense(self.num_categories, activation=self.params.activation))
+        model.add(
+            Dense(self.num_target_labels, activation=self.params.activation))
         model.compile(
             loss=self.params.loss, optimizer=self.params.optimizer,
             metrics=self.params.metrics)
@@ -87,24 +99,15 @@ class CS_NN(object):
         Train the model and put the history in an internal state.
         Metadata is updated with the accuracy
         """
-        callbacks = []
-        if self.params.tensorboard is True:
-            import datetime
-            import tensorflow as tf
-            log_dir = "logs/fit/" + f"ws{self.params.window_size:02d}_" + \
-                      datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            callbacks.append(tf.keras.callbacks.TensorBoard(
-                log_dir=log_dir, histogram_freq=1))
-
         self.history = self.model.fit(
             X_train,
             y_train,
             epochs=self.params.epochs,
             batch_size=self.params.batch_size,
             verbose=self.params.verbose,
-            validation_split=self.params.validation_split,
-            callbacks=callbacks)
-        self.metadata[self.params.metrics[0]] = self.history.history['accuracy']
+            validation_split=self.params.validation_split)
+        metric_name = self.params.metrics[0]
+        self.metadata[metric_name] = self.history.history[metric_name]
 
         if self.params.do_plot is True:
             plot_history(self.history)
@@ -117,7 +120,7 @@ class CS_NN(object):
         """
         info_msg = 'Network {}/{} making prediction'
         self.log.debug(info_msg.format(self.name, self.subtype))
-        self.yhat = self.model.predict(test_set)
+        self.yhat = self.model._predict(test_set)
         return self.yhat
 
     def hardmax(self, y):
