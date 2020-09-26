@@ -10,7 +10,7 @@ from numpy import ndarray
 from pandas import DataFrame
 from tensorflow.python.keras.layers import LSTM, Dense
 from tensorflow.python.keras.optimizer_v2.adam import Adam
-from tensorflow.python.keras.regularizers import L2, l2
+from tensorflow.python.keras.regularizers import l2
 
 from metrics import metrics
 
@@ -94,7 +94,8 @@ class nn:
         n_predictions = int(X_test.shape[0])
         Y = y_test.reshape(n_predictions, )
         Yhat = yhat.reshape(n_predictions, )
-        result = pd.DataFrame({"y": Y, "yhat": Yhat, }).round(2)
+        result = pd.DataFrame({"y": Y, "yhat": Yhat, }).round(
+            self.params.precision)
 
         ta = metrics.trend_accuracy(result)
         if self.params.mlflow:
@@ -163,4 +164,3 @@ class nn:
 
         if self.params.summary is True:
             model.summary()
-

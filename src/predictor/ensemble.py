@@ -109,7 +109,8 @@ class Ensemble:
         preds.rename(columns={'w_avg': 'forecast'}, inplace=True)
         saved_file, _ = save_dataframe(
             new_filename,
-            preds[[date_column, 'actual', 'forecast']].round(2),
+            preds[[date_column, 'actual', 'forecast']].round(
+                self.params.precision),
             self.params.predictions_path,
             index=False)
         self.log.info('Saved forecast file: {}'.format(saved_file))

@@ -48,7 +48,7 @@ from it. The way it should be:
 
     def __init__(self, params: CSDictionary, url: str):
         self.params = params
-        self.data = pd.read_csv(url).round(2)
+        self.data = pd.read_csv(url).round(self.params.precision)
         self.data = self._fix_datetime_index(self.data)
 
         self.raw = self.data.copy(deep=True)
@@ -79,7 +79,7 @@ from it. The way it should be:
             data=self._scaler.transform(self.data[self.params.ohlc]),
             columns=self.params.ohlc,
             index=self.data.index,
-        ).round(2)
+        ).round(self.params.precision)
         self._update_internal_attributes()
         return self
 
@@ -93,7 +93,7 @@ from it. The way it should be:
             data=self._scaler.inverse_transform(scaled_df[self.params.ohlc]),
             columns=self.params.ohlc,
             index=scaled_df.index,
-        ).round(2)
+        ).round(self.params.precision)
 
     def prepare_for_training(
             self,
