@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+import matplotlib.dates as mdates
 from pandas import Series
 
 
@@ -109,3 +110,38 @@ def plot_history(history):
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
+
+
+def plot_marks(data: pd.DataFrame, signal: str, marks: str):
+    # Conversion of dates to matplotlib numeric references
+    inxval = mdates.date2num(data.index.to_pydatetime())
+
+    fig, ax1 = plt.subplots()
+    fig.set_size_inches(20, 6)
+
+    g = pd.Series(data[marks])
+    positives = g.where(g > 0.0).replace(np.nan, 0.0)
+    negatives = g.where(g < 0.0).replace(np.nan, 0.0)
+
+    ax1.plot(data[signal], color="C0", alpha=0.8, linewidth=0.8)
+    markerline, stemline, baseline = ax1.stem(
+        inxval,
+        positives / 10.0,
+        markerfmt=" ",
+        linefmt="C2-",
+        basefmt="C7:",
+        use_line_collection=True,
+    )
+    markerline, stemline, baseline = ax1.stem(
+        inxval,
+        negatives / 10.0,
+        markerfmt=" ",
+        linefmt="C3-",
+        basefmt="C7:",
+        use_line_collection=True,
+    )
+    plt.setp(baseline, "linewidth", 0.2)
+    plt.setp(stemline, "linewidth", 1)
+    plt.show()
+
+
