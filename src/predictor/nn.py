@@ -5,7 +5,6 @@ from os.path import basename, splitext
 import mlflow
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from numpy import ndarray
 from pandas import DataFrame
 from tensorflow.python.keras.layers import LSTM, Dense
@@ -13,6 +12,7 @@ from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.regularizers import l2
 
 from metrics import metrics
+from seeds import reset_seeds
 
 
 class ValidationException(Exception):
@@ -36,6 +36,8 @@ class nn:
         self.params = params
         self.log = params.log
 
+        reset_seeds()
+
         self.metadata['dataset'] = \
             splitext(basename(self.params.input_file))[0]
         self.metadata['epochs'] = self.params.epochs
@@ -46,8 +48,6 @@ class nn:
         self.metadata['learning_rate'] = self.params.learning_rate
         self.metadata['seed'] = self.params.seed
         self.metadata['activation'] = self.params.activation
-
-        tf.random.set_seed(self.params.seed)
 
     def start_training(self, X_train: ndarray, y_train: ndarray,
                        name=None) -> str:

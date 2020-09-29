@@ -123,25 +123,32 @@ def plot_marks(data: pd.DataFrame, signal: str, marks: str):
     positives = g.where(g > 0.0).replace(np.nan, 0.0)
     negatives = g.where(g < 0.0).replace(np.nan, 0.0)
 
-    ax1.plot(data[signal], color="C0", alpha=0.8, linewidth=0.8)
+    min, max = data[signal].min(), data[signal].max()
+    marks_height = (max-min) / 25.0
+
+    ax1.plot(data[signal], color="C0", alpha=0.8, linewidth=1.2)
     markerline, stemline, baseline = ax1.stem(
         inxval,
-        positives / 10.0,
+        positives * marks_height,
         markerfmt=" ",
         linefmt="C2-",
         basefmt="C7:",
         use_line_collection=True,
     )
+    plt.setp(baseline, "linewidth", 0.2)
+    plt.setp(stemline, "linewidth", 1)
+    plt.setp(stemline, "alpha", 0.5)
     markerline, stemline, baseline = ax1.stem(
         inxval,
-        negatives / 10.0,
+        negatives * marks_height,
         markerfmt=" ",
         linefmt="C3-",
         basefmt="C7:",
         use_line_collection=True,
     )
-    plt.setp(baseline, "linewidth", 0.2)
+    plt.setp(baseline, "linewidth", 0.4)
     plt.setp(stemline, "linewidth", 1)
+    plt.setp(stemline, "alpha", 0.5)
     plt.show()
 
 

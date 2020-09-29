@@ -8,6 +8,7 @@ from pandas import DataFrame
 from sklearn.preprocessing import RobustScaler
 
 from cs_dictionary import CSDictionary
+from seeds import reset_seeds
 from sequences import sequences
 
 TrainTestVectors = Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
@@ -48,6 +49,8 @@ from it. The way it should be:
 
     def __init__(self, params: CSDictionary, url: str):
         self.params = params
+        reset_seeds()
+
         self.data = pd.read_csv(url).round(self.params.precision)
         self.data = self._fix_datetime_index(self.data)
 
