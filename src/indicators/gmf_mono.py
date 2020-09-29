@@ -10,16 +10,16 @@ from base_indicators import *
 from indicator import Indicator
 
 
-class mono_gmf(Indicator):
+class gmf_mono(Indicator):
     """Gaussian Median Filter over diff values to return positive, negative
     or neutral trend (+1/-1/0)"""
 
     values: DataFrame = None
 
     # The name of the signal/indicator
-    name = 'mono_gmf'
+    name = 'gmf_mono'
     # The columns that will be generated, and that must be saved/appended
-    ix_columns = ['mono_gmf']
+    ix_columns = ['gmf_mono']
 
     def __init__(
             self,
@@ -30,7 +30,7 @@ class mono_gmf(Indicator):
             mf_window=5,
             sigma=2,
     ):
-        super(mono_gmf, self).__init__(data, params)
+        super(gmf_mono, self).__init__(data, params)
         self.params = params
         self.values = self.fit(column_name, monotonic_window, mf_window, sigma,
                                fill_na=True)

@@ -121,7 +121,7 @@ def plot_marks(data: pd.DataFrame, signal: str, marks: str):
 
     g = pd.Series(data[marks])
     positives = g.where(g > 0.0).replace(np.nan, 0.0)
-    negatives = g.where(g < 0.0).replace(np.nan, 0.0)
+    negatives = g.where(g <= 0.0).replace(np.nan, 0.0)
 
     min, max = data[signal].min(), data[signal].max()
     marks_height = (max-min) / 25.0

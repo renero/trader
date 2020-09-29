@@ -9,7 +9,6 @@ from indicator import Indicator
 
 
 class trend(Indicator):
-
     values: DataFrame = None
 
     # The name of the signal/indicator
@@ -32,9 +31,11 @@ class trend(Indicator):
         y_trend = np.sign(y[1:] - y[:-1])
         y_trend = np.insert(y_trend, 0, 1., axis=0)
         trend_value = pd.Series(
-            map(lambda x: 0. if x == -1 else 1., y_trend))
+            map(lambda x: -1. if x == -1 else 1., y_trend))
 
-        self.values = pd.DataFrame(trend_value, columns=[self.name])
+        self.values = pd.DataFrame(
+            trend_value,
+            columns=[f'{column_name}_{self.name}'])
         if fill_na is True:
             self.values = self.values.replace(np.nan, 0.)
 
