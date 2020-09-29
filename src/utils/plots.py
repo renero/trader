@@ -1,7 +1,7 @@
+import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-import matplotlib.dates as mdates
 from pandas import Series
 
 
@@ -124,7 +124,7 @@ def plot_marks(data: pd.DataFrame, signal: str, marks: str):
     negatives = g.where(g <= 0.0).replace(np.nan, 0.0)
 
     min, max = data[signal].min(), data[signal].max()
-    marks_height = (max-min) / 25.0
+    marks_height = (max - min) / 25.0
 
     ax1.plot(data[signal], color="C0", alpha=0.8, linewidth=1.2)
     markerline, stemline, baseline = ax1.stem(
@@ -152,3 +152,43 @@ def plot_marks(data: pd.DataFrame, signal: str, marks: str):
     plt.show()
 
 
+def plot_forecast(y: np.ndarray, yhat: np.ndarray):
+    """Plots the actual values, and the forecast for those values"""
+    fails = 0
+    plt.figure(figsize=(16, 10))
+    for i in range(1, y.shape[0]):
+        segment_color = "red"
+        lw = 1.0
+        alpha = 1.0
+        if i > 0:
+            if np.sign(y[i] - y[i - 1]) == np.sign(
+                    yhat[i] - yhat[i - 1]
+            ):
+                segment_color = "green"
+                lw = 0.8
+                alpha = 0.6
+            else:
+                fails += 1
+
+        plt.plot(
+            [i - 1, i],
+            [y[i - 1], y[i]],
+            marker=".",
+            linewidth=0.8,
+            alpha=0.6,
+            color="grey",
+        )
+        plt.plot(
+            [i - 1, i],
+            [yhat[i - 1], yhat[i]],
+            linewidth=lw,
+            alpha=alpha,
+            color=segment_color,
+        )
+
+    hits = y.shape[0] - fails
+    hr = 100 * (hits / y.shape[0])
+    fr = 100 * (fails / y.shape[0])
+    plt.title(
+        f"Trend hits ({hits}/{hr:.2f}%) and fails ({fails}/{fr:.2f}%)")
+    plt.show()
