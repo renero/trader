@@ -15,9 +15,6 @@ def main(argv):
     from cs_dictionary import CSDictionary
 
     params = CSDictionary(args=argv)
-    np.random.seed(params.seed)
-
-    params = CSDictionary(args=argv)
     ticks = Ticks(params, params.input_file).scale()
     ticks.append_indicator(["trend", "median_filter"])
     ticks.data.head()

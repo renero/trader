@@ -41,7 +41,6 @@ class CS_NN(object):
             self.name = self.metadata['dataset']
         self.subtype = subtype
         self.metadata['subtype'] = subtype
-        tf.random.set_seed(self.params.seed)
         self.log.debug(
             'NN {}.{} created'.format(self.name, self.metadata['subtype']))
 

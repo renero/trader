@@ -46,7 +46,6 @@ class nn:
         self.metadata['num_target_labels'] = self.params.num_target_labels
         self.metadata['dropout'] = self.params.dropout
         self.metadata['learning_rate'] = self.params.learning_rate
-        self.metadata['seed'] = self.params.seed
         self.metadata['activation'] = self.params.activation
 
     def start_training(self, X_train: ndarray, y_train: ndarray,
@@ -85,7 +84,7 @@ class nn:
         return self
 
     def evaluate(self, X_test: ndarray,
-                 y_test: ndarray) -> DataFrame:
+                 y_test: ndarray) -> float:
         yhat = self.model.predict(X_test)
         if self.metadata['binary'] is True:
             yhat = np.argmax(yhat, axis=1)
@@ -94,15 +93,18 @@ class nn:
         n_predictions = int(X_test.shape[0])
         Y = y_test.reshape(n_predictions, )
         Yhat = yhat.reshape(n_predictions, )
-        result = pd.DataFrame({"y": Y, "yhat": Yhat, }).round(
-            self.params.precision)
+        # result = pd.DataFrame({"y": Y, "yhat": Yhat, }).round(
+        #     self.params.precision)
 
-        ta = metrics.trend_accuracy(result)
+        if self.metadata['binary'] is True:
+            ta = metrics.trend_binary_accuracy(Y, Yhat)
+        else:
+            ta = metrics.trend_accuracy(Y, Yhat)
         if self.params.mlflow:
             mlflow.log_metric("trend_accuracy", ta)
         self.log.info(f"Trend acc.: {ta:4.2f}")
 
-        return result
+        return ta
 
     def end_experiment(self):
         if self.params.mlflow:
