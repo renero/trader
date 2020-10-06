@@ -50,13 +50,28 @@ class metrics:
         plt.show()
 
     @classmethod
-    def trend_accuracy(cls, df: DataFrame) -> float:
+    def trend_accuracy(cls, y: np.ndarray, yhat: np.ndarray) -> float:
+        y.reshape(y.shape[0], )
+        yhat.reshape(y.shape[0], )
         fails = 0
-        for i in range(1, df.shape[0]):
+        for i in range(1, y.shape[0]):
             if i > 0:
-                if cls.fail(df.iloc[i].y, df.iloc[i - 1].y, df.iloc[i].yhat):
+                if cls.fail(y[i], y[i - 1], yhat[i]):
                     fails += 1
-        return (df.shape[0] - fails) / df.shape[0]
+        return (y.shape[0] - fails) / y.shape[0]
+
+    @classmethod
+    def trend_binary_accuracy(cls, y: np.ndarray, yhat: np.ndarray,
+                              threshold: float = 0.5) -> float:
+        y.reshape(y.shape[0], )
+        yhat.reshape(y.shape[0], )
+        fails = 0
+        for i in range(1, y.shape[0]):
+            if i > 0:
+                response = float(yhat[i] >= threshold)
+                if y[i] != response:
+                    fails += 1
+        return (y.shape[0] - fails) / y.shape[0]
 
     @classmethod
     def mean_error(cls, df: DataFrame) -> float:
