@@ -1,3 +1,6 @@
+from termcolor import colored
+
+
 def letter_in_string(string, letter):
     """Given a string, determine if that string contains the letter.
     Parameters:
@@ -44,3 +47,17 @@ def previous(objects_array: object, pos: int):
         return None
     else:
         return objects_array[pos - 1]
+
+
+def print_bin_predictions_match(y_test, yhat):
+    for i in range(y_test.shape[0]):
+        ix = colored(str(f'{i:02d} |'), 'grey')
+        sep = colored('|', 'grey')
+        y = int(y_test[i][0])
+        pred = f"{yhat[i][0]:.02f}"
+        color = "green" if yhat[i][0] >= 0.5 and y == 1 else "red"
+        pred = colored(pred, color)
+        if i % 9 == 0:
+            print(f"\n{ix} ", end='')
+        print(f"{y} {sep} {pred} {sep} ", end="")
+    print(colored("\n", "white"))

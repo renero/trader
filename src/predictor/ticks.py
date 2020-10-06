@@ -70,8 +70,9 @@ from it. The way it should be:
 
     def _drop_unused_columns(self, data):
         cols_to_drop = ["Datetime", self.params.csv_dict['d']]
-        if self.params.csv_dict['v'] in data.columns:
-            cols_to_drop.append(self.params.csv_dict['v'])
+        if 'v' in self.params.csv_dict.keys():
+            if self.params.csv_dict['v'] in data.columns:
+                cols_to_drop.append(self.params.csv_dict['v'])
         data = data.drop(cols_to_drop, axis=1)
         return data
 

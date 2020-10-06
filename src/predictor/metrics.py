@@ -51,6 +51,8 @@ class metrics:
 
     @classmethod
     def trend_accuracy(cls, y: np.ndarray, yhat: np.ndarray) -> float:
+        y.reshape(y.shape[0], )
+        yhat.reshape(y.shape[0], )
         fails = 0
         for i in range(1, y.shape[0]):
             if i > 0:
@@ -59,11 +61,15 @@ class metrics:
         return (y.shape[0] - fails) / y.shape[0]
 
     @classmethod
-    def trend_binary_accuracy(cls, y: np.ndarray, yhat: np.ndarray) -> float:
+    def trend_binary_accuracy(cls, y: np.ndarray, yhat: np.ndarray,
+                              threshold: float = 0.5) -> float:
+        y.reshape(y.shape[0], )
+        yhat.reshape(y.shape[0], )
         fails = 0
         for i in range(1, y.shape[0]):
             if i > 0:
-                if y[i] != yhat[i]:
+                response = float(yhat[i] >= threshold)
+                if y[i] != response:
                     fails += 1
         return (y.shape[0] - fails) / y.shape[0]
 

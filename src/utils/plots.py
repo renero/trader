@@ -112,10 +112,14 @@ def plot_history(history):
     plt.show()
 
 
-def plot_marks(data: pd.DataFrame, signal: str, marks: str):
+def plot_marks(data: pd.DataFrame, signal: str, marks: str, dark=False):
     # Conversion of dates to matplotlib numeric references
     inxval = mdates.date2num(data.index.to_pydatetime())
 
+    if dark is True:
+        plt.style.use('seaborn-dark')
+    else:
+        plt.style.use('mpl20')
     fig, ax1 = plt.subplots()
     fig.set_size_inches(20, 6)
 
@@ -148,14 +152,17 @@ def plot_marks(data: pd.DataFrame, signal: str, marks: str):
     )
     plt.setp(baseline, "linewidth", 0.4)
     plt.setp(stemline, "linewidth", 1)
-    plt.setp(stemline, "alpha", 0.5)
+    plt.setp(stemline, "alpha", 0.9)
     plt.show()
 
 
-def plot_forecast(y: np.ndarray, yhat: np.ndarray):
+def plot_forecast(y: np.ndarray, yhat: np.ndarray, dark=False):
     """Plots the actual values, and the forecast for those values"""
-    fails = 0
+    if dark is True:
+        plt.style.use('dark_background')
     plt.figure(figsize=(16, 10))
+
+    fails = 0
     for i in range(1, y.shape[0]):
         segment_color = "red"
         lw = 1.0
