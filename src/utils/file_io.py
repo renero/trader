@@ -86,7 +86,7 @@ def save_dataframe(name: str,
         # Save the scaler used
         scaler_name = valid_output_name(scaler_name, output_path, 'pickle')
         joblib.dump(scaler, scaler_name)
-    data.round(2).to_csv(file_name, index=index)
+    data.round(4).to_csv(file_name, index=index)
 
     return file_name, scaler_name
 

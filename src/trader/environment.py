@@ -45,7 +45,7 @@ class Environment:
         if 'seed' in self.params:
             np.random.seed(self.params.seed)
         else:
-            np.random.seed(1)
+            np.random.seed(0)
 
         self.states = StatesCombiner(self.params)
         self.init_forecast(self.params.forecast_file, train_mode)

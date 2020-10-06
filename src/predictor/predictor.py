@@ -12,7 +12,6 @@ def main(argv):
     from cs_dictionary import CSDictionary
 
     params = CSDictionary(args=argv)
-    np.random.seed(params.seed)
     log: Logger = params.log
 
     from cs_core import CSCore
