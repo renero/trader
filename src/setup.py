@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='trader',
-      version='0.2.3',
+      version='0.2.4',
       description='Trader package',
       author='J. Renero, J. Gonzalez',
       packages=['indicators', 'predictor', 'retriever', 'trader', 'updater',
