@@ -211,7 +211,7 @@ class CSCore:
         filename = valid_output_name(filename=name,
                                      path=params.predictions_path,
                                      extension='csv')
-        predictions.round(2).to_csv(filename, index=False)
+        predictions.round(4).to_csv(filename, index=False)
         log.info('predictions saved to: {}'.format(filename))
 
     def display_predictions(self, predictions):

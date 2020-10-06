@@ -60,4 +60,4 @@ class TestPortfolio(TestCase):
         self.assertTrue(stock.get_active_packages() == 0)
         self.assertTrue(stock.get_total_shares() == 0)
 
-        portfolio.save()
+        # portfolio.save()

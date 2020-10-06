@@ -1,3 +1,4 @@
+import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -108,4 +109,97 @@ def plot_history(history):
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
+
+
+def plot_marks(data: pd.DataFrame, signal: str, marks: str,
+               secondary: str = None, dark=False):
+    # Conversion of dates to matplotlib numeric references
+    inxval = mdates.date2num(data.index.to_pydatetime())
+
+    if dark is True:
+        plt.style.use('seaborn-dark')
+    else:
+        plt.style.use('mpl20')
+    fig, ax1 = plt.subplots()
+    fig.set_size_inches(20, 6)
+
+    g = pd.Series(data[marks])
+    positives = g.where(g > 0.0).replace(np.nan, 0.0)
+    negatives = g.where(g <= 0.0).replace(np.nan, 0.0)
+
+    min, max = data[signal].min(), data[signal].max()
+    marks_height = (max - min) / 25.0
+
+    ax1.plot(data[signal], color="C0", alpha=0.8, linewidth=1.2)
+    if secondary is not None:
+        ax2 = ax1.twinx()
+        ax2.plot(data[secondary], color="C7", alpha=0.8, linewidth=0.8)
+    markerline, stemline, baseline = ax1.stem(
+        inxval,
+        positives * marks_height,
+        markerfmt=" ",
+        linefmt="C2-",
+        basefmt="C7:",
+        use_line_collection=True,
+    )
+    plt.setp(baseline, "linewidth", 0.2)
+    plt.setp(stemline, "linewidth", 1)
+    plt.setp(stemline, "alpha", 0.5)
+    markerline, stemline, baseline = ax1.stem(
+        inxval,
+        negatives * marks_height,
+        markerfmt=" ",
+        linefmt="C3-",
+        basefmt="C7:",
+        use_line_collection=True,
+    )
+    plt.setp(baseline, "linewidth", 0.4)
+    plt.setp(stemline, "linewidth", 1)
+    plt.setp(stemline, "alpha", 0.9)
+    plt.show()
+
+
+def plot_forecast(y: np.ndarray, yhat: np.ndarray, dark=False):
+    """Plots the actual values, and the forecast for those values"""
+    if dark is True:
+        plt.style.use('dark_background')
+    plt.figure(figsize=(16, 10))
+
+    fails = 0
+    for i in range(1, y.shape[0]):
+        segment_color = "red"
+        lw = 1.0
+        alpha = 1.0
+        if i > 0:
+            if np.sign(y[i] - y[i - 1]) == np.sign(
+                    yhat[i] - yhat[i - 1]
+            ):
+                segment_color = "green"
+                lw = 0.8
+                alpha = 0.6
+            else:
+                fails += 1
+
+        plt.plot(
+            [i - 1, i],
+            [y[i - 1], y[i]],
+            marker=".",
+            linewidth=0.8,
+            alpha=0.6,
+            color="grey",
+        )
+        plt.plot(
+            [i - 1, i],
+            [yhat[i - 1], yhat[i]],
+            linewidth=lw,
+            alpha=alpha,
+            color=segment_color,
+        )
+
+    hits = y.shape[0] - fails
+    hr = 100 * (hits / y.shape[0])
+    fr = 100 * (fails / y.shape[0])
+    plt.title(
+        f"Trend hits ({hits}/{hr:.2f}%) and fails ({fails}/{fr:.2f}%)")
     plt.show()

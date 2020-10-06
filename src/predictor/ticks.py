@@ -8,6 +8,7 @@ from pandas import DataFrame
 from sklearn.preprocessing import RobustScaler
 
 from cs_dictionary import CSDictionary
+from seeds import reset_seeds
 from sequences import sequences
 
 TrainTestVectors = Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
@@ -48,7 +49,9 @@ from it. The way it should be:
 
     def __init__(self, params: CSDictionary, url: str):
         self.params = params
-        self.data = pd.read_csv(url).round(2)
+        reset_seeds()
+
+        self.data = pd.read_csv(url).round(self.params.precision)
         self.data = self._fix_datetime_index(self.data)
 
         self.raw = self.data.copy(deep=True)
@@ -67,8 +70,9 @@ from it. The way it should be:
 
     def _drop_unused_columns(self, data):
         cols_to_drop = ["Datetime", self.params.csv_dict['d']]
-        if self.params.csv_dict['v'] in data.columns:
-            cols_to_drop.append(self.params.csv_dict['v'])
+        if 'v' in self.params.csv_dict.keys():
+            if self.params.csv_dict['v'] in data.columns:
+                cols_to_drop.append(self.params.csv_dict['v'])
         data = data.drop(cols_to_drop, axis=1)
         return data
 
@@ -79,7 +83,7 @@ from it. The way it should be:
             data=self._scaler.transform(self.data[self.params.ohlc]),
             columns=self.params.ohlc,
             index=self.data.index,
-        ).round(2)
+        ).round(self.params.precision)
         self._update_internal_attributes()
         return self
 
@@ -93,7 +97,7 @@ from it. The way it should be:
             data=self._scaler.inverse_transform(scaled_df[self.params.ohlc]),
             columns=self.params.ohlc,
             index=scaled_df.index,
-        ).round(2)
+        ).round(self.params.precision)
 
     def prepare_for_training(
             self,

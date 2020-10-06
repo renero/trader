@@ -10,16 +10,16 @@ from base_indicators import *
 from indicator import Indicator
 
 
-class gmf(Indicator):
+class gmf_mono(Indicator):
     """Gaussian Median Filter over diff values to return positive, negative
     or neutral trend (+1/-1/0)"""
 
     values: DataFrame = None
 
     # The name of the signal/indicator
-    name = 'gmf'
+    name = 'gmf_mono'
     # The columns that will be generated, and that must be saved/appended
-    ix_columns = ['gmf']
+    ix_columns = ['gmf_mono']
 
     def __init__(
             self,
@@ -30,12 +30,14 @@ class gmf(Indicator):
             mf_window=5,
             sigma=2,
     ):
-        super(gmf, self).__init__(data, params)
+        super(gmf_mono, self).__init__(data, params)
         self.params = params
-        self.values = self.fit(column_name, mf_window, sigma, fill_na=True)
+        self.values = self.fit(column_name, monotonic_window, mf_window, sigma,
+                               fill_na=True)
 
     def fit(self,
             column_name='change',
+            monotonic_window=5,
             mf_window=5,
             sigma=2,
             fill_na: bool = True) -> DataFrame:
@@ -72,9 +74,39 @@ class gmf(Indicator):
             gaussian_filter1d(
                 medfilt(y, mf_window),
                 sigma))
+        in_signal = self.get_positive_periods(gmf_values, monotonic_window)
+        out_signal = self.get_negative_periods(gmf_values, monotonic_window)
+        gmf_signal = in_signal + out_signal
 
-        self.values = pd.DataFrame(gmf_values, columns=[self.name])
+        self.values = pd.DataFrame(gmf_signal, columns=[self.name])
         if fill_na is True:
             self.values = self.values.replace(np.nan, 0.)
 
         return self.values
+
+    @staticmethod
+    def get_positive_periods(x, period_length):
+        """This signal is 1 if it is monotonic positively growing over a given
+        period_length"""
+
+        def monotonic_positive(x):
+            dx = np.diff(x)
+            return np.all(dx >= 0)
+
+        periods = x.rolling(period_length + 1)
+        is_monotonic_positive = periods.apply(
+            lambda period: monotonic_positive(period))
+        return np.nan_to_num(is_monotonic_positive)
+
+    @staticmethod
+    def get_negative_periods(x, period_length):
+        """This signal is 1 if it is monotonic negatively growing over a given
+        period_length"""
+
+        def monotonic_negative(x):
+            dx = np.diff(x)
+            return np.all(dx <= 0)
+
+        periods = x.rolling(period_length + 1)
+        is_monotonic_negative = periods.apply(lambda x: monotonic_negative(x))
+        return np.nan_to_num(is_monotonic_negative) * -1.0
