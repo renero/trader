@@ -8,6 +8,7 @@ from tensorflow.python.keras.layers import LSTM, Dense
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.regularizers import l2
 
+from keras_callbacks import display_progress
 from metrics import metrics
 from seeds import reset_seeds
 
@@ -75,7 +76,9 @@ class nn:
             epochs=self.params.epochs,
             batch_size=self.params.batch_size,
             verbose=self.params.verbose,
-            validation_split=self.params.validation_split)
+            validation_split=self.params.validation_split,
+            callbacks=[display_progress(self.params.epochs)]
+        )
 
         if self.params.mlflow:
             mlflow.log_params(nn.metadata)

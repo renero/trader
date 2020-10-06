@@ -55,7 +55,9 @@ def print_bin_predictions_match(y_test, yhat):
         sep = colored('|', 'grey')
         y = int(y_test[i][0])
         pred = f"{yhat[i][0]:.02f}"
-        color = "green" if yhat[i][0] >= 0.5 and y == 1 else "red"
+        true_pred = (yhat[i][0] >= 0.5 and y == 1) or (
+                    yhat[i][0] < 0.5 and y == 0)
+        color = "green" if true_pred else "red"
         pred = colored(pred, color)
         if i % 9 == 0:
             print(f"\n{ix} ", end='')
