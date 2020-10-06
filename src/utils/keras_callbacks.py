@@ -48,7 +48,7 @@ class display_progress(tf.keras.callbacks.Callback):
         return acc, v_acc
 
     def on_train_end(self, logs=None):
-        pass
+        print()
 
     def on_train_batch_end(self, batch, logs=None):
         pass

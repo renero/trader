@@ -112,7 +112,8 @@ def plot_history(history):
     plt.show()
 
 
-def plot_marks(data: pd.DataFrame, signal: str, marks: str, dark=False):
+def plot_marks(data: pd.DataFrame, signal: str, marks: str,
+               secondary: str = None, dark=False):
     # Conversion of dates to matplotlib numeric references
     inxval = mdates.date2num(data.index.to_pydatetime())
 
@@ -131,6 +132,9 @@ def plot_marks(data: pd.DataFrame, signal: str, marks: str, dark=False):
     marks_height = (max - min) / 25.0
 
     ax1.plot(data[signal], color="C0", alpha=0.8, linewidth=1.2)
+    if secondary is not None:
+        ax2 = ax1.twinx()
+        ax2.plot(data[secondary], color="C7", alpha=0.8, linewidth=0.8)
     markerline, stemline, baseline = ax1.stem(
         inxval,
         positives * marks_height,

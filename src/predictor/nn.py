@@ -91,7 +91,7 @@ class nn:
         yhat = self.model.predict(X_test)
         _, accuracy = self.model.evaluate(X_test, y_test)
         self.log.info(f"Predictions (yhat): {yhat.shape}")
-        self.log.info(f"Accuracy evaluation: {accuracy}")
+        self.log.info(f"Accuracy: {accuracy:.2f}")
 
         if self.metadata['binary'] is True:
             ta = metrics.trend_binary_accuracy(y_test, yhat)
