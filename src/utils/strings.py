@@ -1,3 +1,4 @@
+import numpy as np
 from termcolor import colored
 
 
@@ -56,10 +57,37 @@ def print_bin_predictions_match(y_test, yhat):
         y = int(y_test[i][0])
         pred = f"{yhat[i][0]:.02f}"
         true_pred = (yhat[i][0] >= 0.5 and y == 1) or (
-                    yhat[i][0] < 0.5 and y == 0)
+                yhat[i][0] < 0.5 and y == 0)
         color = "green" if true_pred else "red"
         pred = colored(pred, color)
         if i % 9 == 0:
             print(f"\n{ix} ", end='')
         print(f"{y} {sep} {pred} {sep} ", end="")
     print(colored("\n", "white"))
+
+
+def print_progbar(percent: float, max: int = 20, do_print=True,
+                  **kwargs: str) -> str:
+    """ Prints a progress bar of max characters, with progress up to
+    the passed percentage
+
+    :param percent: the percentage of the progress bar completed
+    :param max: the max width of the progress bar
+    :param do_print: print the progbar or not
+    :param **kwargs: optional arguments to the `print` method.
+
+    Example
+    -------
+
+    >>> print_progbar(0.65)
+    >>> "[=============·······]"
+
+    """
+    done = int(np.floor(percent * 20))
+    remain = max - done
+    pb = "[" + "=" * done + "·" * remain + "]"
+    if do_print is True:
+        print(pb, sep="", **kwargs)
+    else:
+        return pb
+
