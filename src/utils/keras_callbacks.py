@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from utils.strings import print_progbar
+from utils.utils import print_progbar
 
 
 class display_progress(tf.keras.callbacks.Callback):

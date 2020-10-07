@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-from utils.file_io import file_exists
+from utils.file_utils import file_exists
 
 
 class TicksReader:
