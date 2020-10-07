@@ -2,14 +2,12 @@
 
 import sys
 
-import numpy as np
-
 from utils.logger import Logger
 from ensemble import Ensemble as ensemble
 
 
 def main(argv):
-    from cs_dictionary import CSDictionary
+    from dictionary_trait import CSDictionary
 
     params = CSDictionary(args=argv)
     log: Logger = params.log

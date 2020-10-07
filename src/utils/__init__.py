@@ -1,1 +1,2 @@
-__all__ = ['my_dict', 'file_io', 'dictionary', 'logger']
+__all__ = ['dictionary_trait', 'file_io', 'keras_callbacks', 'last', 'logger',
+           'plots', 'seeds', 'strings']
