@@ -197,3 +197,4 @@ resources/logs
 resources/mlruns
 src/predictor/mlruns
 /mlruns/0/meta.yaml
+/unused/

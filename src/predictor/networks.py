@@ -13,6 +13,18 @@ class lstm(nn):
         self.metadata['binary'] = binary
         self._build_model()
 
+    def __str__(self):
+        l = self.metadata['layers']
+        b = 'b' if self.metadata['binary'] is True else ''
+        d = self.metadata['dropout']
+        w = self.metadata['window_size']
+        u = self.metadata['units']
+        bs = self.metadata['batch_size']
+        a = self.metadata['learning_rate']
+        e = self.metadata['epochs']
+        desc = f"LSTM{b}({l}l. {u}u. d={d:.2f} lr={a} [W={w} E={e} BS={bs}])"
+        return desc
+
     def _build_model(self):
         """
         Builds the model according to the parameters specified for

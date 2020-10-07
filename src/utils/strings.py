@@ -83,7 +83,7 @@ def print_progbar(percent: float, max: int = 20, do_print=True,
     >>> "[=============·······]"
 
     """
-    done = int(np.floor(percent * 20))
+    done = int(np.ceil(percent * 20))
     remain = max - done
     pb = "[" + "=" * done + "·" * remain + "]"
     if do_print is True:

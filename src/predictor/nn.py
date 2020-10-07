@@ -46,6 +46,8 @@ class nn:
         self.metadata['dropout'] = self.params.dropout
         self.metadata['learning_rate'] = self.params.learning_rate
         self.metadata['activation'] = self.params.activation
+        self.metadata['units'] = self.params.units
+        self.metadata['batch_size'] = self.params.batch_size
 
     def start_training(self, X_train: ndarray, y_train: ndarray,
                        name=None) -> str:
