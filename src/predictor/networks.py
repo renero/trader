@@ -1,5 +1,5 @@
 from tensorflow.keras.models import Sequential
-from tensorflow.python.keras.layers import Dense
+from tensorflow.keras.layers import Dense
 
 from nn import nn
 

@@ -4,13 +4,13 @@ from os.path import basename, splitext
 
 import mlflow
 from numpy import ndarray
-from tensorflow.python.keras.layers import LSTM, Dense
-from tensorflow.python.keras.optimizer_v2.adam import Adam
-from tensorflow.python.keras.regularizers import l2
+from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.regularizers import l2
 
 from metrics import metrics
 from utils.utils import reset_seeds
-from utils.keras_callbacks import display_progress
+from utils.callbacks import display_progress
 
 
 
