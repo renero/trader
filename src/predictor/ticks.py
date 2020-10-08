@@ -9,7 +9,7 @@ from sklearn.preprocessing import RobustScaler
 
 from dictionary import Dictionary
 from sequences import sequences
-from utils import reset_seeds
+from utils.utils import reset_seeds
 
 TrainTestVectors = Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
 TrainVectors = Union[TrainTestVectors, Tuple[np.ndarray, np.ndarray]]

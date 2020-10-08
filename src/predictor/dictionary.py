@@ -1,6 +1,6 @@
 from arguments import Arguments
 from common.dictionary_trait import DictionaryTrait
-from utils.logger import Logger
+from common.logger import Logger
 
 
 class Dictionary(DictionaryTrait):

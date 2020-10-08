@@ -9,7 +9,7 @@ from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.regularizers import l2
 
 from metrics import metrics
-from utils import reset_seeds
+from utils.utils import reset_seeds
 from utils.keras_callbacks import display_progress
 
 
