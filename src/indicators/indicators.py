@@ -9,12 +9,12 @@ from importlib import import_module
 import pandas as pd
 
 from indicator import Indicator
-from ix_dictionary import IXDictionary
+from ix_dictionary import IXDictionaryTrait
 from logger import Logger
 
 
 def main(argv):
-    params = IXDictionary(args=argv)
+    params = IXDictionaryTrait(args=argv)
     log: Logger = params.log
 
     # Call the proper constructor, from the name of indicator in arguments

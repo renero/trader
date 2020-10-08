@@ -7,9 +7,9 @@ import pandas as pd
 from pandas import DataFrame
 from sklearn.preprocessing import RobustScaler
 
-from cs_dictionary import CSDictionary
-from seeds import reset_seeds
+from dictionary import Dictionary
 from sequences import sequences
+from utils import reset_seeds
 
 TrainTestVectors = Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
 TrainVectors = Union[TrainTestVectors, Tuple[np.ndarray, np.ndarray]]
@@ -47,7 +47,7 @@ from it. The way it should be:
     _encoder = None
     _volatility = 0.0
 
-    def __init__(self, params: CSDictionary, url: str):
+    def __init__(self, params: Dictionary, url: str):
         self.params = params
         reset_seeds()
 
@@ -160,7 +160,7 @@ from it. The way it should be:
             *args,
             **kwargs) -> DataFrame:
         try:
-            module = import_module(indicator, package='indicators')
+            module = import_module(f'.{indicator}', package='indicators')
             ix = getattr(module, indicator)(
                 self.data,
                 self.params,

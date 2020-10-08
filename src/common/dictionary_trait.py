@@ -1,7 +1,28 @@
+"""
+This class reads params from a YAML file and creates an object that
+contains attributes named as the params in the file, accessible through
+getters:
+
+  object.parameter
+
+in addition to classical dictionary access method
+
+  object[parameter]
+
+The structure of attributes is built recursively if they contain a dictionary.
+
+  object.attr1.attr2.attr3
+
+"""
+
+from os import getcwd
+from pathlib import Path
+
+from yaml import safe_load, YAMLError
+
 debug = False
 
-
-class MyDict(dict):
+class MyCustomDictionary(dict):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -42,7 +63,7 @@ class MyDict(dict):
 
                 self.logdebug('   > Creating new dict() with name <{}>'.format(
                     attribute_name))
-                setattr(this_object, attribute_name, MyDict())
+                setattr(this_object, attribute_name, MyCustomDictionary())
 
                 self.logdebug('     > New Attribute <{}> type is: {}'.format(
                     attribute_name, type(getattr(this_object, attribute_name))
@@ -52,3 +73,24 @@ class MyDict(dict):
                 self.logdebug('   > Calling recursively with dict')
                 self.logdebug('     {}'.format(param_dictionary[param_name]))
                 this_object.add_dict(new_object, param_dictionary[param_name])
+
+
+class DictionaryTrait(MyCustomDictionary):
+
+    def __init__(self, default_params_filename='params.yaml', **kwargs):
+        """
+        Read the parameters from a default filename
+        :return:
+        """
+        super().__init__(**kwargs)
+        params = {}
+        cwd = Path(getcwd())
+        params_path: str = str(cwd.joinpath(default_params_filename))
+
+        with open(params_path, 'r') as stream:
+            try:
+                params = safe_load(stream)
+            except YAMLError as exc:
+                print(exc)
+
+        self.add_dict(self, params)

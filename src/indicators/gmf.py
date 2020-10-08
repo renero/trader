@@ -6,8 +6,8 @@ from pandas import DataFrame
 from scipy.ndimage.filters import gaussian_filter1d
 from scipy.signal import medfilt
 
-from base_indicators import *
-from indicator import Indicator
+from .base_indicators import *
+from .indicator import Indicator
 
 
 class gmf(Indicator):

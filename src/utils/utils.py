@@ -1,4 +1,12 @@
+import os
+
+os.environ['PYTHONHASHSEED'] = '0'
+
+import random
+
 import numpy as np
+import tensorflow as tf
+from tensorflow.keras import backend as K
 from termcolor import colored
 
 
@@ -83,7 +91,7 @@ def print_progbar(percent: float, max: int = 20, do_print=True,
     >>> "[=============·······]"
 
     """
-    done = int(np.floor(percent * 20))
+    done = int(np.ceil(percent * 20))
     remain = max - done
     pb = "[" + "=" * done + "·" * remain + "]"
     if do_print is True:
@@ -91,3 +99,13 @@ def print_progbar(percent: float, max: int = 20, do_print=True,
     else:
         return pb
 
+
+def reset_seeds():
+    """Reset all internal seeds to same value always"""
+    K.clear_session()
+    tf.compat.v1.reset_default_graph()
+
+    np.random.seed(1)
+    random.seed(2)
+    tf.compat.v1.set_random_seed(3)
+    print("[Determinism: Random seeds reset]")  # optional

@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from strings import print_progbar
+from utils.utils import print_progbar
 
 
 class display_progress(tf.keras.callbacks.Callback):
@@ -27,18 +27,19 @@ class display_progress(tf.keras.callbacks.Callback):
         pass
 
     def on_epoch_end(self, epoch, logs=None):
-        acc, v_acc = self.get_min_and_amx(logs)
-
+        acc, v_acc = self.get_min_and_max(logs)
         if epoch % self.refresh_step != 0:
             return
+        self.update_progress(acc, epoch, v_acc)
 
+    def update_progress(self, acc, epoch, v_acc):
         str_epoch = f"\rEpoch {epoch:03d}/{self.epochs:03d}"
         str_acc = f" - Acc:{acc:.2f} (↑{self.a_max:.02f}/↓{self.a_min:.02f})"
         str_val = f" - Val:{v_acc:.02f} (↑{self.v_max:.02f}/↓{self.v_min:.02f})"
-        pb = print_progbar(epoch/self.epochs, do_print=False)
+        pb = print_progbar(epoch / self.epochs, do_print=False)
         print("\r" + str_epoch + str_acc + str_val + ' | ' + pb, end="")
 
-    def get_min_and_amx(self, logs):
+    def get_min_and_max(self, logs):
         acc = logs['accuracy']
         self.a_max = acc if acc > self.a_max else self.a_max
         self.a_min = acc if acc < self.a_min else self.a_min
@@ -48,18 +49,35 @@ class display_progress(tf.keras.callbacks.Callback):
         return acc, v_acc
 
     def on_train_end(self, logs=None):
+        acc, v_acc = self.get_min_and_max(logs)
+        self.update_progress(acc, self.epochs, v_acc)
         print()
 
+    def on_train_batch_start(self, batch, logs=None):
+        pass
+
     def on_train_batch_end(self, batch, logs=None):
+        pass
+
+    def on_predict_begin(self, logs=None):
         pass
 
     def on_predict_end(self, logs=None):
         pass
 
+    def on_test_begin(self, logs=None):
+        pass
+
     def on_test_end(self, logs=None):
         pass
 
+    def on_predict_batch_begin(self, batch, logs=None):
+        pass
+
     def on_predict_batch_end(self, batch, logs=None):
+        pass
+
+    def on_test_batch_begin(self, batch, logs=None):
         pass
 
     def on_test_batch_end(self, batch, logs=None):
