@@ -8,9 +8,9 @@ from tensorflow.python.keras.layers import LSTM, Dense
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.regularizers import l2
 
-from keras_callbacks import display_progress
 from metrics import metrics
-from seeds import reset_seeds
+from utils import reset_seeds
+from utils.keras_callbacks import display_progress
 
 
 
@@ -46,6 +46,8 @@ class nn:
         self.metadata['dropout'] = self.params.dropout
         self.metadata['learning_rate'] = self.params.learning_rate
         self.metadata['activation'] = self.params.activation
+        self.metadata['units'] = self.params.units
+        self.metadata['batch_size'] = self.params.batch_size
 
     def start_training(self, X_train: ndarray, y_train: ndarray,
                        name=None) -> str:

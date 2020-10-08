@@ -50,7 +50,7 @@ def split_and_run(window_size, epochs, network, layers, binary):
 
 
 def main(argv):
-    from cs_dictionary import CSDictionary
+    from dictionary_trait import CSDictionary
     global params
 
     params = CSDictionary(args=argv)

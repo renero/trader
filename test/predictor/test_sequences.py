@@ -3,7 +3,7 @@ from typing import Tuple
 
 import numpy as np
 
-from predictor.cs_dictionary import CSDictionary
+from dictionary_trait import CSDictionary
 from predictor.sequences import sequences
 from predictor.ticks import Ticks
 

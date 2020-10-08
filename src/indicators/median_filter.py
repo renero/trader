@@ -5,8 +5,8 @@ Trend of the closing value: +1 if positive, -1 if negative
 from pandas import DataFrame
 from scipy.signal import medfilt
 
-from base_indicators import *
-from indicator import Indicator
+from .base_indicators import *
+from .indicator import Indicator
 
 
 class median_filter(Indicator):

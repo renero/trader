@@ -1,9 +1,9 @@
 from arguments import Arguments
-from utils.dictionary import Dictionary
+from common.dictionary_trait import DictionaryTrait
 from utils.logger import Logger
 
 
-class CSDictionary(Dictionary):
+class Dictionary(DictionaryTrait):
 
     def __init__(self, default_params_filename='params.yaml', *args, **kwargs):
 
