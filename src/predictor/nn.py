@@ -10,7 +10,7 @@ from tensorflow.keras.regularizers import l2
 
 from metrics import metrics
 from utils.utils import reset_seeds
-from utils.callbacks import display_progress
+#from utils.callbacks import display_progress
 
 
 
@@ -78,9 +78,10 @@ class nn:
             epochs=self.params.epochs,
             batch_size=self.params.batch_size,
             verbose=self.params.verbose,
-            validation_split=self.params.validation_split,
-            callbacks=[display_progress(self.params.epochs)]
-        )
+            validation_split=self.params.validation_split)
+        # ),
+        #     callbacks=[display_progress(self.params.epochs)]
+        # )
 
         if self.params.mlflow:
             mlflow.log_params(nn.metadata)
