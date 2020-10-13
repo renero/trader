@@ -199,3 +199,5 @@ src/predictor/mlruns
 /mlruns/0/meta.yaml
 /unused/
 /resources/docs/setup.md
+docs
+data_and_params.zip
