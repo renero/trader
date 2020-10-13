@@ -201,3 +201,6 @@ src/predictor/mlruns
 /resources/docs/setup.md
 docs
 data_and_params.zip
+notebooks/simple_predictor
+notebooks/mlruns
+.flake8
