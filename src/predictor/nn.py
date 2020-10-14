@@ -1,17 +1,15 @@
-import random
 from collections import defaultdict
-from os.path import basename, splitext
+from os.path import join, basename, splitext, dirname, realpath
+from pathlib import Path
 
 import mlflow
 from numpy import ndarray
-from tensorflow.keras.layers import LSTM, Dense
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.regularizers import l2
+from tensorflow.keras.models import model_from_json
 
 from metrics import metrics
+from utils.callbacks import display_progress
+from utils.file_utils import file_exists
 from utils.utils import reset_seeds
-#from utils.callbacks import display_progress
-
 
 
 class ValidationException(Exception):
@@ -55,12 +53,13 @@ class nn:
         self.log.info(f'Training for {self.params.epochs} epochs...')
         exp_name = self._set_experiment(name) if self.params.mlflow else None
         self._train(X_train, y_train)
+        self._end_experiment()
         return exp_name
 
     @staticmethod
     def _set_experiment(name: str) -> str:
         if name is None:
-            name = f'{random.getrandbits(32):x}'
+            name = 'untracked'
         mlflow.set_experiment(name)
         mlflow.start_run()
         mlflow.keras.autolog()
@@ -78,10 +77,9 @@ class nn:
             epochs=self.params.epochs,
             batch_size=self.params.batch_size,
             verbose=self.params.verbose,
-            validation_split=self.params.validation_split)
-        # ),
-        #     callbacks=[display_progress(self.params.epochs)]
-        # )
+            validation_split=self.params.validation_split,
+            callbacks=[display_progress(self.params.epochs)]
+        )
 
         if self.params.mlflow:
             mlflow.log_params(nn.metadata)
@@ -106,63 +104,65 @@ class nn:
 
         return yhat, ta
 
-    def end_experiment(self):
+    def _end_experiment(self):
         if self.params.mlflow:
             mlflow.end_run()
 
-    def add_single_lstm_layer(self, model):
-        """Single layer LSTM must use this layer."""
-        model.add(
-            LSTM(
-                input_shape=(self.window_size, self.params.num_features),
-                dropout=self.params.dropout,
-                units=self.params.units,
-                kernel_regularizer=l2(0.0000001),
-                activity_regularizer=l2(0.0000001)))
+    def load(self, model_name, summary=False):
+        """ Load json and create model """
+        self.log.info('Reading model file: {}'.format(model_name))
+        nn_path = join(self.params.models_dir, '{}.json'.format(model_name))
+        nn_path = file_exists(nn_path, dirname(realpath(__file__)))
+        json_file = open(nn_path, 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
+        loaded_model = model_from_json(loaded_model_json)
 
-    def add_output_lstm_layer(self, model):
-        """Use this layer, when stacking several ones."""
-        model.add(
-            LSTM(
-                self.params.units,
-                dropout=self.params.dropout,
-                kernel_regularizer=l2(0.0000001),
-                activity_regularizer=l2(0.0000001)))
+        # load weights into new model
+        weights_path = join(self.params.models_dir, '{}.h5'.format(model_name))
+        weights_path = file_exists(weights_path, dirname(realpath(__file__)))
+        loaded_model.load_weights(weights_path)
+        loaded_model.compile(
+            loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 
-    def add_stacked_lstm_layer(self, model):
-        """Use N-1 of this layer to stack N LSTM layers."""
-        model.add(
-            LSTM(
-                input_shape=(self.window_size, self.params.num_features),
-                return_sequences=True,
-                dropout=self.params.dropout,
-                units=self.params.units,
-                kernel_regularizer=l2(0.0000001),
-                activity_regularizer=l2(0.0000001)))
+        if summary is True:
+            loaded_model.summary()
+        self.model = loaded_model
 
-    def close_network(self, model):
-        """Adds a dense layer, and compiles the model with the selected
-        optimzer, returning a summary of the model, if set to True in params"""
-        model.add(
-            Dense(self.params.num_target_labels,
-                  activation=self.params.activation))
-        optimizer = Adam(lr=self.params.learning_rate)
-        model.compile(
-            loss=self.params.loss,
-            optimizer=optimizer,
-            metrics=self.params.metrics)
+        return loaded_model
 
-        if self.params.summary is True:
-            model.summary()
+    def save(self):
+        """ serialize model to JSON """
+        if self.metadata['accuracy'] == 'unk':
+            raise ValidationException('Trying to save without training.')
 
-    def close_binary_network(self, model):
-        """ Last layer to predict binary outputs """
-        model.add(Dense(1, activation='sigmoid'))
-        optimizer = Adam(lr=self.params.learning_rate)
-        model.compile(
-            loss='binary_crossentropy',
-            optimizer=optimizer,
-            metrics='accuracy')
+        if self.params.output is not None:
+            model_name = self.params.output
+        else:
+            model_name = self._valid_model_name()
 
-        if self.params.summary is True:
-            model.summary()
+        model_json = self.model.to_json()
+        with open('{}.json'.format(model_name), "w") as json_file:
+            json_file.write(model_json)
+
+        # serialize weights to HDF5
+        self.model.save_weights('{}.h5'.format(model_name))
+        self.log.info("Saved model and weights ({})".format(model_name))
+
+    def _valid_model_name(self):
+        """
+        Builds a valid name with the metadata and the date.
+        Returns The filename if the name is valid and file does not exists,
+                None otherwise.
+        """
+        self.filename = '{}_w{}_e{}'.format(
+            self.metadata['dataset'],
+            self.metadata['window_size'],
+            self.metadata['epochs'])
+        base_filepath = join(self.params.models_dir, self.filename)
+        output_filepath = base_filepath
+        idx = 1
+        while Path(output_filepath).is_file() is True:
+            output_filepath = '{}_{:d}'.format(base_filepath, idx)
+            idx += 1
+        return output_filepath

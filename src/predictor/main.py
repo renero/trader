@@ -3,10 +3,12 @@
 
 import sys
 
-import networks
+from dictionary import Dictionary
+from networks import lstm
 from ticks import Ticks
+from utils.utils import print_bin_predictions_match
 
-params = None
+params: Dictionary = None
 
 
 def read_ticks():
@@ -20,45 +22,25 @@ def read_ticks():
     return ticks
 
 
-def run(X_train, y_train, X_test, y_test, name, network, layers, binary=False):
-    global params
-
-    method = getattr(networks, network)
-    nn = method(params, n_layers=layers, binary=binary)
-    nn.start_training(X_train, y_train, name)
-    yhat, acc = nn.evaluate(X_test, y_test)
-    nn.end_experiment()
-    return nn, yhat, acc
-
-
-def split_and_run(window_size, epochs, network, layers, binary):
-    global params
-
-    ticks = read_ticks()
-    params.window_size = window_size
-    params.epochs = epochs
-    X_train, y_train, X_test, y_test = ticks.prepare_for_training(
-        predict="gmf_trend", train_columns=["gmf"]
-    )
-    nn, yhat, acc = run(X_train, y_train, X_test, y_test,
-                        "Reproducibility",
-                        network,
-                        layers,
-                        binary)
-    del (X_train, y_train, X_test, y_test, ticks)
-    return nn, yhat, acc
-
-
 def main(argv):
-    from dictionary_trait import CSDictionary
+    from dictionary import Dictionary
     global params
 
-    params = CSDictionary(args=argv)
-    nn, yhat, acc = split_and_run(window_size=14,
-                                  epochs=20,
-                                  network="lstm",
-                                  layers=1,
-                                  binary=True)
+    params = Dictionary(args=argv)
+    ticks = read_ticks()
+    params.epochs = 100
+
+    X_trainC, y_trainC, X_testC, y_testC = ticks.prepare_for_training(
+        predict="close_trend",
+        train_columns=["returns", "gmf", "gmf_mono", "gmf_trend"]
+    )
+
+    nn1 = lstm(params, n_layers=1, binary=True)
+    nn1.start_training(X_trainC, y_trainC, name=None)
+    yhatC_trend, acc = nn1.evaluate(X_testC, y_testC)
+
+    print(nn1)
+    print_bin_predictions_match(y_testC, yhatC_trend)
 
 
 if __name__ == "__main__":
