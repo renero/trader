@@ -5,6 +5,7 @@ from pathlib import Path
 import mlflow
 from numpy import ndarray
 from tensorflow.keras.models import model_from_json
+from tensorflow.keras.optimizers import Adam
 
 from metrics import metrics
 from utils.callbacks import display_progress
@@ -39,13 +40,27 @@ class nn:
             splitext(basename(self.params.input_file))[0]
         self.metadata['epochs'] = self.params.epochs
         self.metadata['window_size'] = self.params.window_size
-        self.metadata['num_features'] = self.params.num_features
-        self.metadata['num_target_labels'] = self.params.num_target_labels
+        if 'num_features' in self.params:
+            self.metadata['num_features'] = self.params.num_features
+        if 'num_target_labels' in self.params:
+            self.metadata['num_target_labels'] = self.params.num_target_labels
         self.metadata['dropout'] = self.params.dropout
         self.metadata['learning_rate'] = self.params.learning_rate
         self.metadata['activation'] = self.params.activation
         self.metadata['units'] = self.params.units
         self.metadata['batch_size'] = self.params.batch_size
+
+    def __str__(self):
+        l = self.metadata['layers']
+        b = 'b' if self.metadata['binary'] is True else ''
+        d = self.metadata['dropout']
+        w = self.metadata['window_size']
+        u = self.metadata['units']
+        bs = self.metadata['batch_size']
+        a = self.metadata['learning_rate']
+        e = self.metadata['epochs']
+        desc = f"LSTM{b}({l}l;{u}u;d={d:.2f};lr={a};[W={w};E={e};BS={bs}])"
+        return desc
 
     def start_training(self, X_train: ndarray, y_train: ndarray,
                        name=None) -> str:
@@ -61,6 +76,10 @@ class nn:
         if name is None:
             name = 'untracked'
         mlflow.set_experiment(name)
+        try:
+            mlflow.end_run()
+        except Exception:
+            pass
         mlflow.start_run()
         mlflow.keras.autolog()
         return name
@@ -108,27 +127,44 @@ class nn:
         if self.params.mlflow:
             mlflow.end_run()
 
-    def load(self, model_name, summary=False):
-        """ Load json and create model """
-        self.log.info('Reading model file: {}'.format(model_name))
-        nn_path = join(self.params.models_dir, '{}.json'.format(model_name))
+    #
+    # LOAD AND SAVE MODEL FILES
+    #
+
+    @staticmethod
+    def _load(model_name, params):
+        """ Load json and h5 files, compile the model and return it """
+        loaded_model = nn._load_model(model_name, params)
+        nn._load_weights(loaded_model, model_name, params)
+        nn._compile_model(loaded_model, params)
+
+        if params.summary is True:
+            loaded_model.summary()
+        return loaded_model
+
+    @staticmethod
+    def _compile_model(loaded_model, params):
+        optimizer = Adam(lr=params.learning_rate)
+        loaded_model.compile(
+            loss=params.loss,
+            optimizer=optimizer,
+            metrics=params.metrics)
+
+    @staticmethod
+    def _load_weights(loaded_model, model_name, params):
+        # load weights into new model
+        weights_path = join(params.models_dir, '{}.h5'.format(model_name))
+        weights_path = file_exists(weights_path, dirname(realpath(__file__)))
+        loaded_model.load_weights(weights_path)
+
+    @staticmethod
+    def _load_model(model_name, params):
+        nn_path = join(params.models_dir, '{}.json'.format(model_name))
         nn_path = file_exists(nn_path, dirname(realpath(__file__)))
         json_file = open(nn_path, 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         loaded_model = model_from_json(loaded_model_json)
-
-        # load weights into new model
-        weights_path = join(self.params.models_dir, '{}.h5'.format(model_name))
-        weights_path = file_exists(weights_path, dirname(realpath(__file__)))
-        loaded_model.load_weights(weights_path)
-        loaded_model.compile(
-            loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
-
-        if summary is True:
-            loaded_model.summary()
-        self.model = loaded_model
-
         return loaded_model
 
     def save(self):

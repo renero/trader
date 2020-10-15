@@ -1,5 +1,5 @@
-from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import l2
 
@@ -8,26 +8,14 @@ from nn import nn
 
 class lstm(nn):
 
-    def __init__(self, params, n_layers: int, binary=False):
+    def __init__(self, params, binary=False):
         super().__init__(params)
-        self.metadata['name'] = f'{self.__class__.__name__}_{n_layers}layers'
-        self.metadata['layers'] = n_layers
+        self.metadata[
+            'name'] = f'{self.__class__.__name__}_{params.layers}layers'
+        self.metadata['layers'] = params.layers
         self.metadata['binary'] = binary
-        self._build_model()
 
-    def __str__(self):
-        l = self.metadata['layers']
-        b = 'b' if self.metadata['binary'] is True else ''
-        d = self.metadata['dropout']
-        w = self.metadata['window_size']
-        u = self.metadata['units']
-        bs = self.metadata['batch_size']
-        a = self.metadata['learning_rate']
-        e = self.metadata['epochs']
-        desc = f"LSTM{b}({l}l. {u}u. d={d:.2f} lr={a} [W={w} E={e} BS={bs}])"
-        return desc
-
-    def _build_model(self):
+    def build(self):
         """
         Builds the model according to the parameters specified for
         the network in the params, or as arguments.
@@ -37,7 +25,8 @@ class lstm(nn):
             self.add_single_lstm_layer(self.window_size, self.params, model)
         else:
             for _ in range(self.metadata['layers']):
-                self.add_stacked_lstm_layer(self.window_size, self.params, model)
+                self.add_stacked_lstm_layer(self.window_size, self.params,
+                                            model)
             self.add_output_lstm_layer(self.params, model)
         if self.metadata['binary'] is True:
             self.close_binary_network(self.params, model)
@@ -47,6 +36,19 @@ class lstm(nn):
 
         self.log.info(
             'NN {} created'.format(self.metadata['name']))
+        return self
+
+    def load(self, model_name):
+        self.model = self._load(model_name, self.params)
+        # These parameters are embedded in network configuration, and must
+        # be retrieved from the JSON structure, instead of computing them
+        # from the input data used for training.
+        self.params.num_features = \
+            self.model.get_config()["layers"][0]["config"]["batch_input_shape"][
+                2]
+        self.params.num_target_labels = \
+            self.model.get_config()["layers"][-1]["config"]["units"]
+
         return self
 
     @staticmethod
@@ -104,9 +106,9 @@ class lstm(nn):
         model.add(Dense(1, activation='sigmoid'))
         optimizer = Adam(lr=params.learning_rate)
         model.compile(
-            loss='binary_crossentropy',
+            loss=params.loss,
             optimizer=optimizer,
-            metrics='accuracy')
+            metrics=params.metrics)
 
         if params.summary is True:
             model.summary()

@@ -4,7 +4,7 @@
 import sys
 
 from dictionary import Dictionary
-from networks import lstm
+from lstm import lstm
 from ticks import Ticks
 from utils.utils import print_bin_predictions_match
 
