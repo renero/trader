@@ -8,12 +8,12 @@ from nn import nn
 
 class lstm(nn):
 
-    def __init__(self, params, binary=False):
+    def __init__(self, params):
         super().__init__(params)
         self.metadata[
             'name'] = f'{self.__class__.__name__}_{params.layers}layers'
         self.metadata['layers'] = params.layers
-        self.metadata['binary'] = binary
+        self.metadata['binary'] = params.loss == 'binary_crossentropy'
 
     def build(self):
         """
@@ -28,10 +28,8 @@ class lstm(nn):
                 self.add_stacked_lstm_layer(self.window_size, self.params,
                                             model)
             self.add_output_lstm_layer(self.params, model)
-        if self.metadata['binary'] is True:
-            self.close_binary_network(self.params, model)
-        else:
-            self.close_lstm_network(self.params, model)
+
+        self.close_lstm_network(self.params, model)
         self.model = model
 
         self.log.info(
@@ -87,23 +85,10 @@ class lstm(nn):
     @staticmethod
     def close_lstm_network(params, model):
         """Adds a dense layer, and compiles the model with the selected
-        optimzer, returning a summary of the model, if set to True in params"""
+        optimizer, returning a summary of the model, if set to True in params"""
         model.add(
             Dense(params.num_target_labels,
                   activation=params.activation))
-        optimizer = Adam(lr=params.learning_rate)
-        model.compile(
-            loss=params.loss,
-            optimizer=optimizer,
-            metrics=params.metrics)
-
-        if params.summary is True:
-            model.summary()
-
-    @staticmethod
-    def close_binary_network(params, model):
-        """ Last layer to predict binary outputs """
-        model.add(Dense(1, activation='sigmoid'))
         optimizer = Adam(lr=params.learning_rate)
         model.compile(
             loss=params.loss,

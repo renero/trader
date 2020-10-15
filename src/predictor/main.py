@@ -35,7 +35,7 @@ def main(argv):
         train_columns=["returns", "gmf", "gmf_mono", "gmf_trend"]
     )
 
-    nn1 = lstm(params, n_layers=1, binary=True)
+    nn1 = lstm(params).build()
     nn1.start_training(X_trainC, y_trainC, name=None)
     yhatC_trend, acc = nn1.evaluate(X_testC, y_testC)
 
