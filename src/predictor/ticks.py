@@ -122,6 +122,12 @@ from it. The way it should be:
             data_vectors[1])
         return data_vectors
 
+    def last_date_in_training(self) -> str:
+        """Returns the date (string) of the last event in the training set"""
+        return sequences._last_date_in_training(self.data,
+                                                self.params.window_size,
+                                                self.params.test_size)
+
     def _training_columns(self, train_columns):
         """Return the list of columns to be used for training.
         Depends on whether the value of train_columns is None."""

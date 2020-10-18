@@ -159,6 +159,15 @@ class sequences:
             cls._last_index_in_training(df, timesteps, test_size)]
 
     @classmethod
+    def _last_date_in_training(
+            cls, df: DataFrame, timesteps: int, test_size: float = 0.1
+    ) -> str:
+        """ Returns the date (no time) index of the last event in training """
+        last_one = df.iloc[
+            cls._last_index_in_training(df, timesteps, test_size)]
+        return str(last_one.name).split(' ')[0]
+
+    @classmethod
     def first_in_test(
             cls, df: DataFrame, timesteps: int, test_size: float = 0.1
     ) -> Series:
