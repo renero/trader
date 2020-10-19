@@ -68,15 +68,29 @@ from it. The way it should be:
         data.columns = self.params.ohlc
         return data
 
+    def _unused_columns(self, data: DataFrame) -> List[str]:
+        columns_in_data = list(map(lambda t: t.lower(), list(data)))# - set(cols_to_drop))))
+        columns_to_keep = list(map(lambda t: t.lower(), self.params.ohlc))
+        return list(set(columns_in_data) - set(columns_to_keep))
+
     def _drop_unused_columns(self, data):
-        cols_to_drop = ["Datetime", self.params.csv_dict['d']]
-        if 'v' in self.params.csv_dict.keys():
-            if self.params.csv_dict['v'] in data.columns:
-                cols_to_drop.append(self.params.csv_dict['v'])
-        data = data.drop(cols_to_drop, axis=1)
+        cols_to_drop = self._unused_columns(data)
+
+        def find_col_name(name):
+            col_list = list(data)
+            try:
+                # this uses a generator to find the index if it matches,
+                # will raise an exception if not found
+                return col_list[next(
+                    i for i, v in enumerate(col_list) if v.lower() == name)]
+            except:
+                return ''
+
+        for column_to_drop in cols_to_drop:
+            data = data.drop(find_col_name(column_to_drop), axis=1)
         return data
 
-    def scale(self) -> DataFrame:
+    def scale(self) -> "Ticks":
         """Scales the OHLC ticks from the dataframe read"""
         self._scaler = RobustScaler().fit(self.data[self.params.ohlc])
         self.data = pd.DataFrame(

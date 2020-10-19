@@ -1,5 +1,5 @@
 #
-# Predictor Test Parameters
+# Predictor Parameters
 #
 
 # delimiter used in the CSV file for the OHLC+V information.
@@ -11,27 +11,42 @@ csv_dict:
   h: 'High'
   l: 'Low'
   c: 'Close'
-  v: 'Volume'
 ohlc: ['open','high','low','close']
+cse_tags: ['b', 'o', 'h', 'l', 'c']
+precision: 4
 
-# Seed to be used to initialize the whole system.
-seed: 1
+# Saving predictions. The first one is only the path to be used when saving
+# predict_training. The second one (json_predict_path) is the name of the
+# json file used during the pipeline execution (highly ephemeral)
+predictions_path: ../output/^GDAXI
+
+# Files, Networks, Names...
+models_dir: ../staging/EURUSD/
+
+# JSON Files to be generated daily
+json_prediction: /tmp/trader/^GDAXI/tmp_prediction.json
+json_forecast: /tmp/trader/^GDAXI/tmp_forecast.json
 
 # Keras parameters
 verbose: 0
-mlflow: False
+mlflow: True
 summary: False
 
+#
 # training parameters
-loss: mean_squared_error
-metrics: ['mse']
-batch_size: 8
+# -------------------
+#
+# loss: mean_squared_error  # <- continuous output
+# metrics: ['mse']          # <- continuous output
+# activation: tanh          # <- continuous output
+#
+loss: binary_crossentropy   # <- binary output
+metrics: ['accuracy']       # <- binary output
+activation: sigmoid         # <- binary output
+batch_size: 16
 validation_split: 0.1
 test_size: 0.1
 learning_rate: 0.01
-
-# model parameters
-l1units: 128
-l2units: 128
-activation: tanh
-dropout: 0.1
+layers: 1
+units: 28
+dropout: 0.2

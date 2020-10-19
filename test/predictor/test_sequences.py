@@ -3,7 +3,7 @@ from typing import Tuple
 
 import numpy as np
 
-from dictionary_trait import CSDictionary
+from predictor.dictionary import Dictionary
 from predictor.sequences import sequences
 from predictor.ticks import Ticks
 
@@ -26,14 +26,15 @@ class TestSequences(unittest.TestCase):
             "--epochs", "1",
             "train",
         ]
-        cls.params = CSDictionary(args=argv)
+        cls.params = Dictionary(args=argv)
         cls.ticks = Ticks(cls.params, cls.params['input_file'])
 
     def test_prepare(self):
-        X, y, Xt, yt = sequences.to_time_windows(self.ticks.data,
-                                                 train_columns=self.ticks.data.columns,
-                                                 y_label="close",
-                                                 timesteps=self.params.window_size)
+        X, y, Xt, yt = sequences.to_time_windows(
+            self.ticks.data,
+            train_columns=self.ticks.data.columns,
+            y_label="close",
+            timesteps=self.params.window_size)
         self.assertIsInstance(X, np.ndarray)
         self.check_shape((X, y, Xt, yt))
 
