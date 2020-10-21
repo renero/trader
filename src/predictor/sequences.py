@@ -146,7 +146,7 @@ class sequences:
         dataframe"""
         train_size = 1.0 - test_size
         n_samples = df.shape[0]
-        n_test = ceil(test_size * n_samples)
+        # n_test = ceil(test_size * n_samples)
         # n_train = floor(train_size * n_samples)
         n_train = ceil(train_size * n_samples)
         # last_index_in_train = n_train - timesteps - 1

@@ -45,7 +45,7 @@ metrics: ['accuracy']       # <- binary output
 activation: sigmoid         # <- binary output
 batch_size: 16
 validation_split: 0.1
-test_size: 0.1
+test_size: 0.25
 learning_rate: 0.01
 layers: 1
 units: 28
