@@ -1,4 +1,5 @@
 from importlib import import_module
+from os.path import basename, splitext
 from typing import Union, List, Tuple
 
 import joblib
@@ -9,6 +10,7 @@ from sklearn.preprocessing import RobustScaler
 
 from dictionary import Dictionary
 from sequences import sequences
+from utils.file_utils import valid_output_name
 from utils.utils import reset_seeds
 
 TrainTestVectors = Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
@@ -41,24 +43,42 @@ from it. The way it should be:
     So, let's work on it.
     """
 
-    data = None
+    data: pd.DataFrame = None
     _scaler = None
     _scaler_file = None
     _encoder = None
     _volatility = 0.0
 
-    def __init__(self, params: Dictionary, url: str):
+    def __init__(self,
+                 params: Dictionary,
+                 csv_file: str = None,
+                 df: pd.DataFrame = None):
+        """
+        Initialize a Ticks object by passing a CSV file URL * or * a dataframe
+        """
+        assert csv_file is not None or df is not None, \
+            "Either a CSV file path or an existing dataframe must be specified"
         self.params = params
+        self.log = params.log
         reset_seeds()
-
-        self.data = pd.read_csv(url).round(self.params.precision)
-        self.data = self._fix_datetime_index(self.data)
-
-        self.raw = self.data.copy(deep=True)
+        self.data = self._from_csv(
+            url=csv_file) if csv_file is not None else self._from_dataframe(df)
         self._volatility = self.data.close.std()
+
+    def _from_csv(self, url: str) -> pd.DataFrame:
+        return self._fix_datetime_index(
+            pd.read_csv(url).round(self.params.precision)
+        )
+
+    def _from_dataframe(self, df: pd.DataFrame) -> "Ticks":
+        return self._fix_datetime_index(
+            df.round(self.params.precision)
+        )
 
     def _fix_datetime_index(self, data: DataFrame):
         """Set the index in the proper `datetime` type """
+        if isinstance(data.index, pd.core.indexes.datetimes.DatetimeIndex):
+            return data
         format = "%Y-%m-%d %H:%M:%S"
         date_column = self.params.csv_dict['d']
         data["Datetime"] = pd.to_datetime(data[date_column] + " 00:00:00",
@@ -69,7 +89,8 @@ from it. The way it should be:
         return data
 
     def _unused_columns(self, data: DataFrame) -> List[str]:
-        columns_in_data = list(map(lambda t: t.lower(), list(data)))# - set(cols_to_drop))))
+        columns_in_data = list(
+            map(lambda t: t.lower(), list(data)))  # - set(cols_to_drop))))
         columns_to_keep = list(map(lambda t: t.lower(), self.params.ohlc))
         return list(set(columns_in_data) - set(columns_to_keep))
 
@@ -90,9 +111,12 @@ from it. The way it should be:
             data = data.drop(find_col_name(column_to_drop), axis=1)
         return data
 
-    def scale(self) -> "Ticks":
+    def scale(self, scaler_path: str = None) -> "Ticks":
         """Scales the OHLC ticks from the dataframe read"""
-        self._scaler = RobustScaler().fit(self.data[self.params.ohlc])
+        if scaler_path is None:
+            self._scaler = RobustScaler().fit(self.data[self.params.ohlc])
+        else:
+            self.load_scaler(scaler_path)
         self.data = pd.DataFrame(
             data=self._scaler.transform(self.data[self.params.ohlc]),
             columns=self.params.ohlc,
@@ -123,11 +147,11 @@ from it. The way it should be:
         """
         data_vectors = sequences.to_time_windows(
             self.data,
-            self._training_columns(train_columns),
-            predict,
             timesteps=self.params.window_size,
-            test_size=self.params.test_size
-        )
+            train_columns=self._training_columns(
+                train_columns),
+            y_column=predict,
+            test_size=self.params.test_size)
         # First and second elements in tuple are the training vectors
         # Third and fourth are the test set (if any).
         # I use the first two to update parameters
@@ -194,7 +218,7 @@ from it. The way it should be:
         except ModuleNotFoundError:
             raise ModuleNotFoundError(f"Indicator {indicator} does not exist")
 
-    def save_scaler(self, filename: str) -> None:
+    def save_scaler(self, filename: str = None) -> None:
         """
         Saves the scaler with the filename specified
 
@@ -207,14 +231,22 @@ from it. The way it should be:
         assert (
                 self._scaler is not None
         ), "Scaler has not yet been created. Use scale() method first."
-        self._scaler_file = filename
+        dataset_name = splitext(basename(self.params.input_file))[0]
+        scaler_filename = filename if filename is not None else \
+            f"scaler_{dataset_name}"
+        self._scaler_file = valid_output_name(
+            filename=scaler_filename,
+            path=self.params.models_dir,
+            extension='bin'
+        )
         joblib.dump(self._scaler, self._scaler_file)
-        print(f"RobustScaler saved at: {self._scaler_file}")
+        self.log.info(f"Scaler saved at: {self._scaler_file}")
 
     def load_scaler(self, filename: str):
         """Loads the scaler from the filename specified"""
         self._scaler_file = filename
         self._scaler = joblib.load(self._scaler_file)
+        self.log.info(f"Scaler loaded from {filename}")
         return self._scaler
 
     @property
