@@ -1,20 +1,17 @@
 from importlib import import_module
 from os.path import basename, splitext
-from typing import Union, List, Tuple
+from typing import Union, List
 
 import joblib
-import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from sklearn.preprocessing import RobustScaler
 
 from dictionary import Dictionary
+from predictor import TrainVectors
 from sequences import sequences
 from utils.file_utils import valid_output_name
 from utils.utils import reset_seeds
-
-TrainTestVectors = Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
-TrainVectors = Union[TrainTestVectors, Tuple[np.ndarray, np.ndarray]]
 
 
 class Ticks:
@@ -23,22 +20,26 @@ from it. The way it should be:
 
     # to predict close and use OHLC values
 
->>> ticks.prepare_for_training(predict='close')
->>> X, y, Xt, yt = ticks.split(test_size=0.1)
+    >>> params = Dictionary(args=argv)
+    >>> df = pd.DataFrame({"Col1": [10, 20, 15, 30, 45],\
+                           "Col2": [17, 27, 22, 37, 52]},\
+                           index=pd.date_range("2020-01-01", "2020-01-05"))
+    >>> ticks = Ticks(params, df=df)
+    >>> X, y, Xt, yt = ticks.prepare_for_training( \
+            predict_column='Col2', train_columns='Col1')
 
-    # To generate X and y without test set
->>> ticks.prepare_for_training(predict='close')
->>> X, y = ticks.split(test_size=0.0)
+    # To generate X and y without test set, ensure params.test_size=0.
+    >>> X, y = ticks.prepare_for_training(predict_column='close')
 
     # if we want to predict "trend"
->>> ticks.append_indicator('trend')
->>> ticks.prepare_for_training(predict='trend')
->>> X, y , Xt, yt = split(test_size=0.1)
+    >>> ticks.append_indicator('trend')
+    >>> ticks.prepare_for_training(predict_column='trend')
+    >>> X, y , Xt, yt = split(test_size=0.1)
 
     # if we want to use less variables in prediction
->>> ticks.append_indicator(['moving_average', 'trend'])
->>> ticks.prepare_for_training(predict='trend',
-        train_columns=['close', 'moving_average'])
+    >>> ticks.append_indicator(['moving_average', 'trend'])
+    >>> ticks.prepare_for_training(predict_column='trend', \
+            train_columns=['close', 'moving_average'])
 
     So, let's work on it.
     """
@@ -137,10 +138,8 @@ from it. The way it should be:
             index=scaled_df.index,
         ).round(self.params.precision)
 
-    def prepare_for_training(
-            self,
-            predict: str,
-            train_columns: List[str] = None) -> TrainVectors:
+    def prepare_for_training(self, predict_column: str,
+                             train_columns: List[str] = None) -> TrainVectors:
         """
         Prepare the input dataframe (OHLC) converting it in a 3D tensor
         and update internal parameters.
@@ -150,7 +149,7 @@ from it. The way it should be:
             timesteps=self.params.window_size,
             train_columns=self._training_columns(
                 train_columns),
-            y_column=predict,
+            y_column=predict_column,
             test_size=self.params.test_size)
         # First and second elements in tuple are the training vectors
         # Third and fourth are the test set (if any).
@@ -159,6 +158,15 @@ from it. The way it should be:
         self.params.num_target_labels = sequences.get_num_target_labels(
             data_vectors[1])
         return data_vectors
+
+    def prepare_for_predict(self, train_columns: List[str]) -> TrainVectors:
+        """
+        Prepare a dataframe to be used as input to a trained network,
+        to obtain a prediction.
+        """
+        return sequences.to_time_windows(
+            df=self.data, timesteps=self.params.window_size,
+            train_columns=train_columns)
 
     def last_date_in_training(self) -> str:
         """Returns the date (string) of the last event in the training set"""

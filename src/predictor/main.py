@@ -31,9 +31,8 @@ def main(argv):
     params.epochs = 100
 
     X_trainC, y_trainC, X_testC, y_testC = ticks.prepare_for_training(
-        predict="close_trend",
-        train_columns=["returns", "gmf", "gmf_mono", "gmf_trend"]
-    )
+        predict_column="close_trend",
+        train_columns=["returns", "gmf", "gmf_mono", "gmf_trend"])
 
     nn1 = lstm(params).build()
     nn1.start_training(X_trainC, y_trainC, name=None)

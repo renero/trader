@@ -7,8 +7,7 @@ from numpy import ndarray
 from pandas import DataFrame, Series
 from sklearn.model_selection import train_test_split
 
-TrainTestVectors = Tuple[ndarray, ndarray, ndarray, ndarray]
-TrainVectors = Union[TrainTestVectors, Tuple[ndarray, ndarray]]
+from predictor import TrainVectors, TrainTestVectors
 
 
 class sequences:
