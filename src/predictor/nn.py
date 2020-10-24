@@ -59,7 +59,7 @@ class nn:
         bs = self.metadata['batch_size']
         a = self.metadata['learning_rate']
         e = self.metadata['epochs']
-        desc = f"LSTM{b}({l}l;{u}u;d={d:.2f};lr={a};[W={w};E={e};BS={bs}])"
+        desc = f"LSTM{b}({l}L;u{u};d{d:.2f};lr{a};[W{w};E{e};BS{bs}])"
         return desc
 
     def start_training(self, X_train: ndarray, y_train: ndarray,
@@ -191,10 +191,11 @@ class nn:
         Returns The filename if the name is valid and file does not exists,
                 None otherwise.
         """
-        self.filename = '{}_w{}_e{}'.format(
-            self.metadata['dataset'],
-            self.metadata['window_size'],
-            self.metadata['epochs'])
+        # self.filename = '{}_w{}_e{}'.format(
+        #     self.metadata['dataset'],
+        #     self.metadata['window_size'],
+        #     self.metadata['epochs'])
+        self.filename = str(self)
         base_filepath = join(self.params.models_dir, self.filename)
         output_filepath = base_filepath
         idx = 1
