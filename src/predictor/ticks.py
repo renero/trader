@@ -151,11 +151,16 @@ from it. The way it should be:
                 train_columns),
             y_column=predict_column,
             test_size=self.params.test_size)
+        # Keep this values in params.
+        self.params.predict_column = predict_column
+        self.params.train_columns = train_columns
         # First and second elements in tuple are the training vectors
         # Third and fourth are the test set (if any).
-        # I use the first two to update parameters
+        # I use the first two to update parameters.
         self.params.num_features = sequences.get_num_features(data_vectors[0])
         self.params.num_target_labels = sequences.get_num_target_labels(
+            data_vectors[1])
+        self.params.num_target_values = sequences.get_num_target_values(
             data_vectors[1])
         return data_vectors
 
@@ -258,7 +263,7 @@ from it. The way it should be:
         return self._scaler
 
     @property
-    def scaler_file(self) -> str:
+    def scaler_file(self) -> Union[str, None]:
         if hasattr(self, "_scaler_file"):
             return self._scaler_file.as_posix()
         return None

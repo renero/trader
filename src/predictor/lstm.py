@@ -37,7 +37,7 @@ class lstm(nn):
         return self
 
     def load(self, model_name):
-        self.model = self._load(model_name, self.params)
+        self.model, self.metadata = self._load(model_name, self.params)
         # These parameters are embedded in network configuration, and must
         # be retrieved from the JSON structure, instead of computing them
         # from the input data used for training.

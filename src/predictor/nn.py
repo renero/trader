@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 from os.path import join, basename, splitext, dirname, realpath
 from pathlib import Path
@@ -9,7 +10,7 @@ from tensorflow.keras.optimizers import Adam
 
 from metrics import metrics
 from utils.callbacks import display_progress
-from utils.file_utils import file_exists
+from utils.file_utils import file_exists, valid_output_name
 from utils.utils import reset_seeds
 
 
@@ -44,13 +45,20 @@ class nn:
             self.metadata['num_features'] = self.params.num_features
         if 'num_target_labels' in self.params:
             self.metadata['num_target_labels'] = self.params.num_target_labels
+        if 'num_target_values' in self.params:
+            self.metadata['num_target_values'] = self.params.num_target_values
         self.metadata['dropout'] = self.params.dropout
         self.metadata['learning_rate'] = self.params.learning_rate
         self.metadata['activation'] = self.params.activation
         self.metadata['units'] = self.params.units
         self.metadata['batch_size'] = self.params.batch_size
+        if 'train_columns' in self.params:
+            self.metadata['train_columns'] = self.params.train_columns
+        if 'predict_column' in self.params:
+            self.metadata['predict_column'] = self.params.predict_column
 
     def __str__(self):
+        p = self.metadata['predict_column']
         l = self.metadata['layers']
         b = 'b' if self.metadata['binary'] is True else ''
         d = self.metadata['dropout']
@@ -59,7 +67,7 @@ class nn:
         bs = self.metadata['batch_size']
         a = self.metadata['learning_rate']
         e = self.metadata['epochs']
-        desc = f"LSTM{b}({l}L;u{u};d{d:.2f};lr{a};[W{w};E{e};BS{bs}])"
+        desc = f"LSTM{b}_{p};{l}L;u{u};d{d:.2f};lr{a};W{w};E{e};BS{bs}"
         return desc
 
     def start_training(self, X_train: ndarray, y_train: ndarray,
@@ -133,14 +141,16 @@ class nn:
 
     @staticmethod
     def _load(model_name, params):
-        """ Load json and h5 files, compile the model and return it """
+        """ Load json and h5 files, compile the model and return it, together
+        with the metadata """
         loaded_model = nn._load_model(model_name, params)
         nn._load_weights(loaded_model, model_name, params)
         nn._compile_model(loaded_model, params)
+        metadata = nn._load_metadata(model_name, params)
 
         if params.summary is True:
             loaded_model.summary()
-        return loaded_model
+        return loaded_model, metadata
 
     @staticmethod
     def _compile_model(loaded_model, params):
@@ -167,39 +177,35 @@ class nn:
         loaded_model = model_from_json(loaded_model_json)
         return loaded_model
 
+    @staticmethod
+    def _load_metadata(model_name, params):
+        nn_path = join(params.models_dir, '{}.metadata.json'.format(model_name))
+        nn_path = file_exists(nn_path, dirname(realpath(__file__)))
+        json_file = open(nn_path, 'r')
+        loaded_metadata = json.load(json_file)
+        json_file.close()
+        return loaded_metadata
+
     def save(self):
         """ serialize model to JSON """
-        if self.metadata['accuracy'] == 'unk':
-            raise ValidationException('Trying to save without training.')
-
         if self.params.output is not None:
             model_name = self.params.output
         else:
-            model_name = self._valid_model_name()
+            model_name = valid_output_name(str(self), self.params.models_dir)
+            self.log.info(model_name)
 
+        # Save the metadata
+        meta_json = json.dumps(self.metadata, sort_keys=True, indent=4)
+        with open(f'{model_name}.metadata.json', "w") as json_file:
+            json_file.write(meta_json)
+        json_file.close()
+
+        # Save the model structure in JSON file (Keras)
         model_json = self.model.to_json()
-        with open('{}.json'.format(model_name), "w") as json_file:
+        with open(f'{model_name}.json', "w") as json_file:
             json_file.write(model_json)
+        json_file.close()
 
-        # serialize weights to HDF5
-        self.model.save_weights('{}.h5'.format(model_name))
+        # Serialize weights to HDF5 (Keras)
+        self.model.save_weights(f'{model_name}.h5')
         self.log.info("Saved model and weights ({})".format(model_name))
-
-    def _valid_model_name(self):
-        """
-        Builds a valid name with the metadata and the date.
-        Returns The filename if the name is valid and file does not exists,
-                None otherwise.
-        """
-        # self.filename = '{}_w{}_e{}'.format(
-        #     self.metadata['dataset'],
-        #     self.metadata['window_size'],
-        #     self.metadata['epochs'])
-        self.filename = str(self)
-        base_filepath = join(self.params.models_dir, self.filename)
-        output_filepath = base_filepath
-        idx = 1
-        while Path(output_filepath).is_file() is True:
-            output_filepath = '{}_{:d}'.format(base_filepath, idx)
-            idx += 1
-        return output_filepath

@@ -309,6 +309,11 @@ class sequences:
         return y_train.shape[1]
 
     @classmethod
+    def get_num_target_values(cls, y_train):
+        assert len(y_train.shape) == 2, "Training labels must be a 2D tensor"
+        return len(np.unique(y_train))
+
+    @classmethod
     def _last_index_in_training(
             cls, df: DataFrame, timesteps: int, test_size: float = 0.1
     ) -> int:

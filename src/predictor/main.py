@@ -28,18 +28,20 @@ def main(argv):
 
     params = Dictionary(args=argv)
     ticks = read_ticks()
-    params.epochs = 100
+    params.epochs = 150
+    params.window_size = 28
 
-    X_trainC, y_trainC, X_testC, y_testC = ticks.prepare_for_training(
-        predict_column="close_trend",
-        train_columns=["returns", "gmf", "gmf_mono", "gmf_trend"])
+    XT, yT, Xt, yt = ticks.prepare_for_training(
+        predict_column="gmf_trend",
+        train_columns=["gmf", "gmf_mono"])
 
     nn1 = lstm(params).build()
-    nn1.start_training(X_trainC, y_trainC, name=None)
-    yhatC_trend, acc = nn1.evaluate(X_testC, y_testC)
+    nn1.start_training(XT, yT, name=None)
+    yhat, acc = nn1.evaluate(Xt, yt)
 
     print(nn1)
-    print_bin_predictions_match(y_testC, yhatC_trend)
+    print_bin_predictions_match(yt, yhat)
+    nn1.save()
 
 
 if __name__ == "__main__":
