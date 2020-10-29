@@ -1,18 +1,17 @@
 from importlib import import_module
-from typing import Union, List, Tuple
+from os.path import basename, splitext
+from typing import Union, List
 
 import joblib
-import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from sklearn.preprocessing import RobustScaler
 
 from dictionary import Dictionary
+from predictor import TrainVectors
 from sequences import sequences
+from utils.file_utils import valid_output_name
 from utils.utils import reset_seeds
-
-TrainTestVectors = Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
-TrainVectors = Union[TrainTestVectors, Tuple[np.ndarray, np.ndarray]]
 
 
 class Ticks:
@@ -21,44 +20,66 @@ from it. The way it should be:
 
     # to predict close and use OHLC values
 
->>> ticks.prepare_for_training(predict='close')
->>> X, y, Xt, yt = ticks.split(test_size=0.1)
+    >>> params = Dictionary(args=argv)
+    >>> df = pd.DataFrame({"Col1": [10, 20, 15, 30, 45],\
+                           "Col2": [17, 27, 22, 37, 52]},\
+                           index=pd.date_range("2020-01-01", "2020-01-05"))
+    >>> ticks = Ticks(params, df=df)
+    >>> X, y, Xt, yt = ticks.prepare_for_training( \
+            predict_column='Col2', train_columns='Col1')
 
-    # To generate X and y without test set
->>> ticks.prepare_for_training(predict='close')
->>> X, y = ticks.split(test_size=0.0)
+    # To generate X and y without test set, ensure params.test_size=0.
+    >>> X, y = ticks.prepare_for_training(predict_column='close')
 
     # if we want to predict "trend"
->>> ticks.append_indicator('trend')
->>> ticks.prepare_for_training(predict='trend')
->>> X, y , Xt, yt = split(test_size=0.1)
+    >>> ticks.append_indicator('trend')
+    >>> ticks.prepare_for_training(predict_column='trend')
+    >>> X, y , Xt, yt = split(test_size=0.1)
 
     # if we want to use less variables in prediction
->>> ticks.append_indicator(['moving_average', 'trend'])
->>> ticks.prepare_for_training(predict='trend',
-        train_columns=['close', 'moving_average'])
+    >>> ticks.append_indicator(['moving_average', 'trend'])
+    >>> ticks.prepare_for_training(predict_column='trend', \
+            train_columns=['close', 'moving_average'])
 
     So, let's work on it.
     """
 
-    data = None
+    data: pd.DataFrame = None
     _scaler = None
     _scaler_file = None
     _encoder = None
     _volatility = 0.0
 
-    def __init__(self, params: Dictionary, url: str):
+    def __init__(self,
+                 params: Dictionary,
+                 csv_file: str = None,
+                 df: pd.DataFrame = None):
+        """
+        Initialize a Ticks object by passing a CSV file URL * or * a dataframe
+        """
+        assert csv_file is not None or df is not None, \
+            "Either a CSV file path or an existing dataframe must be specified"
         self.params = params
+        self.log = params.log
         reset_seeds()
-
-        self.data = pd.read_csv(url).round(self.params.precision)
-        self.data = self._fix_datetime_index(self.data)
-
-        self.raw = self.data.copy(deep=True)
+        self.data = self._from_csv(
+            url=csv_file) if csv_file is not None else self._from_dataframe(df)
         self._volatility = self.data.close.std()
+
+    def _from_csv(self, url: str) -> pd.DataFrame:
+        return self._fix_datetime_index(
+            pd.read_csv(url).round(self.params.precision)
+        )
+
+    def _from_dataframe(self, df: pd.DataFrame) -> "Ticks":
+        return self._fix_datetime_index(
+            df.round(self.params.precision)
+        )
 
     def _fix_datetime_index(self, data: DataFrame):
         """Set the index in the proper `datetime` type """
+        if isinstance(data.index, pd.core.indexes.datetimes.DatetimeIndex):
+            return data
         format = "%Y-%m-%d %H:%M:%S"
         date_column = self.params.csv_dict['d']
         data["Datetime"] = pd.to_datetime(data[date_column] + " 00:00:00",
@@ -68,17 +89,35 @@ from it. The way it should be:
         data.columns = self.params.ohlc
         return data
 
+    def _unused_columns(self, data: DataFrame) -> List[str]:
+        columns_in_data = list(
+            map(lambda t: t.lower(), list(data)))  # - set(cols_to_drop))))
+        columns_to_keep = list(map(lambda t: t.lower(), self.params.ohlc))
+        return list(set(columns_in_data) - set(columns_to_keep))
+
     def _drop_unused_columns(self, data):
-        cols_to_drop = ["Datetime", self.params.csv_dict['d']]
-        if 'v' in self.params.csv_dict.keys():
-            if self.params.csv_dict['v'] in data.columns:
-                cols_to_drop.append(self.params.csv_dict['v'])
-        data = data.drop(cols_to_drop, axis=1)
+        cols_to_drop = self._unused_columns(data)
+
+        def find_col_name(name):
+            col_list = list(data)
+            try:
+                # this uses a generator to find the index if it matches,
+                # will raise an exception if not found
+                return col_list[next(
+                    i for i, v in enumerate(col_list) if v.lower() == name)]
+            except:
+                return ''
+
+        for column_to_drop in cols_to_drop:
+            data = data.drop(find_col_name(column_to_drop), axis=1)
         return data
 
-    def scale(self) -> DataFrame:
+    def scale(self, scaler_path: str = None) -> "Ticks":
         """Scales the OHLC ticks from the dataframe read"""
-        self._scaler = RobustScaler().fit(self.data[self.params.ohlc])
+        if scaler_path is None:
+            self._scaler = RobustScaler().fit(self.data[self.params.ohlc])
+        else:
+            self.load_scaler(scaler_path)
         self.data = pd.DataFrame(
             data=self._scaler.transform(self.data[self.params.ohlc]),
             columns=self.params.ohlc,
@@ -99,28 +138,46 @@ from it. The way it should be:
             index=scaled_df.index,
         ).round(self.params.precision)
 
-    def prepare_for_training(
-            self,
-            predict: str,
-            train_columns: List[str] = None) -> TrainVectors:
+    def prepare_for_training(self, predict_column: str,
+                             train_columns: List[str] = None) -> TrainVectors:
         """
         Prepare the input dataframe (OHLC) converting it in a 3D tensor
         and update internal parameters.
         """
         data_vectors = sequences.to_time_windows(
             self.data,
-            self._training_columns(train_columns),
-            predict,
             timesteps=self.params.window_size,
-            test_size=self.params.test_size
-        )
+            train_columns=self._training_columns(
+                train_columns),
+            y_column=predict_column,
+            test_size=self.params.test_size)
+        # Keep this values in params.
+        self.params.predict_column = predict_column
+        self.params.train_columns = train_columns
         # First and second elements in tuple are the training vectors
         # Third and fourth are the test set (if any).
-        # I use the first two to update parameters
+        # I use the first two to update parameters.
         self.params.num_features = sequences.get_num_features(data_vectors[0])
         self.params.num_target_labels = sequences.get_num_target_labels(
             data_vectors[1])
+        self.params.num_target_values = sequences.get_num_target_values(
+            data_vectors[1])
         return data_vectors
+
+    def prepare_for_predict(self, train_columns: List[str]) -> TrainVectors:
+        """
+        Prepare a dataframe to be used as input to a trained network,
+        to obtain a prediction.
+        """
+        return sequences.to_time_windows(
+            df=self.data, timesteps=self.params.window_size,
+            train_columns=train_columns)
+
+    def last_date_in_training(self) -> str:
+        """Returns the date (string) of the last event in the training set"""
+        return sequences._last_date_in_training(self.data,
+                                                self.params.window_size,
+                                                self.params.test_size)
 
     def _training_columns(self, train_columns):
         """Return the list of columns to be used for training.
@@ -174,7 +231,7 @@ from it. The way it should be:
         except ModuleNotFoundError:
             raise ModuleNotFoundError(f"Indicator {indicator} does not exist")
 
-    def save_scaler(self, filename: str) -> None:
+    def save_scaler(self, filename: str = None) -> None:
         """
         Saves the scaler with the filename specified
 
@@ -187,18 +244,26 @@ from it. The way it should be:
         assert (
                 self._scaler is not None
         ), "Scaler has not yet been created. Use scale() method first."
-        self._scaler_file = filename
+        dataset_name = splitext(basename(self.params.input_file))[0]
+        scaler_filename = filename if filename is not None else \
+            f"scaler_{dataset_name}"
+        self._scaler_file = valid_output_name(
+            filename=scaler_filename,
+            path=self.params.models_dir,
+            extension='bin'
+        )
         joblib.dump(self._scaler, self._scaler_file)
-        print(f"RobustScaler saved at: {self._scaler_file}")
+        self.log.info(f"Scaler saved at: {self._scaler_file}")
 
     def load_scaler(self, filename: str):
         """Loads the scaler from the filename specified"""
         self._scaler_file = filename
         self._scaler = joblib.load(self._scaler_file)
+        self.log.info(f"Scaler loaded from {filename}")
         return self._scaler
 
     @property
-    def scaler_file(self) -> str:
+    def scaler_file(self) -> Union[str, None]:
         if hasattr(self, "_scaler_file"):
             return self._scaler_file.as_posix()
         return None

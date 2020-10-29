@@ -108,4 +108,4 @@ def reset_seeds():
     np.random.seed(1)
     random.seed(2)
     tf.compat.v1.set_random_seed(3)
-    print("[Determinism: Random seeds reset]")  # optional
+    #print("[Determinism: Random seeds reset]")  # optional

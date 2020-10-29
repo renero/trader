@@ -22,7 +22,7 @@ class trend(Indicator):
         self.values = self.fit(column_name, fill_na=False)
 
     def fit(self, column_name='close', fill_na: bool = True) -> DataFrame:
-        """ Compute the trend of the close value """
+        """ Compute the trend of the given column name value """
         assert column_name in self.data.columns, \
             f"A column with the {column_name} name must be present in the data"
         data = self.data.copy(deep=True)
