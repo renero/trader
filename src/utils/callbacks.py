@@ -1,5 +1,6 @@
 from tensorflow.keras.callbacks import Callback
 
+from dictionary import Dictionary
 from utils.utils import print_progbar
 
 
@@ -7,8 +8,9 @@ class display_progress(Callback):
     blades = ['|', '/', '–', '\\']
     pos = 0
 
-    def __init__(self, epochs):
-        self.epochs = epochs
+    def __init__(self, params: Dictionary):
+        self.params = params
+        self.epochs = self.params.epochs
         self.a_max = -1000.0
         self.a_min = 1000.
         self.v_max = -1000.0
@@ -40,10 +42,10 @@ class display_progress(Callback):
         print("\r" + str_epoch + str_acc + str_val + ' | ' + pb, end="")
 
     def get_min_and_max(self, logs):
-        acc = logs['accuracy']
+        acc = logs[self.params.metrics[0]]
         self.a_max = acc if acc > self.a_max else self.a_max
         self.a_min = acc if acc < self.a_min else self.a_min
-        v_acc = logs['val_accuracy']
+        v_acc = logs[self.params.val_metrics[0]]
         self.v_max = v_acc if v_acc > self.v_max else self.v_max
         self.v_min = v_acc if v_acc < self.v_min else self.v_min
         return acc, v_acc

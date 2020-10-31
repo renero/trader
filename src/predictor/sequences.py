@@ -314,6 +314,13 @@ class sequences:
         return len(np.unique(y_train))
 
     @classmethod
+    def get_output_values(cls, y_train):
+        assert len(y_train.shape) == 2, "Training labels must be a 2D tensor"
+        values = np.unique(y_train)
+        if len(values) < int(len(y_train) / 10):
+            return sorted(values)
+
+    @classmethod
     def _last_index_in_training(
             cls, df: DataFrame, timesteps: int, test_size: float = 0.1
     ) -> int:

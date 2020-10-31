@@ -10,8 +10,8 @@ class lstm(nn):
 
     def __init__(self, params):
         super().__init__(params)
-        self.metadata[
-            'name'] = f'{self.__class__.__name__}_{params.layers}layers'
+        self.metadata['name'] = \
+            f'{self.__class__.__name__}_{params.layers}layers'
         self.metadata['layers'] = params.layers
         self.metadata['binary'] = params.loss == 'binary_crossentropy'
 
@@ -86,14 +86,17 @@ class lstm(nn):
     def close_lstm_network(params, model):
         """Adds a dense layer, and compiles the model with the selected
         optimizer, returning a summary of the model, if set to True in params"""
-        model.add(
-            Dense(params.num_target_labels,
-                  activation=params.activation))
         optimizer = Adam(lr=params.learning_rate)
-        model.compile(
-            loss=params.loss,
-            optimizer=optimizer,
-            metrics=params.metrics)
+
+        if params.num_target_labels == 1 and params.num_target_values == 2:
+            num_output_cells = params.num_target_labels
+        else:
+            num_output_cells = params.num_target_values
+        model.add(
+            Dense(num_output_cells,
+                  activation=params.activation))
+        model.compile(loss=params.loss, optimizer=optimizer,
+                      metrics=params.metrics)
 
         if params.summary is True:
             model.summary()

@@ -28,12 +28,14 @@ def main(argv):
 
     params = Dictionary(args=argv)
     ticks = read_ticks()
-    params.epochs = 150
+    params.epochs = 50
     params.window_size = 28
 
     XT, yT, Xt, yt = ticks.prepare_for_training(
-        predict_column="gmf_trend",
-        train_columns=["gmf", "gmf_mono"])
+        predict_column="gmf_mono",
+        train_columns=["gmf", "gmf_trend"])
+    yT += 1
+    yt += 1
 
     nn1 = lstm(params).build()
     nn1.start_training(XT, yT, name=None)
