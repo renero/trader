@@ -39,7 +39,7 @@ class display_progress(Callback):
         str_acc = f" - Acc:{acc:.2f} (↑{self.a_max:.02f}/↓{self.a_min:.02f})"
         str_val = f" - Val:{v_acc:.02f} (↑{self.v_max:.02f}/↓{self.v_min:.02f})"
         pb = print_progbar(epoch / self.epochs, do_print=False)
-        print("\r" + str_epoch + str_acc + str_val + ' | ' + pb, end="")
+        print("\r" + str_epoch + str_acc + str_val + ' - ' + pb, end="")
 
     def get_min_and_max(self, logs):
         acc = logs[self.params.metrics[0]]

@@ -182,11 +182,8 @@ class nn:
 
     def save(self):
         """ serialize model to JSON """
-        if self.params.output is not None:
-            model_name = self.params.output
-        else:
-            model_name = valid_output_name(str(self), self.params.models_dir)
-            self.log.info(model_name)
+        model_name = valid_output_name(str(self), self.params.models_dir)
+        self.log.info(model_name)
 
         # Save the metadata
         meta_json = json.dumps(self.metadata, sort_keys=True, indent=4)

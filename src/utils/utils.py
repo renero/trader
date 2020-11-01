@@ -1,6 +1,6 @@
 import os
 
-os.environ['PYTHONHASHSEED'] = '0'
+#os.environ['PYTHONHASHSEED'] = '0'
 
 import random
 
@@ -8,6 +8,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from termcolor import colored
+from tensorflow.keras.metrics import BinaryAccuracy, SparseCategoricalAccuracy
 
 
 def letter_in_string(string, letter):
@@ -58,14 +59,16 @@ def previous(objects_array: object, pos: int):
         return objects_array[pos - 1]
 
 
-def print_bin_predictions_match(y_test, yhat):
+def print_bin_predictions_match(y_test, yhat, binary=True):
+    accuracy = BinaryAccuracy() if binary else SparseCategoricalAccuracy()
     for i in range(y_test.shape[0]):
         ix = colored(str(f'{i:02d} |'), 'grey')
         sep = colored('|', 'grey')
         y = int(y_test[i][0])
-        pred = f"{yhat[i][0]:.02f}"
-        true_pred = (yhat[i][0] >= 0.5 and y == 1) or (
-                yhat[i][0] < 0.5 and y == 0)
+        pred = f"{yhat[i][0]:.02f}" if binary else f"{np.argmax(yhat[i])}"
+        accuracy.reset_states()
+        accuracy.update_state(y, yhat[i])
+        true_pred = accuracy.result().numpy() == 1.0
         color = "green" if true_pred else "red"
         pred = colored(pred, color)
         if i % 9 == 0:
@@ -108,4 +111,4 @@ def reset_seeds():
     np.random.seed(1)
     random.seed(2)
     tf.compat.v1.set_random_seed(3)
-    #print("[Determinism: Random seeds reset]")  # optional
+    # print("[Determinism: Random seeds reset]")  # optional

@@ -28,8 +28,10 @@ def main(argv):
 
     params = Dictionary(args=argv)
     ticks = read_ticks()
-    params.epochs = 50
-    params.window_size = 28
+    params.window_size = 14
+    params.batch_size = 14
+    params.units = 28
+    params.dropout = 0.2
 
     XT, yT, Xt, yt = ticks.prepare_for_training(
         predict_column="gmf_mono",
@@ -42,7 +44,7 @@ def main(argv):
     yhat, acc = nn1.evaluate(Xt, yt)
 
     print(nn1)
-    print_bin_predictions_match(yt, yhat)
+    print_bin_predictions_match(yt, yhat, nn1.metadata['binary'])
     nn1.save()
 
 

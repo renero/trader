@@ -43,6 +43,8 @@ class Logger:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+    LINEWIDTH = 33
+
     _level = 3
 
     def __init__(self, level=0):
@@ -58,13 +60,13 @@ class Logger:
         if self._level < self._DEBUG:
             return
         when = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
-        print('{} - {}DEBUG - {:<31} - {}{}'.format(
+        print('{} - {}DEBUG - {:<33} - {}{}'.format(
             when, self.OKBLUE, who(1), what, self.ENDC, **kwargs))
         sys.stdout.flush()
 
     def highlight(self, what):
         now = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
-        print('{} - INFO  - {:<31} - {}{}{}'.format(
+        print('{} - INFO  - {:<33} - {}{}{}'.format(
             now,
             who(1),
             self.INFOGREY, what, self.ENDC))
@@ -73,14 +75,14 @@ class Logger:
         if self._level < self._INFO:
             return
         when = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
-        print('{} - INFO  - {:<31} - {}'.format(
+        print('{} - INFO  - {:<33} - {}'.format(
             when, who(1), what, **kwargs))
 
     def warn(self, what, **kwargs):
         if self._level < self._WARN:
             return
         when = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
-        print('{} - {}WARN  - {:<31} - {}{}'.format(
+        print('{} - {}WARN  - {:<33} - {}{}'.format(
             when, self.WARNING, who(1), what, self.ENDC, **kwargs))
 
     def error(self, what):
