@@ -28,10 +28,10 @@ def main(argv):
 
     params = Dictionary(args=argv)
     ticks = read_ticks()
-    params.window_size = 14
-    params.batch_size = 14
-    params.units = 28
-    params.dropout = 0.2
+    params.window_size = 28
+    params.batch_size = 16
+    params.units = 42
+    params.dropout = 0.1
 
     XT, yT, Xt, yt = ticks.prepare_for_training(
         predict_column="gmf_mono",
