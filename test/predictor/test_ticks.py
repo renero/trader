@@ -1,6 +1,6 @@
 import unittest
 
-from dictionary_trait import CSDictionary
+from dictionaries import CSDictionary
 from predictor.ticks import Ticks
 from sequences import sequences
 

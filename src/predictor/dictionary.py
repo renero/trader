@@ -1,9 +1,9 @@
 from predictor.arguments import Arguments
-from common.dictionary_trait import DictionaryTrait
+from common.dictionaries import customdict_trait
 from common.logger import Logger
 
 
-class Dictionary(DictionaryTrait):
+class Dictionary(customdict_trait):
 
     def __init__(self, default_params_filename='params.yaml', *args, **kwargs):
 
@@ -14,7 +14,7 @@ class Dictionary(DictionaryTrait):
             parameters_file = arguments.args.config_file[0]
         else:
             parameters_file = default_params_filename
-        super().__init__(parameters_file, **kwargs)
+        super().__init__(parameters_file, *args)
 
         for possible_action in arguments.possible_actions:
             setattr(self, possible_action, False)

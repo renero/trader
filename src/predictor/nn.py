@@ -8,7 +8,7 @@ from numpy import ndarray
 from tensorflow.keras.models import model_from_json
 from tensorflow.keras.optimizers import Adam
 
-from metrics import metrics
+from common.dictionaries import customdict
 from utils.callbacks import display_progress
 from utils.file_utils import file_exists, valid_output_name
 from utils.utils import reset_seeds

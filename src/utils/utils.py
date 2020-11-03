@@ -1,14 +1,14 @@
-import os
-
-#os.environ['PYTHONHASHSEED'] = '0'
+# os.environ['PYTHONHASHSEED'] = '0'
 
 import random
+from typing import List
 
 import numpy as np
 import tensorflow as tf
+from prettytable import PrettyTable
 from tensorflow.keras import backend as K
-from termcolor import colored
 from tensorflow.keras.metrics import BinaryAccuracy, SparseCategoricalAccuracy
+from termcolor import colored
 
 
 def letter_in_string(string, letter):
@@ -112,3 +112,23 @@ def reset_seeds():
     random.seed(2)
     tf.compat.v1.set_random_seed(3)
     # print("[Determinism: Random seeds reset]")  # optional
+
+
+def dict2table(dictionary: dict) -> str:
+    """Converts a table into an ascii table."""
+    t = PrettyTable()
+    t.field_names = ['Parameter', 'Value']
+    for header in t.field_names:
+        t.align[header] = 'l'
+
+    def tabulate_dictionary(t: PrettyTable, d: dict, name: str = None) -> PrettyTable:
+        for item in d.items():
+            if isinstance(item[1], dict):
+                t = tabulate_dictionary(t, item[1], item[0])
+                continue
+            sep = '.' if name is not None else ''
+            prefix = '' if name is None else name
+            t.add_row([f"{prefix}{sep}{item[0]}", item[1]])
+        return t
+
+    return str(tabulate_dictionary(t, dictionary))
