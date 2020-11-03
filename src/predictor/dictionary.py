@@ -20,28 +20,29 @@ class Dictionary(customdict_trait):
             setattr(self, possible_action, False)
         setattr(self, arguments.args.action, True)
 
-        setattr(self, 'do_plot', arguments.args.plot)
-        setattr(self, 'save_predictions', arguments.args.save)
-        setattr(self, 'input_file', arguments.args.file[0])
+        # setattr(self, 'do_plot', arguments.args.plot)
+        self.do_plot = arguments.args.plot
+        self.save_predictions = arguments.args.save
+        self.input_file = arguments.args.file[0]
         if arguments.args.window is not None:
-            setattr(self, 'window_size', arguments.args.window[0])
+            self.window_size = arguments.args.window[0]
         else:
-            setattr(self, 'window_size', 10)
+            self.window_size = 10
         if arguments.args.epochs is not None:
-            setattr(self, 'epochs', arguments.args.epochs[0])
+            self.epochs = arguments.args.epochs[0]
         else:
-            setattr(self, 'epochs', 1)
+            self.epochs = 1
 
         # Output filename specified
         if arguments.args.output is not None:
-            setattr(self, 'output', arguments.args.output[0])
+            self.output = arguments.args.output[0]
         else:
-            setattr(self, 'output', None)
+            self.output = None
 
         #
         # Extend the dictionary with custom meta-parameters
         #
-        setattr(self, 'ohlc_tags', list(list(self.csv_dict.keys())[1:]))
+        self.ohlc_tags = list(list(self.csv_dict.keys())[1:])
 
         #
         # Set log_level and start the logger
