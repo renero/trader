@@ -28,7 +28,7 @@ debug = False
 class customdict(defaultdict):
 
     def __init__(self, *args):
-        super().__init__(*args)
+        # https://stackoverflow.com/a/45411093/892904
         super(customdict, self).__init__(*(args or (str,)))
 
     def __getattr__(self, key):

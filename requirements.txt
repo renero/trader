@@ -18,3 +18,4 @@ scipy~=1.5
 
 prettytable~=1.0.1
 setuptools~=50.3.0
+cvxopt~=1.2.5

@@ -1,4 +1,4 @@
-from predictor.arguments import Arguments
+from arguments import Arguments
 from common.dictionaries import customdict_trait
 from common.logger import Logger
 
