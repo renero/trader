@@ -1,4 +1,5 @@
 import errno
+import glob
 import json
 import os
 from os.path import dirname, realpath, join
@@ -26,6 +27,7 @@ def file_exists(given_filepath: str, my_dir: str) -> str:
         else:
             raise FileNotFoundError(
                 errno.ENOENT, os.strerror(errno.ENOENT), new_filepath)
+    print(f'filepath = {filepath}')
     return filepath
 
 
@@ -34,11 +36,22 @@ def valid_output_name(filename: str, path: str, extension=None) -> str:
     Builds a valid name. In case there's another file which already exists
     adds a number (1, 2, ...) until finds a valid filename which does not
     exist.
-    Returns The filename if the name is valid and file does not exists,
+
+    Returns
+    -------
+    The filename if the name is valid and file does not exists,
             None otherwise.
-    :param filename: The base filename to be set.
-    :param path: The path where trying to set the filename
-    :param extension: The extension of the file, without the dot '.'
+
+    Params
+    ------
+    filename: str
+        The base filename to be set.
+    path: str
+        The path where trying to set the filename
+    extension:str
+        The extension of the file, without the dot '.' If no extension is
+        specified, any extension is searched to avoid returning a filepath
+        of an existing file, no matter what extension it has.
     """
     path = file_exists(path, dirname(realpath(__file__)))
     if extension:
@@ -47,7 +60,7 @@ def valid_output_name(filename: str, path: str, extension=None) -> str:
         base_filepath = join(path, filename)
     output_filepath = base_filepath
     idx = 1
-    while Path(output_filepath).is_file() is True:
+    while len(glob.glob(f"{output_filepath}*")) > 0:
         if extension:
             output_filepath = join(
                 path, filename) + '_{:d}.{}'.format(
@@ -56,6 +69,7 @@ def valid_output_name(filename: str, path: str, extension=None) -> str:
             output_filepath = join(path, filename + '_{}'.format(idx))
         idx += 1
 
+    print(f'output_filepath: {output_filepath}')
     return output_filepath
 
 

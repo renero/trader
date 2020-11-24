@@ -4,7 +4,7 @@ import setuptools
 
 setup(
     name='trader',
-    version='0.2.6',
+    version='0.2.7',
     description='Almanaque Trader',
     author='J. Renero, J. Gonzalez',
     packages=setuptools.find_packages(),

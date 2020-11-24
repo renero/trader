@@ -1,6 +1,6 @@
 import unittest
 
-from dictionary_trait import CSDictionary
+from dictionaries import CSDictionary
 from predictor.ticks import Ticks
 from sequences import sequences
 
@@ -87,7 +87,7 @@ class TestTicks(unittest.TestCase):
         self.setUpClass()
         self.ticks.append_indicator('trend')
         print(self.ticks.data)
-        X, y, Xt, yt = self.ticks.prepare_for_training(predict='trend')
+        X, y, Xt, yt = self.ticks.prepare_for_training(predict_column='trend')
         self.assertListEqual(list(X[0][0]), list(self.ticks.data.iloc[0]))
         self.assertEqual(
             y[0],
