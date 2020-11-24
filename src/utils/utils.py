@@ -1,12 +1,13 @@
-import os
-
-os.environ['PYTHONHASHSEED'] = '0'
+# os.environ['PYTHONHASHSEED'] = '0'
 
 import random
+from typing import List
 
 import numpy as np
 import tensorflow as tf
+from prettytable import PrettyTable
 from tensorflow.keras import backend as K
+from tensorflow.keras.metrics import BinaryAccuracy, SparseCategoricalAccuracy
 from termcolor import colored
 
 
@@ -58,14 +59,16 @@ def previous(objects_array: object, pos: int):
         return objects_array[pos - 1]
 
 
-def print_bin_predictions_match(y_test, yhat):
+def print_bin_predictions_match(y_test, yhat, binary=True):
+    accuracy = BinaryAccuracy() if binary else SparseCategoricalAccuracy()
     for i in range(y_test.shape[0]):
         ix = colored(str(f'{i:02d} |'), 'grey')
         sep = colored('|', 'grey')
         y = int(y_test[i][0])
-        pred = f"{yhat[i][0]:.02f}"
-        true_pred = (yhat[i][0] >= 0.5 and y == 1) or (
-                yhat[i][0] < 0.5 and y == 0)
+        pred = f"{yhat[i][0]:.02f}" if binary else f"{np.argmax(yhat[i])}"
+        accuracy.reset_states()
+        accuracy.update_state(y, yhat[i])
+        true_pred = accuracy.result().numpy() == 1.0
         color = "green" if true_pred else "red"
         pred = colored(pred, color)
         if i % 9 == 0:
@@ -108,4 +111,24 @@ def reset_seeds():
     np.random.seed(1)
     random.seed(2)
     tf.compat.v1.set_random_seed(3)
-    #print("[Determinism: Random seeds reset]")  # optional
+    # print("[Determinism: Random seeds reset]")  # optional
+
+
+def dict2table(dictionary: dict) -> str:
+    """Converts a table into an ascii table."""
+    t = PrettyTable()
+    t.field_names = ['Parameter', 'Value']
+    for header in t.field_names:
+        t.align[header] = 'l'
+
+    def tabulate_dictionary(t: PrettyTable, d: dict, name: str = None) -> PrettyTable:
+        for item in d.items():
+            if isinstance(item[1], dict):
+                t = tabulate_dictionary(t, item[1], item[0])
+                continue
+            sep = '.' if name is not None else ''
+            prefix = '' if name is None else name
+            t.add_row([f"{prefix}{sep}{item[0]}", item[1]])
+        return t
+
+    return str(tabulate_dictionary(t, dictionary))

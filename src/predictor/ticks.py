@@ -151,6 +151,10 @@ from it. The way it should be:
                 train_columns),
             y_column=predict_column,
             test_size=self.params.test_size)
+        self._update_params(data_vectors, predict_column, train_columns)
+        return data_vectors
+
+    def _update_params(self, data_vectors, predict_column, train_columns):
         # Keep this values in params.
         self.params.predict_column = predict_column
         self.params.train_columns = train_columns
@@ -162,7 +166,7 @@ from it. The way it should be:
             data_vectors[1])
         self.params.num_target_values = sequences.get_num_target_values(
             data_vectors[1])
-        return data_vectors
+        self.params.output_values = sequences.get_output_values(data_vectors[1])
 
     def prepare_for_predict(self, train_columns: List[str]) -> TrainVectors:
         """

@@ -1,14 +1,14 @@
 import json
 from collections import defaultdict
 from os.path import join, basename, splitext, dirname, realpath
-from pathlib import Path
 
 import mlflow
+import numpy as np
 from numpy import ndarray
 from tensorflow.keras.models import model_from_json
 from tensorflow.keras.optimizers import Adam
 
-from metrics import metrics
+from common.dictionaries import customdict
 from utils.callbacks import display_progress
 from utils.file_utils import file_exists, valid_output_name
 from utils.utils import reset_seeds
@@ -47,6 +47,8 @@ class nn:
             self.metadata['num_target_labels'] = self.params.num_target_labels
         if 'num_target_values' in self.params:
             self.metadata['num_target_values'] = self.params.num_target_values
+        if 'output_values' in self.params:
+            self.metadata['output_mapping'] = self.params.output_values
         self.metadata['dropout'] = self.params.dropout
         self.metadata['learning_rate'] = self.params.learning_rate
         self.metadata['activation'] = self.params.activation
@@ -105,7 +107,7 @@ class nn:
             batch_size=self.params.batch_size,
             verbose=self.params.verbose,
             validation_split=self.params.validation_split,
-            callbacks=[display_progress(self.params.epochs)]
+            callbacks=[display_progress(self.params)]
         )
 
         if self.params.mlflow:
@@ -121,15 +123,7 @@ class nn:
         self.log.info(f"Predictions (yhat): {yhat.shape}")
         self.log.info(f"Accuracy: {accuracy:.2f}")
 
-        if self.metadata['binary'] is True:
-            ta = metrics.trend_binary_accuracy(y_test, yhat)
-        else:
-            ta = metrics.trend_accuracy(y_test, yhat)
-        if self.params.mlflow:
-            mlflow.log_metric("trend_accuracy", ta)
-        self.log.info(f"Trend acc.: {ta:4.2f}")
-
-        return yhat, ta
+        return yhat, accuracy
 
     def _end_experiment(self):
         if self.params.mlflow:
@@ -188,11 +182,8 @@ class nn:
 
     def save(self):
         """ serialize model to JSON """
-        if self.params.output is not None:
-            model_name = self.params.output
-        else:
-            model_name = valid_output_name(str(self), self.params.models_dir)
-            self.log.info(model_name)
+        model_name = valid_output_name(str(self), self.params.models_dir)
+        self.log.info(model_name)
 
         # Save the metadata
         meta_json = json.dumps(self.metadata, sort_keys=True, indent=4)

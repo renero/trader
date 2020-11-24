@@ -1,11 +1,11 @@
 import numpy as np
 
 from arguments import Arguments
-from dictionary_trait import DictionaryTrait
+from dictionaries import customdict_trait
 from logger import Logger
 
 
-class IXDictionaryTrait(DictionaryTrait):
+class indicators_dict(customdict_trait):
 
     def __init__(self, default_params_filename='params.yaml', *args, **kwargs):
 

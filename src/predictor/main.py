@@ -28,19 +28,23 @@ def main(argv):
 
     params = Dictionary(args=argv)
     ticks = read_ticks()
-    params.epochs = 150
     params.window_size = 28
+    params.batch_size = 16
+    params.units = 42
+    params.dropout = 0.1
 
     XT, yT, Xt, yt = ticks.prepare_for_training(
-        predict_column="gmf_trend",
-        train_columns=["gmf", "gmf_mono"])
+        predict_column="gmf_mono",
+        train_columns=["gmf", "gmf_trend"])
+    yT += 1
+    yt += 1
 
     nn1 = lstm(params).build()
     nn1.start_training(XT, yT, name=None)
     yhat, acc = nn1.evaluate(Xt, yt)
 
     print(nn1)
-    print_bin_predictions_match(yt, yhat)
+    print_bin_predictions_match(yt, yhat, nn1.metadata['binary'])
     nn1.save()
 
 
